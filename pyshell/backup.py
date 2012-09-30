@@ -18,6 +18,15 @@ parser_description = u"""
 BackUp – A simple backup utility using {rsync}.
 """.format(rsync=backup_rsync)
 
+def force_dir_path(path):
+    """Force the input path to be a directory."""
+    if not path.endswith("/"):
+        return path + "/"
+    elif path.endswith("//"):
+        return path.rstrip("/") + "/"
+    else:
+        return path
+
 class BackupEngine(object):
     """The controlling engine for backups."""
     def __init__(self):
@@ -26,7 +35,8 @@ class BackupEngine(object):
         self._parser.add_argument('-n','--dry-run',help="Print what would be copied, but don't copy",action='store_false',dest='run')
         self._parser.add_argument('-q',help="Silence the noisy output",action='store_false',dest='verbose')
         self._parser.add_argument('-d','--delete',help="Delete duplicated files",action='store_true')
-        self._parser.add_argument('--print',help="Print commands",action='store_true')
+        self._parser.add_argument('--print',help="Print commands",action='store_true',dest='prints')
+        self._parse_modes = self._parser.add_argument_group('Targets')
         self._destinations = {}
         self._origins = {}
         self._delete = {}
@@ -37,11 +47,13 @@ class BackupEngine(object):
     def set_destination(self,argname,origin,destination,delete=False):
         """Set a backup route for rsync"""
         destination = destination.replace("~",self._home)
+        destination = force_dir_path(destination)
         origin = origin.replace("~",self._home)
+        origin = force_dir_path(origin)
         self._destinations[argname] = destination
         self._origins[argname]      = origin
         self._delete[argname]       = delete
-        parser = self._parser.add_argument('+'+argname,
+        self._parse_modes.add_argument('+'+argname,
             help="Copy files from {origin} to {destination}".format(origin=origin,destination=destination),action='append_const',dest='modes',const=argname)
         
     def parse_arguments(self):
@@ -50,6 +62,9 @@ class BackupEngine(object):
         self._modes     = args.modes
         self._run       = args.run
         self._verbosity = args.verbose
+        self._print     = args.prints
+        if not self._modes:
+            self._parser.error("No backup routine selected. Must select at least one:")
         
     def setup_args(self):
         """Setup process arguments"""
@@ -69,10 +84,12 @@ class BackupEngine(object):
             return
         if self._delete[mode]:
             _pargs += ['--del']
-            print "Starting {mode} backup. Using '--del'.".format(mode=mode)
-        else:
-            print "Starting {mode} backup.".format(mode=mode)
-        self._procs[mode] = Popen(_pargs)
+            print "WARNING: {mode} is using '--del'.".format(mode=mode)
+        print "Starting {mode} backup.".format(mode=mode)
+        if self._print:
+            print " ".join(_pargs)
+        if self._run:
+            self._procs[mode] = Popen(_pargs)
         
         
     def start(self):
@@ -115,6 +132,7 @@ class BackupEngine(object):
         """Run the whole engine"""
         self.configure()
         self.parse_arguments()
+        self.setup_args()
         self.start()
         self.end()
             
