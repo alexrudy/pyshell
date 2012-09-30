@@ -1,0 +1,26 @@
+destination: /Volumes/Big Orange Disk/
+home:
+  origin: ~/
+  destination: Home
+dropbox:
+  origin: ~/Dropbox
+  destination: Home/Dropbox
+library:
+  origin: ~/Library
+  destination: Home/Library
+documents:
+  origin: ~/Documents
+  destination: Home/Documents
+development:
+  origin: ~/Development
+  destination: Home/Development
+pictures:
+  origin: ~/Pictures
+  destination: Home/Pictures
+media:
+  origin: ~/Music/iTunes/iTunes Music/
+  destination: Home/Music/iTunes/iTunes Music/
+apps:
+  origin: ~/Music/iTunes/iTunes Music/Mobile Applications
+  destination: Home/Music/iTunes/iTunes Music/Mobile Applications
+  delete: true
