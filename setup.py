@@ -11,15 +11,18 @@ from distribute_setup import use_setuptools
 use_setuptools()
 from setuptools import setup, find_packages
 
-from pyshell.version import version
+from pyshell import version
 
 setup(
     name = 'pyshell',
     version = version,
-    packages = find_packages(exclude=['tests'])
-    package_data = {'pyshell':['Defaults.yaml']}
+    packages = find_packages(exclude=['tests']),
+    package_data = {'pyshell':['Defaults.yaml']},
     install_requires = ['distribute','PyYAML>=3.10'],
     test_suite = 'tests',
     author = 'Alexander Rudy',
-    author_email = 'dev@alexrudy.org'
+    author_email = 'dev@alexrudy.org',
+    entry_points = {
+        'console_scripts' : ["BackUp = pyshell.backup:script"]
+    }
 )
