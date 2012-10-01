@@ -47,7 +47,7 @@ class BackupEngine(object):
         # Normalize Arguments
         destination = force_dir_path(destination.replace("~",self._home))
         origin      = force_dir_path(origin.replace("~",self._home))
-        trigger     = triggers if isinstance(triggers,list) else []
+        triggers    = triggers if isinstance(triggers,list) else []
         
         # Set Properties
         self._destinations[argname] = destination
@@ -77,7 +77,7 @@ class BackupEngine(object):
         
     def setup_args(self):
         """Setup process arguments"""
-        if self._opts.verbosity:
+        if self._opts.verbose:
             self._pargs += ['-v']
         if not self._opts.run:
             self._pargs += ['-n']
@@ -90,7 +90,7 @@ class BackupEngine(object):
         elif not (mode in self._origins and mode in self._destinations and mode in self._delete):
             warn("Mode {mode} incomplete!".format(mode=mode),UserWarning)
         _pargs = self._pargs + [ self._origins[mode] , self._destinations[mode] ]
-        if mode in self._proc:
+        if mode in self._procs:
             warn("Mode {mode} already running.".format(mode=mode),RuntimeWarning)
             return
         elif not os.path.isdir(self._origins[mode]):
@@ -130,12 +130,20 @@ class BackupEngine(object):
         
     def end(self):
         """End all processes"""
-        for mode in self._modes:
+        for mode in self._opts.modes:
             self.end_proc(mode)
         
+    def command_line(self):
+        """Parse arguments from the command line"""
+        self._opts, self._rargs = self._parser.parse_known_args()        
+        
+    def arguments(self,*args):
+        """Parse the given arguments"""
+        self._opts, self._rargs = self._parser.parse_known_args(*args)        
+        
+    
     def configure(self):
         """Configure the simulator"""
-        self._opts, self._rargs = self._parser.parse_known_args()        
         if os.access(self._opts.config,os.R_OK):
             with open(self._opts.config,'r') as filestream:
                 config = yaml.load(filestream)
@@ -156,6 +164,9 @@ class BackupEngine(object):
             
     def run(self):
         """Run the whole engine"""
+        if not(hasattr(self,'_rargs') and hasattr(self,'_opts')):
+            warn("Implied Command-line mode",UserWarning)
+            self.command_line()
         self.configure()
         self.parse()
         self.start()
@@ -164,10 +175,12 @@ class BackupEngine(object):
 def script():
     """Operations if this module is a script"""
     engine = BackupEngine()
+    engine.command_line()
     engine.run()
     
 if __name__ == '__main__':
     print("Running from file: {arg}".format(arg=sys.argv[0]))
     engine = BackupEngine()
+    engine.command_line()
     engine.run()
 
