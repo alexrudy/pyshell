@@ -33,6 +33,7 @@ class BackupEngine(object):
         self._parser = ArgumentParser(prefix_chars='-+',add_help=False,formatter_class=RawDescriptionHelpFormatter,
             description = fill(u"BackUp – A simple backup utility using {cmd}. The utility has configurable targets, and can spawn multiple simultaneous {cmd} processes for efficiency.".format(cmd=self._cmd))+"\n\n"+fill("Using {version}".format(version=self._cmd_version)))
         self._parser.add_argument('--config',action='store',metavar='file.yml',default='Backup.yaml',help="Set configuration file")
+        self._parser.add_argument('--prefix',action='store',nargs='+',default=[],help="Set the backup prefixes")
         self._destinations = {}
         self._origins = {}
         self._delete = {}
@@ -66,7 +67,7 @@ class BackupEngine(object):
         self._parser.add_argument('-h','--help',action='help')
         self._parser.add_argument('--print',action='store_true',dest='prints',help="Print {cmd} commands".format(cmd=self._cmd))
         self._parser.add_argument('--version',action='version',version="%(prog)s version {version}\n{cmd_version}".format(version=version,cmd_version=self._cmd_version))
-        self._parser.add_argument('modes',metavar='target',nargs='+',help="The %(prog)s target's name.")
+        self._parser.add_argument('modes',metavar='target',nargs='+',default=[],help="The %(prog)s target's name.")
         self._parser.epilog = "\n".join(self._help)
         self._opts = self._parser.parse_args(self._rargs, self._opts)
         
@@ -133,9 +134,22 @@ class BackupEngine(object):
         for mode in self._opts.modes:
             self.end_proc(mode)
         
-    def command_line(self):
-        """Parse arguments from the command line"""
-        self._opts, self._rargs = self._parser.parse_known_args()        
+    def kill_proc(self,mode):
+        """Kill a particular subprocess"""
+        if mode in self._procs:
+            retcode = self._procs[mode].terminate()
+            if retcode != 0:
+                warn("Mode {mode} terminated with code {code}".format(mode=mode,code=retcode),RuntimeWarning)
+            print("Terminated {mode} backup".format(mode=mode))
+        elif mode not in self._origins:
+            return
+        else:
+            warn("Mode {mode} was never started.".format(mode=mode),UserWarning)
+            
+    def kill(self):
+        """Kill all mode procedures"""
+        for mode in self._opts.modes:
+            self.kill_proc(mode)
         
     def arguments(self,*args):
         """Parse the given arguments"""
@@ -153,6 +167,14 @@ class BackupEngine(object):
             with open(resource_filename(__name__,'Defaults.yaml'),'r') as filestream:
                 config = yaml.load(filestream)
         
+        if len(self._opts.prefix) == 2:
+            config["destination"] = self._opts.prefix[1]
+            config["origin"] = self._opts.prefix[0]
+        elif len(self._opts.prefix) == 1:
+            config["destination"] = self._opts.prefix[0]
+        elif len(self._opts.prefix) > 2:
+            self._parser.error("Cannot specificy more than two prefixes. Usage: --prefix [origin] destination")
+        
         dest_prefix = config.pop('destination',"")
         orig_prefix = config.pop('origin',"")
         
@@ -166,21 +188,25 @@ class BackupEngine(object):
         """Run the whole engine"""
         if not(hasattr(self,'_rargs') and hasattr(self,'_opts')):
             warn("Implied Command-line mode",UserWarning)
-            self.command_line()
+            self.arguments()
         self.configure()
         self.parse()
-        self.start()
-        self.end()
+        try:
+            self.start()
+            self.end()
+        except (KeyboardInterrupt, SystemExit):
+            self.kill()
+        
             
 def script():
     """Operations if this module is a script"""
     engine = BackupEngine()
-    engine.command_line()
+    engine.arguments()
     engine.run()
     
 if __name__ == '__main__':
     print("Running from file: {arg}".format(arg=sys.argv[0]))
     engine = BackupEngine()
-    engine.command_line()
+    engine.arguments()
     engine.run()
 
