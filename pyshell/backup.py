@@ -33,7 +33,7 @@ class BackupEngine(object):
         self._parser = ArgumentParser(prefix_chars='-+',add_help=False,formatter_class=RawDescriptionHelpFormatter,
             description = fill(u"BackUp – A simple backup utility using {cmd}. The utility has configurable targets, and can spawn multiple simultaneous {cmd} processes for efficiency.".format(cmd=self._cmd))+"\n\n"+fill("Using {version}".format(version=self._cmd_version)))
         self._parser.add_argument('--config',action='store',metavar='file.yml',default='Backup.yaml',help="Set configuration file")
-        self._parser.add_argument('--prefix',action='store',nargs='+',default=[],help="Set the backup prefixes")
+        self._parser.add_argument('--prefix',action='store',metavar='path/to/',nargs='+',default=[],help="Set the backup prefixes")
         self._destinations = {}
         self._origins = {}
         self._delete = {}
@@ -57,7 +57,7 @@ class BackupEngine(object):
         self._triggers[argname]     = triggers
         
         # Set program help:
-        self._help += [ "  %(mode)-18s Copy files using the '%(mode)s' target %(delete)s\n%(s)-20s  from %(origin)r\n%(s)-20s  to   %(destination)r" % dict(s=" ",mode=argname,origin=origin,destination=destination,delete="removing old files" if delete else "") ]
+        self._help += [ "  %(mode)-18s Copy files using the '%(mode)s' target %(delete)s\n%(s)-20s  from %(origin)r\n%(s)-20s  to   %(destination)r\n" % dict(s=" ",mode=argname,origin=origin,destination=destination,delete="removing old files" if delete else "") ]
         
     def parse(self):
         """Parse the command line arguments"""
@@ -106,8 +106,7 @@ class BackupEngine(object):
         print("Starting {mode} backup...".format(mode=mode))
         if self._opts.prints:
             print(" ".join(_pargs))
-        if self._opts.run:
-            self._procs[mode] = Popen(_pargs)
+        self._procs[mode] = Popen(_pargs)
         for tmode in self._triggers[mode]:
             self.start_proc(mode)
         
