@@ -23,6 +23,6 @@ setup(
     author = 'Alexander Rudy',
     author_email = 'dev@alexrudy.org',
     entry_points = {
-        'console_scripts' : ["BackUp = pyshell.backup:script"]
+        'console_scripts' : ["BackUp = pyshell.backup:BackupEngine.script"]
     }
 )
