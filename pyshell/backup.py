@@ -39,7 +39,7 @@ class BackupEngine(CLIEngine):
         self._triggers = {}
         self._pargs = [self._cmd,'-a']
         self._procs = {}
-        self._help = ["targets:"]
+        self._help = []
             
     def set_destination(self,argname,origin,destination,delete=False,triggers=None):
         """Set a backup route for rsync"""
@@ -158,6 +158,8 @@ class BackupEngine(CLIEngine):
             self._config["destination"] = self._opts.prefix[0]
         elif len(self._opts.prefix) > 2:
             self._parser.error("Cannot specificy more than two prefixes. Usage: --prefix [origin] destination")
+        
+        self._help += ['Configured from \'%s\'' % self._opts.config,'','targets:']
         
         dest_prefix = self._config.pop('destination',"")
         orig_prefix = self._config.pop('origin',"")
