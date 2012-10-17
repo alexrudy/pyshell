@@ -41,7 +41,10 @@ class CLIEngine(object):
         
     def parse(self):
         """Parse the command line arguments"""
-        raise NotImplementedError("Nothing to parse!")
+        self._parser.add_argument('-h','--help',action='help')
+        self._opts = self._parser.parse_args(self._rargs, self._opts)
+        
+        
             
     def arguments(self,*args):
         """Parse the given arguments"""

@@ -62,12 +62,11 @@ class BackupEngine(CLIEngine):
         self._parser.add_argument('-n','--dry-run',action='store_false',dest='run',help="Print what would be copied, but don't copy")
         self._parser.add_argument('-q',action='store_false',dest='verbose',help="Silence the noisy output")
         self._parser.add_argument('-d','--delete',action='store_true',dest='delete',help="Delete duplicated files")
-        self._parser.add_argument('-h','--help',action='help')
         self._parser.add_argument('-v','--print',action='store_true',dest='prints',help="Print {cmd} commands".format(cmd=self._cmd))
         self._parser.add_argument('--version',action='version',version="%(prog)s version {version}\n{cmd_version}".format(version=version,cmd_version=self._cmd_version))
         self._parser.add_argument('modes',metavar='target',nargs='+',default=[],help="The %(prog)s target's name.")
         self._parser.epilog = "\n".join(self._help)
-        self._opts = self._parser.parse_args(self._rargs, self._opts)
+        super(BackupEngine, self).parse()
         
         if not self._opts.modes:
             self._parser.error("No backup routine selected. Must select at least one:\n+%s" % " +".join(self._origins.keys()))
