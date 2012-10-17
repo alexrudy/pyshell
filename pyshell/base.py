@@ -43,8 +43,6 @@ class CLIEngine(object):
         """Parse the command line arguments"""
         self._parser.add_argument('-h','--help',action='help')
         self._opts = self._parser.parse_args(self._rargs, self._opts)
-        
-        
             
     def arguments(self,*args):
         """Parse the given arguments"""
@@ -55,7 +53,7 @@ class CLIEngine(object):
         """Configure the simulator"""
         self._config.load(resource_filename(__name__,'Defaults.yaml'),silent=False)
         if hasattr(self._opts,'config') and os.path.exists(os.path.expanduser("~/%s" % self._opts.config)):
-            self._config.load("%s/%s" % (os.environ["HOME"],self._opts,'config'),silent=True)
+            self._config.load(os.path.expanduser("~/%s" % self._opts,'config'),silent=True)
         if hasattr(self._opts,'config') and os.path.exists(self._opts.config):
             self._config.load(self._opts.config,silent=False)
         elif hasattr(self._opts,'config') and self._opts.config != self.defaultcfg:
