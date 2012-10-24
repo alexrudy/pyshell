@@ -7,14 +7,19 @@
 #  Copyright 2012 Jaberwocky. All rights reserved.
 # 
 """
+.. currentmodule: pyshell.util
+
 :mod:`util` - Utilities
------------------------
+=======================
 
-..autofunction: force_dir_path
+.. autofunction::
+    force_dir_path
 
-..autofunction: query_yes_no
+.. autofunction::
+    query_yes_no
 
-..autofunction: query_string
+.. autofunction::
+    query_string
 
 """
 import os
