@@ -28,7 +28,8 @@ class CLIEngine(object):
         super(CLIEngine, self).__init__()
         self._parser = ArgumentParser(prefix_chars='-',add_help=False,formatter_class=RawDescriptionHelpFormatter,
             description = self.description)
-        self._parser.add_argument('--config',action='store',metavar='file.yml',default=self.defaultcfg,help="Set configuration file. By default, load %(file)s and ~/%(file)s if it exists." % dict(file=self.defaultcfg))
+        if self.defaultcfg:
+            self._parser.add_argument('--config',action='store',metavar='file.yml',default=self.defaultcfg,help="Set configuration file. By default, load %(file)s and ~/%(file)s if it exists." % dict(file=self.defaultcfg))
         self._home = os.environ["HOME"]
         self._config = Config()
         self._config.dn = Config
