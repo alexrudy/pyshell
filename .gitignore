@@ -1,0 +1,12 @@
+# 
+#  .gitignore
+#  pyshell
+#  
+#  Created by Alexander Rudy on 2012-09-30.
+#  Copyright 2012 Alexander Rudy. All rights reserved.
+# 
+
+*.egg-info
+*.pyc
+tests/pkg
+docs/_build

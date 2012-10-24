@@ -1,0 +1,7 @@
+# 
+#  __init__.py
+#  Tests for {{package}}
+#  
+#  Created by {{author}} on {{date}}.
+#  Copyright 2012 {{author}}. All rights reserved.
+# 

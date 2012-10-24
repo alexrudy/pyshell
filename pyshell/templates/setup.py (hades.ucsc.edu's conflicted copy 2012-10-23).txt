@@ -1,0 +1,26 @@
+# -*- coding: utf-8 -*-
+# 
+#  setup.py
+#  {{name}}
+#  
+#  Created by {{author}} on {{date}}.
+#  Copyright 2012 {{author}}. All rights reserved.
+# 
+
+from distribute_setup import use_setuptools
+use_setuptools()
+from setuptools import setup, find_packages
+
+from {{name}} import version
+
+setup(
+    name = "{{name}}",
+    version = version,
+    packages = find_packages(exclude=['{{exclude}}']),
+    package_data = {{package_data}},
+    install_requires = {{dependencies}},
+    test_suite = {{tests}},
+    author = "{{author}}",
+    author_email = "{{email}}",
+    entry_points = {{entry_points}},
+)
