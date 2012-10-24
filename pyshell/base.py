@@ -22,7 +22,7 @@ class CLIEngine(object):
     
     description = "A command line interface."
     
-    defaultcfg = "Config.yaml"
+    defaultcfg = "Config.yml"
     
     def __init__(self):
         super(CLIEngine, self).__init__()
@@ -41,7 +41,7 @@ class CLIEngine(object):
         
     def parse(self):
         """Parse the command line arguments"""
-        self._parser.add_argument('-h','--help',action='help')
+        self._parser.add_argument('-h','--help',action='help',help="Display this help text")
         self._opts = self._parser.parse_args(self._rargs, self._opts)
             
     def arguments(self,*args):
@@ -51,7 +51,9 @@ class CLIEngine(object):
     
     def configure(self):
         """Configure the simulator"""
-        self._config.load(resource_filename(__name__,'Defaults.yaml'),silent=False)
+        if not self.defaultcfg:
+            return
+        self._config.load(resource_filename(__name__,self.defaultcfg),silent=True)
         if hasattr(self._opts,'config') and os.path.exists(os.path.expanduser("~/%s" % self._opts.config)):
             self._config.load(os.path.expanduser("~/%s" % self._opts,'config'),silent=True)
         if hasattr(self._opts,'config') and os.path.exists(self._opts.config):

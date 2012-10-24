@@ -1,0 +1,18 @@
+# 
+#  {{filename}}
+#  Tests for {{package}}
+#  
+#  Created by {{author}} on {{date}}.
+#  Copyright 2012 {{author}}. All rights reserved.
+# 
+
+import {{name}}.{{package}}
+
+class test_{{package}}(object):
+    """Tests for {{package}}"""
+    
+    def test_something(self):
+        """A single test"""
+        assert True
+
+        

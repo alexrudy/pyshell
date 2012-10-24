@@ -44,8 +44,8 @@ class BackupEngine(CLIEngine):
     def set_destination(self,argname,origin,destination,delete=False,triggers=None):
         """Set a backup route for rsync"""
         # Normalize Arguments
-        destination = force_dir_path(destination.replace("~",self._home))
-        origin      = force_dir_path(origin.replace("~",self._home))
+        destination = force_dir_path(os.path.expanduser(destination))
+        origin      = force_dir_path(os.path.expanduser(origin))
         triggers    = triggers if isinstance(triggers,list) else []
         
         # Set Properties
