@@ -6,4 +6,4 @@
 #  Copyright 2012 Alexander Rudy. All rights reserved.
 # 
 
-version = "0.0.0"
+version = "0.1.0"
