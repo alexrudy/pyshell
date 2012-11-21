@@ -21,7 +21,8 @@ from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from pkg_resources import resource_filename
 import os, os.path
 from warnings import warn
-from .config import DottedConfiguration as Config
+from .config import DottedConfiguration as Config, Configuration as BConfig
+import logging, logging.config
 
 class CLIEngine(object):
     """The controlling engine for backups."""
@@ -29,6 +30,8 @@ class CLIEngine(object):
     description = "A command line interface."
     
     defaultcfg = "Config.yml"
+    
+    module = __name__
     
     def __init__(self):
         super(CLIEngine, self).__init__()
@@ -43,7 +46,7 @@ class CLIEngine(object):
                 " ~/%(file)s if it exists." % dict(file=self.defaultcfg))
         self._home = os.environ["HOME"]
         self._config = Config()
-        self._config.dn = Config
+        self._config.dn = BConfig
         self._opts = None
         self._rargs = None
         
@@ -52,6 +55,11 @@ class CLIEngine(object):
     def config(self):
         """Configuration"""
         return self._config
+        
+    @property
+    def opts(self):
+        """Command Line Options"""
+        return self._opts
         
     def parse(self):
         """Parse the command line arguments"""
@@ -68,16 +76,18 @@ class CLIEngine(object):
         """Configure the simulator"""
         if not self.defaultcfg:
             return
-        self._config.load(resource_filename(__name__, self.defaultcfg))
-        if hasattr(self._opts, 'config') \
-            and os.path.exists(os.path.expanduser("~/%s" % self._opts.config)):
-            self._config.load(os.path.expanduser("~/%s" % self._opts,
+        self.config.load(resource_filename(self.module, self.defaultcfg))
+        if hasattr(self.opts, 'config') \
+            and os.path.exists(os.path.expanduser("~/%s" % self.opts.config)):
+            self.config.load(os.path.expanduser("~/%s" % self.opts,
                 'config'))
-        if hasattr(self._opts, 'config') and os.path.exists(self._opts.config):
-            self._config.load(self._opts.config, silent=False)
-        elif hasattr(self._opts, 'config') \
+        if hasattr(self.opts, 'config') and os.path.exists(self.opts.config):
+            self.config.load(self.opts.config, silent=False)
+        elif hasattr(self.opts, 'config') \
             and self._opts.config != self.defaultcfg:
             warn("Configuration File not found!", RuntimeWarning)
+        if "logging" in self.config:
+            logging.config.dictConfig(self.config["logging"])
                     
     
     def start(self):
