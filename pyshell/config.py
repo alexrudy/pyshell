@@ -167,9 +167,15 @@ class Configuration(collections.MutableMapping):
         super(Configuration, self).__init__()
         self.log = logging.getLogger(__name__)
         self._store = dict(*args, **kwargs)
+        self._filename = None
     
     name = "Configuration"
     """The name/type of this configuration."""
+        
+    @property
+    def filename(self):
+        """The filename which has been used to save/load this configuration most recently"""
+        return self._filename
         
     def __repr__(self):
         """String representation of this object"""
@@ -238,6 +244,7 @@ class Configuration(collections.MutableMapping):
                 stream.write(str(self.store))
             elif not silent:
                 raise ValueError("Filename Error, not (.dat,.yaml,.yml): %s" % filename)
+            self._filename = filename
         
     def load(self, filename, silent=True):
         """Loads a configuration from a yaml file, and merges it into the master configuration.
@@ -258,6 +265,7 @@ class Configuration(collections.MutableMapping):
                 raise
         else:
             self.merge(new)
+            self._filename = filename
             loaded = True
         return loaded
     
