@@ -184,7 +184,6 @@ can be customized using the 'Default' configuration variable in the configuratio
         
         # Default Macro
         self.registerPipe(None,"all",description="Run all pipes",help="Run all pipes",include=False)
-        self.registerPipe(None,"none",description="Run no pipes",help="Run no pipes",include=False)
         
         
     #########################

@@ -87,7 +87,7 @@ class CLIEngine(object):
         if hasattr(self.opts, 'config') and os.path.exists(self.opts.config):
             self.config.load(self.opts.config, silent=False)
         elif hasattr(self.opts, 'config') \
-            and self._opts.config != self.defaultcfg:
+            and self.opts.config != self.defaultcfg:
             warn("Configuration File not found!", RuntimeWarning)
         if "logging" in self.config:
             logging.config.dictConfig(self.config["logging"])
@@ -124,6 +124,7 @@ class CLIEngine(object):
             self.end()
         except (KeyboardInterrupt, SystemExit):
             self.kill()
+            raise
     
     @classmethod        
     def script(cls):
