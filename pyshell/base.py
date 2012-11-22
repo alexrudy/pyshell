@@ -29,16 +29,19 @@ class CLIEngine(object):
     
     description = "A command line interface."
     
+    epilog = ""
+    
     defaultcfg = "Config.yml"
     
     module = __name__
     
-    def __init__(self):
+    def __init__(self,prefix_chars='-'):
         super(CLIEngine, self).__init__()
         self._parser = ArgumentParser(
-            prefix_chars = '-', add_help = False,
+            prefix_chars = prefix_chars, add_help = False,
             formatter_class = RawDescriptionHelpFormatter,
-            description = self.description)
+            description = self.description,
+            epilog = self.epilog)
         if self.defaultcfg:
             self._parser.add_argument('--config',
                 action='store', metavar='file.yml', default=self.defaultcfg,
@@ -88,11 +91,17 @@ class CLIEngine(object):
             warn("Configuration File not found!", RuntimeWarning)
         if "logging" in self.config:
             logging.config.dictConfig(self.config["logging"])
+        if "py.warnings" in self.config["logging.loggers"]:
+            logging.captureWarnings(True)
                     
     
     def start(self):
         """Start this system."""
         raise NotImplementedError("Nothing to Start!")
+        
+    def do(self):
+        """Do the stuff"""
+        pass
         
     def end(self):
         """End this tool"""
@@ -111,6 +120,7 @@ class CLIEngine(object):
         self.parse()
         try:
             self.start()
+            self.do()
             self.end()
         except (KeyboardInterrupt, SystemExit):
             self.kill()
