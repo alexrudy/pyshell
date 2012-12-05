@@ -114,9 +114,9 @@ def query_string(question, default=None, validate=None):
     """
     
     if default is None:
-        prompt = " :"
+        prompt = " : "
     else:
-        prompt = " (%s):" % default
+        prompt = " (%s): " % default
     
     
     while True:
