@@ -69,6 +69,10 @@ class CLIEngine(object):
         self._parser.add_argument('-h', '--help',
             action='help', help="Display this help text")
         self._opts = self._parser.parse_args(self._rargs, self._opts)
+        if "logging" in self.config:
+            logging.config.dictConfig(self.config["logging"])
+            if "py.warnings" in self.config["logging.loggers"]:
+                logging.captureWarnings(True)
             
     def arguments(self, *args):
         """Parse the given arguments"""
@@ -89,15 +93,12 @@ class CLIEngine(object):
         elif hasattr(self.opts, 'config') \
             and self.opts.config != self.defaultcfg:
             warn("Configuration File not found!", RuntimeWarning)
-        if "logging" in self.config:
-            logging.config.dictConfig(self.config["logging"])
-        if "py.warnings" in self.config["logging.loggers"]:
-            logging.captureWarnings(True)
+
                     
     
     def start(self):
         """Start this system."""
-        raise NotImplementedError("Nothing to Start!")
+        pass
         
     def do(self):
         """Do the stuff"""
@@ -105,7 +106,7 @@ class CLIEngine(object):
         
     def end(self):
         """End this tool"""
-        raise NotImplementedError("Nothing to End!")
+        pass
         
     def kill(self):
         """Kill this tool"""
@@ -124,7 +125,8 @@ class CLIEngine(object):
             self.end()
         except (KeyboardInterrupt, SystemExit):
             self.kill()
-            raise
+            if __debug__:
+                raise
     
     @classmethod        
     def script(cls):
