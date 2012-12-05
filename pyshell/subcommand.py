@@ -20,8 +20,18 @@ class SCEngine(object):
     def config(self):
         """docstring for config"""
         return self._config
+        
+    @property
+    def parser(self):
+        """docstring for parser"""
+        return self._parser
+        
+    @property
+    def opts(self):
+        """docstring for opts"""
+        return self._opts
     
-    def parser(self,subparsers):
+    def setup_parser(self,subparsers):
         """docstring for parser"""
         self._parser = subparsers.add_parser(self.command,**self._kwargs)
         
@@ -36,6 +46,10 @@ class SCEngine(object):
         
     def start(self):
         """docstring for start"""
+        pass
+        
+    def do(self):
+        """docstring for do"""
         pass
         
     def end(self):
@@ -64,6 +78,10 @@ class SCController(CLIEngine):
         """docstring for start"""
         self._subcommand[self._opts.mode].start()
         
+    def do(self):
+        """docstring for start"""
+        self._subcommand[self._opts.mode].do()
+        
     def end(self):
         """docstring for end"""
         self._subcommand[self._opts.mode].end()
@@ -77,7 +95,6 @@ class SCController(CLIEngine):
         """Parse command line args"""
         super(SCController, self).parse()
         for subEngine in self._subcommand:
-            self._subcommand[subEngine].configure(self.config,self._opts)
             self._subcommand[subEngine].parse(self._opts)
         
     def configure(self):
@@ -85,4 +102,7 @@ class SCController(CLIEngine):
         super(SCController, self).configure()
         self._subparsers = self._parser.add_subparsers(dest='mode',help=self._subparsers_help)
         for subEngine in self._subcommand:
-            self._subcommand[subEngine].parser(self._subparsers)
+            self._subcommand[subEngine].setup_parser(self._subparsers)
+            self._subcommand[subEngine].configure(self._config,self._opts)
+            
+            
