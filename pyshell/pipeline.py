@@ -446,7 +446,7 @@ can be customized using the 'Default' configuration variable in the configuratio
         if self.attempt == []:
             self.inorder = True
             self.complete = []
-        if len(self.include) == 0 and self.config["Default"] is not None:
+        if len(self.include) == 0 and self.config.get("Default",None) is not None:
             self.include += self.config.get("Default",[])
         if len(self.include) == 0:
             self.parser.error(u"No pipes triggered to run!")
