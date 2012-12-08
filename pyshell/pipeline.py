@@ -331,7 +331,7 @@ can be customized using the 'Default' configuration variable in the configuratio
         Other keyword arguments are passed to :meth:`ArgumentParser.add_argument`
         """
         if self.running or self.starting:
-            raise SimulatorStateError("Cannot add macro after pipeline has started!")
+            raise PipelineStateError("Cannot add macro after pipeline has started!")
         
         if "help" not in kwargs:
             help = argparse.SUPPRESS
@@ -348,7 +348,7 @@ can be customized using the 'Default' configuration variable in the configuratio
         
     
     def collect(self, matching=r'^(?!\_)', genericClasses=(), **kwargs):
-        """Collect class methods for inclusion as pipeline pipes. Instance methods are collected if they do not belong to the parent :class:`Simulator` class (i.e. this method, and others like :meth:`registerPipe` will not be collected.). Registered pipes will default to having no dependents, to be named similar to thier own methods (``collected_pipe`` becomes ``*collected-pipe`` on the command line) and will use thier doc-string as the pipe description. The way in which these pipes are collected can be adjusted using the decorators provided in this module.
+        """Collect class methods for inclusion as pipeline pipes. Instance methods are collected if they do not belong to the parent :class:`Pipeline` class (i.e. this method, and others like :meth:`registerPipe` will not be collected.). Registered pipes will default to having no dependents, to be named similar to thier own methods (``collected_pipe`` becomes ``*collected-pipe`` on the command line) and will use thier doc-string as the pipe description. The way in which these pipes are collected can be adjusted using the decorators provided in this module.
         
         To define a method as a pipe with a dependent, help string, and by default inclusion, use::
             
@@ -434,11 +434,11 @@ can be customized using the 'Default' configuration variable in the configuratio
         
         This command can be used to run specific pipes and their dependents. The control is far less flow control than the command-line interface (there is currently no argument interface to inclusion and exclusion lists, ``+`` and ``-``.), but can be used to call single macros in simulators froms scripts. In these cases, it is often beneficial to set up your own macro (calling :func:`registerPipe` with ``None`` as the pipe action) to wrap the actions you want taken in each phase.
         
-        It is possible to stop execution in the middle of this function. Simply raise an :exc:`SimulatorPause` exception and the simulator will return, and remain in a state where you are free to call :meth:`do` again."""
+        It is possible to stop execution in the middle of this function. Simply raise an :exc:`PipelinePause` exception and the simulator will return, and remain in a state where you are free to call :meth:`do` again."""
         if not self.started:
-            raise PipelineStateException("Simulator has not yet started!")
+            raise PipelineStateException("Pipeline has not yet started!")
         elif self.running:
-            raise PipelineStateException(u"Simulator is already running!")
+            raise PipelineStateException(u"Pipeline is already running!")
         self.running = True
         self.include = []
         self.include += list(pipes)
@@ -591,12 +591,12 @@ can be customized using the 'Default' configuration variable in the configuratio
             self.log.info(msg)
         self._reset()
         if code != 0 and self.commandLine:
-            self.log.critical("Simulator exiting abnormally: %d" % code)
+            self.log.critical("Pipeline exiting abnormally: %d" % code)
             sys.exit(code)
         elif code != 0:
-            self.log.critical("Simulator closing out, exit code %d" % code)
+            self.log.critical("Pipeline closing out, exit code %d" % code)
         else:
-            self.log.info(u"Simulator %s Finished" % self.name)
+            self.log.info(u"Pipeline %s Finished" % self.name)
             
     def pipe_tree(self):
         """Displays the pipe tree."""
