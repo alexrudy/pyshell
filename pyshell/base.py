@@ -9,6 +9,84 @@
 """
 .. currentmodule: pyshell.base
 
+Using the :class:`CLIEngine`
+============================
+
+The :class:`CLIEngine` is designed with "Convention over Configuration" \
+in mind. That is, it aims to set everything up so that it will work out\
+-of-the-box, and the user is responsbile for adjusting undesireable\
+behavior.
+
+Class Construction
+------------------
+    
+This class should be subclassed by the user, who should re-implement \
+the following methods:
+    
+- :meth:`start`
+- :meth:`do`
+- :meth:`end`
+- :meth:`kill`
+    
+These funcitons are used in the normal operation of the command line engine.
+    
+Other methods are used to control the engine.
+    
+Using the Engine
+----------------
+
+To run the engine, use :meth:`run`. To run the engine without \
+instantiating the class, use :meth:`script`, a class method \
+that instantiates a new object, and runs the tool. Both methods \
+accomplish the same thing at the end of the day. Using :meth:`script` \
+allows the developer to set this as an entry point in their ``setup.py``
+file, and so provide the command line enegine as a command line tool \
+in a distutils supported python package. A basic entry point for this \
+tool would appear like ::
+    
+    ["PyScript = mymodule.cli:Engine.script"]
+    
+
+Engine Operation
+----------------
+
+The engine is set up to use a configuration file system, \
+provide basic parsing attributes, and an interruptable \
+command line interaction flow. The configuration is designed\
+to provide dynamic output and to configure the system \
+before it completes the parsing process.
+    
+1. Initialization loads the object, and sets up the argument parser. \
+At this point, parser should only understand arguments that are neeeded\
+to print the best `--help` message.
+    
+2. Preliminary Arguments are parsed by :meth:`arguments`.
+    
+3. Configuration is handled by the :meth:`configure` function. This \
+function loads the following configuration files in order (such that the \
+last one loaded is the one that takes precedence):
+    
+* The ``defaultcfg`` file from ``engine.module``. This allows the \
+developer to provide a base configuration for the engine.
+* The requested configuration file from the user's home directory.
+* The requested configuration file form the current directory.
+* If no configuration file is requested, the filename for `defaultcfg` will be \
+used. As well, if the engine cannot find the requested configureation file \
+in the current directory (i.e. the user asks for a file, and it isn't there) \
+a warning will be issued.
+    
+4. Help message is inserted into parsing, and remining arguments\
+parsed by :meth:`parse`. At this point, the entire configuration process \
+is complete.
+    
+5. The functions :meth:`start`, :meth:`do` and :meth:`end` are called, \
+in that order. These functions should do the bulk of the engine's work.
+
+6. If the user interrupts the operation of the program, :meth:`kill` will \
+be called. If python is in ``__debug__`` mode, this will raise a full \
+traceback. If not, the traceback will be suppressed.
+
+
 :mod:`base` - Command Line Interface Engine
 ===========================================
 
@@ -17,6 +95,7 @@
     :members:
     
 """
+
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from pkg_resources import resource_filename
 import os, os.path
@@ -25,17 +104,35 @@ from .config import DottedConfiguration as Config, Configuration as BConfig
 import logging, logging.config
 
 class CLIEngine(object):
-    """The controlling engine for backups."""
+    """A base class for Command Line Inteface facing tools. :class:`CLIEnigne` \
+    provides the basic structure to set up a simple command-line interface,\
+    based on the :mod:`argparse` framework.
+    
+    :param str prefix_chars: Sets the prefix characters to command line arguments. \
+    by default this is set to "-", reqiuring that all command line argumetns begin \
+    with "-".
+    
+    At the end of initialization, the configuration (:attr:`config`) and \
+    :attr:`parser` will be availabe for use.
+    """
     
     description = "A command line interface."
+    """The textual description of the command line interface, \
+    set as the description of the parser from :mod:`argparse`."""
     
     epilog = ""
+    """The text that comes at the end of the :mod:`argparse` \
+    help text."""
     
     defaultcfg = "Config.yml"
+    """The name of the default configuration file to be loaded. If set to \
+    ``False``, no configuration will occur."""
     
     module = __name__
+    """Set :attr:`module` to ``__name__`` to allow the class to\
+    correctly detect the current module."""
     
-    def __init__(self,prefix_chars='-'):
+    def __init__(self, prefix_chars='-'):
         super(CLIEngine, self).__init__()
         self._parser = ArgumentParser(
             prefix_chars = prefix_chars, add_help = False,
@@ -55,39 +152,71 @@ class CLIEngine(object):
         
         
     @property
+    def parser(self):
+        """:class:`argparse.ArgumentParser` instance for this engine."""
+        return self._parser
+        
+    @property
     def config(self):
-        """Configuration"""
+        """:class:`pyshell.config.Configuration` object for this engine."""
         return self._config
         
     @property
     def opts(self):
-        """Command Line Options"""
+        """Command Line Options, as paresed, for this engine"""
         return self._opts
         
     def parse(self):
         """Parse the command line arguments"""
-        self._parser.add_argument('-h', '--help',
+        self.parser.add_argument('-h', '--help',
             action='help', help="Display this help text")
-        self._opts = self._parser.parse_args(self._rargs, self._opts)
+        self._opts = self.parser.parse_args(self._rargs, self._opts)
         if "logging" in self.config:
             logging.config.dictConfig(self.config["logging"])
             if "py.warnings" in self.config["logging.loggers"]:
                 logging.captureWarnings(True)
             
     def arguments(self, *args):
-        """Parse the given arguments"""
-        self._opts, self._rargs = self._parser.parse_known_args(*args)        
+        """Parse the given arguments. If no arguments are given, parses \
+        the known arguments on the command line. Generally this should \
+        parse all arguments except ``-h`` for help, which should be \
+        parsed last after the help text has been fully assembled. The full \
+        help text can be set to the ``self.parser.epilog`` attribute.
+        
+        :param \*args: The arguments to be parsed. 
+        
+        Similar like taking the command line components and doing \
+        ``" -h --config test.yml".split()``. Same signature as would be used \
+        for :meth:`argparse.ArgumentParser.parse_args()`
+        
+        """
+        self._opts, self._rargs = self.parser.parse_known_args(*args)        
         
     
     def configure(self):
-        """Configure the simulator"""
+        """Configure the command line engine from a series of YAML files.
+        
+        The configuration loads (starting with a blank configuration):
+        
+            1. The :attr:`module` configuration file named for \
+            :attr:`defaultcfg`
+            2. The command line specified file from the user's home folder \
+            ``~/config.yml``
+            3. The command line specified file from the working directory.
+        
+        If the third file is not found, and the user specified a new name for \
+        the configuration file, then the user is warned that no configuration \
+        file could be found. This way the usre is only warned about a missing \
+        configuration file if they requested a file specifically (and so \
+        intended to use a customized file).
+        
+        """
         if not self.defaultcfg:
             return
         self.config.load(resource_filename(self.module, self.defaultcfg))
         if hasattr(self.opts, 'config') \
             and os.path.exists(os.path.expanduser("~/%s" % self.opts.config)):
-            self.config.load(os.path.expanduser("~/%s" % self.opts,
-                'config'))
+            self.config.load(os.path.expanduser("~/%s" % self.opts.config))
         if hasattr(self.opts, 'config') and os.path.exists(self.opts.config):
             self.config.load(self.opts.config, silent=False)
         elif hasattr(self.opts, 'config') \
@@ -97,23 +226,34 @@ class CLIEngine(object):
                     
     
     def start(self):
-        """Start this system."""
+        """This function is called at the start of the :class:`CLIEngine` \
+        operation. It should contain any process spawning that needs to \
+        occur."""
         pass
         
     def do(self):
-        """Do the stuff"""
+        """This function should handle the main operations for the command \
+        line tool."""
         pass
         
     def end(self):
-        """End this tool"""
+        """This function is called at the end of the :class:`CLIEngine` \
+        operation and should ensure that all subprocesses have ended."""
         pass
         
     def kill(self):
-        """Kill this tool"""
-        raise NotImplementedError("Nothing to Kill!")
+        """This function should forcibly kill any subprocesses. If it is not \
+        overwritten in a sub-class, and is called while in debug mode (see the \
+        ``__debug__`` variable), it will raise a not-implemented error."""
+        if __debug__:
+            raise NotImplementedError("Nothing to Kill!")
+        else:
+            pass
             
     def run(self):
-        """Run the whole engine"""
+        """This method is used to run the command line engine in the expected \
+        order. This method should be called to run the engine from another \
+        program."""
         if not(hasattr(self, '_rargs') and hasattr(self, '_opts')):
             warn("Implied Command-line mode", UserWarning)
             self.arguments()
@@ -130,7 +270,9 @@ class CLIEngine(object):
     
     @classmethod        
     def script(cls):
-        """Operations if this module is a script"""
+        """The class method for using this module as a script entry \
+        point. This method ensures that the engine runs correctly on \
+        the command line, and is cleaned up at the end."""
         engine = cls()
         engine.arguments()
         engine.run()
