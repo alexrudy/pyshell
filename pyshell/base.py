@@ -99,6 +99,7 @@ traceback. If not, the traceback will be suppressed.
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from pkg_resources import resource_filename
 import os, os.path
+import abc
 from warnings import warn
 from .config import DottedConfiguration as Config, Configuration as BConfig
 import logging, logging.config
@@ -116,6 +117,8 @@ class CLIEngine(object):
     :attr:`parser` will be availabe for use.
     """
     
+    __metaclass__ = abc.ABCMeta
+    
     description = "A command line interface."
     """The textual description of the command line interface, \
     set as the description of the parser from :mod:`argparse`."""
@@ -128,9 +131,20 @@ class CLIEngine(object):
     """The name of the default configuration file to be loaded. If set to \
     ``False``, no configuration will occur."""
     
-    module = __name__
+    _module = __name__
+    
+    def set_module(self,module):
+        self._module = module
+    
+    def get_module(self):
+        return self._module
+        
+    def del_module(self):
+        del self._module
+        
+    module = abc.abstractproperty(get_module,set_module,del_module,
     """Set :attr:`module` to ``__name__`` to allow the class to\
-    correctly detect the current module."""
+    correctly detect the current module.""")
     
     def __init__(self, prefix_chars='-'):
         super(CLIEngine, self).__init__()
