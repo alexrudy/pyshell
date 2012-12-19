@@ -185,7 +185,7 @@ class CLIEngine(object):
         
         :param \*args: The arguments to be parsed. 
         
-        Similar like taking the command line components and doing \
+        Similar to taking the command line components and doing \
         ``" -h --config test.yml".split()``. Same signature as would be used \
         for :meth:`argparse.ArgumentParser.parse_args()`
         
