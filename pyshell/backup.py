@@ -21,6 +21,7 @@ from . import version
 from .util import force_dir_path
 from .base import CLIEngine
 
+
 class BackupEngine(CLIEngine):
     """The controlling engine for backups."""
     
@@ -32,12 +33,15 @@ class BackupEngine(CLIEngine):
         Implemented as a property to allow the text description to include
         infomration about the underlying command, usually `rsync`.
         """
-        return fill(u"BackUp – A simple backup utility using {cmd}. The" \
-        "utility has configurable targets, and can spawn multiple"\
+        return fill(u"BackUp – A simple backup utility using {cmd}. The "\
+        "utility has configurable targets, and can spawn multiple "\
         "simultaneous {cmd} processes for efficiency.".format(cmd=self._cmd))\
         + "\n\n" + fill("Using {version}".format(version=self._cmd_version))
         
     defaultcfg = "Backup.yml"
+    
+    module = __name__
+    # This sets the module name for this engine
     
     def __init__(self, cmd="rsync"):
         # - Initialization of Command Variables
@@ -61,6 +65,8 @@ class BackupEngine(CLIEngine):
             action='store', default=[],
             metavar='path/to/', nargs='+',
             help="Set the backup prefixes")
+        self.parser.usage = "%(prog)s [-nqdvh] [--config file.yml] [--prefix "\
+        "origin [destination]]\n            target [target ...]"
         
         self._destinations = {}
         self._origins = {}
@@ -73,6 +79,11 @@ class BackupEngine(CLIEngine):
     def set_destination(self, argname, origin, destination,
         delete=False, triggers=None):
         """Set a backup route for rsync"""
+        
+        if argname in self._destinations:
+            warn("Mode {mode} will be overwritten.".format(mode=argname),
+            UserWarning)
+        
         # Normalize Arguments
         destination = force_dir_path(os.path.expanduser(destination))
         origin      = force_dir_path(os.path.expanduser(origin))
@@ -85,7 +96,7 @@ class BackupEngine(CLIEngine):
         self._triggers[argname]     = triggers
         
         # Set program help:
-        self._help += ["  %(mode)-18s Copy files using the '%(mode)s' target"\
+        self._help += ["  %(mode)-18s Copy files using the '%(mode)s' target "\
         "%(delete)s\n%(s)-20s  from %(origin)r\n%(s)-20s  to   "\
         "%(destination)r\n" % dict(s=" ", mode=argname, origin=origin,
             destination=destination,
@@ -112,11 +123,6 @@ class BackupEngine(CLIEngine):
         if not self._opts.modes:
             self._parser.error("No backup routine selected. "\
             "Must select at least one:\n+%s" % " +".join(self._origins.keys()))
-        self.setup_args()
-        
-        
-    def setup_args(self):
-        """Setup process arguments"""
         if self._opts.verbose:
             self._pargs += ['-v']
         if not self._opts.run:
@@ -129,11 +135,11 @@ class BackupEngine(CLIEngine):
         # origin and a destination set. Else, provide a warning
         if not (mode in self._origins or mode in self._destinations 
                 or mode in self._delete):
-            warn("Mode {mode} not found!".format(mode=mode), UserWarning)
+            warn("Mode '{mode}' not found!".format(mode=mode), UserWarning)
             return
         elif not (mode in self._origins and mode in self._destinations 
             and mode in self._delete):
-            warn("Mode {mode} incomplete!".format(mode=mode), UserWarning)
+            warn("Mode '{mode}' incomplete!".format(mode=mode), UserWarning)
         
         # Set up this command's arguments
         _pargs = self._pargs + [self._origins[mode] , self._destinations[mode]]
@@ -141,16 +147,16 @@ class BackupEngine(CLIEngine):
         # Check that the mode isn't running, and that the mode's
         # destination and origin directories exist.
         if mode in self._procs:
-            warn("Mode {mode} already running.".format(mode=mode),
+            warn("Mode '{mode}' already running.".format(mode=mode),
                 RuntimeWarning)
             return
         elif not os.path.isdir(self._origins[mode]):
-            warn("Skipping {mode} backup. Origin {origin} does not "\
+            warn("Skipping '{mode}' backup. Origin '{origin}' does not "\
                 "exist.".format(mode=mode,origin=self._origins[mode]),
                 RuntimeWarning)
             return
         elif not os.path.isdir(self._destinations[mode]):
-            warn("Skipping {mode} backup. Destination {destination} "\
+            warn("Skipping '{mode}' backup. Destination '{destination}' "\
                 "does not exist.".format(mode=mode,
                     destination=self._destinations[mode]),
                 RuntimeWarning)
@@ -237,8 +243,8 @@ class BackupEngine(CLIEngine):
         orig_prefix = self._config.pop('origin',"")
         
         for mode, mcfg in self._config.iteritems():
-            destination = dest_prefix + mcfg.get("destination","")
-            origin = orig_prefix + mcfg.get("origin","")
+            destination = os.path.join(dest_prefix, mcfg.get("destination",""))
+            origin = os.path.join(orig_prefix, mcfg.get("origin",""))
             self.set_destination(argname = mode, origin = origin,
                 destination = destination, delete = mcfg.pop('delete',False))
             
