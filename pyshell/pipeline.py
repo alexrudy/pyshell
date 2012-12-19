@@ -524,11 +524,16 @@ can be customized using the 'Default' configuration variable in the configuratio
                     self.execute(dependent,level=level+1,code="D")
                 else:
                     self._pipe_tree += ["%-30s : (done already)" % (u"  " * (level+1) + u"└ %s" % dependent)]
-                if dependent not in self.complete:
-                    if self.pipes[dependent].optional:
-                        self.log.debug(u"Pipe '%s' requested by '%s' but skipped" % (dependent,pipe))
-                    else:
-                        self.log.warning(u"Pipe '%s' required by '%s' but failed to complete." % (dependent,pipe))
+        
+        for dependent in self.pipes[pipe].dependencies:
+            if dependent not in self.orders:
+                self.log.error("Pipe %r requested dependent %r which doesn't exist." % (pipe, dependent))
+            elif dependent not in self.complete and self.pipes[dependent].optional:
+                self.log.debug(u"Pipe %r requested by %r but skipped" % (dependent,pipe))
+            elif dependent not in self.complete:
+                self.log.warning(u"Pipe '%s' required by '%s' but failed to complete." % (dependent,pipe))
+            
+        
         
         s = self.pipes[pipe]
         self._pipe_tree += [u"%-30s : %s" % (u"  " * level + indicator % pipe,s.description)]
