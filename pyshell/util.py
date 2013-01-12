@@ -14,6 +14,15 @@
 
 .. autofunction::
     force_dir_path
+    
+.. autofunction::
+    semiabstractmethod
+    
+.. autofunction::
+    func_lineno
+    
+.. autofunction::
+    make_decorator
 
 .. autofunction::
     query_yes_no
@@ -69,6 +78,19 @@ def make_decorator(func):
             newfunc.compat_func_name = name
         return newfunc
     return decorate
+
+def semiabstractmethod(txt):
+    """Convert semi-abstract-methods into raisers for NotImplementedErrors"""
+    if callable(txt):
+        func = txt
+        txt = u"Abstract method %s.%s() cannot be called."
+    def decorator(func):
+        def raiser(self, *args, **kwargs):
+            msg = txt % (self, func.__name__)
+            raise NotImplementedError(msg)
+        newfunc = make_decorator(func)(raiser)
+        return newfunc
+    return decorator
 
 # Borrowed from:
 # http://stackoverflow.com/questions/3041986/python-command-line-yes-no-input  
