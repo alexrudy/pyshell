@@ -23,10 +23,10 @@ Class Construction
 This class should be subclassed by the user, who should re-implement \
 the following methods:
     
-- :meth:`start`
-- :meth:`do`
-- :meth:`end`
-- :meth:`kill`
+- :meth:`~CLIEngine.start` - Called at the beginning of the operation.
+- :meth:`~CLIEngine.do`  - Does the 'real work'.
+- :meth:`~CLIEngine.end` - Called at end of operation.
+- :meth:`~CLIEngine.kill` - Called if the engine tries to exit abnormally.
     
 These funcitons are used in the normal operation of the command line engine.
     
@@ -35,14 +35,21 @@ Other methods are used to control the engine.
 Using the Engine
 ----------------
 
-To run the engine, use :meth:`run`. To run the engine without \
-instantiating the class, use :meth:`script`, a class method \
+To run the engine, use :meth:`~CLIEngine.run`. To run the engine without \
+instantiating the class, use :meth:`~CLIEngine.script`, a class method \
 that instantiates a new object, and runs the tool. Both methods \
-accomplish the same thing at the end of the day. Using :meth:`script` \
-allows the developer to set this as an entry point in their ``setup.py``
-file, and so provide the command line enegine as a command line tool \
-in a distutils supported python package. A basic entry point for this \
-tool would appear like ::
+accomplish the same thing at the end of the day.
+
+You can use :meth:`~CLIEngine.script` to start the engine with the "if main" \
+python convention ::
+
+    if __name__ == '__main__':
+        Engine.script()
+
+Using :meth:`~CLIEngine.script` allows the developer to set this as \
+an entry point in their ``setup.py`` file, and so provide the command \
+line enegine as a command line tool in a distutils supported python package. \
+A basic entry point for this tool would appear like ::
     
     ["PyScript = mymodule.cli:Engine.script"]
     
@@ -52,12 +59,12 @@ Engine Operation
 
 The engine is set up to use a configuration file system, \
 provide basic parsing attributes, and an interruptable \
-command line interaction flow. The configuration is designed\
+command line interaction flow. The configuration is designed \
 to provide dynamic output and to configure the system \
 before it completes the parsing process.
     
 1. Initialization loads the object, and sets up the argument parser. \
-At this point, parser should only understand arguments that are neeeded\
+At this point, parser should only understand arguments that are neeeded \
 to print the best `--help` message.
     
 2. Preliminary Arguments are parsed by :meth:`arguments`.
@@ -101,7 +108,7 @@ from pkg_resources import resource_filename
 import os, os.path
 import abc
 from warnings import warn
-from .config import DottedConfiguration as Config, Configuration as BConfig
+from .config import StructuredConfiguration as Config, Configuration as BConfig
 import logging, logging.config
 
 class CLIEngine(object):
