@@ -180,7 +180,8 @@ can be customized using the 'Default' configuration variable in the configuratio
         self._parser.add_argument('--configure',action='append',metavar="Option.Key='literal value'",help="add configuration items in the form of dotted names and value pairs: Option.Key='literal value' will set config[\"Option.Key\"] = 'literal value'",dest='literalconfig')
         
         self.registerFunction('-n','--dry-run', self.dry_run, run='post',help="run the simulation, but do not execute pipes.")
-        self.registerFunction('--show-tree', self.pipe_tree, run='end',help="show a dependcy tree of all pipes run.")
+        self.registerFunction('--show-tree', self.pipe_tree, run='end',help="show a dependcy tree of all pipes run.")  
+        self.registerFunction('--list-pipes', self.pipe_list, run='end', help="show a list of all pipes.")
         
         # Default Macro
         self.registerPipe(None,"all",description="Run all pipes",help="Run all pipes",include=False)
@@ -609,6 +610,14 @@ can be customized using the 'Default' configuration variable in the configuratio
         text = u"Dependency Tree, request order:\n"
         text += "\n".join(self._pipe_tree)
         self.log.log(25,text)
+        
+    def pipe_list(self):
+        """A list of all available pipes and their descriptions."""
+        text = [u"Pipes loaded in %s" % self]
+        for pipe in self.orders:
+            p = self.pipes[pipe]
+            text += [u"%s : %s" % (p.name,p.description)]
+        self.log.log(25,"\n".join(text))
         
     def dry_run(self):
         """Flip the simulator into dry-run mode."""
