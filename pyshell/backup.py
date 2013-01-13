@@ -17,9 +17,15 @@ import sys
 from textwrap import fill
 from warnings import warn
 
-from . import version
-from .util import force_dir_path
-from .base import CLIEngine
+try:
+    from . import version
+    from .util import force_dir_path
+    from .base import CLIEngine
+except ValueError:
+    from pyshell import version
+    from pyshell.util import force_dir_path
+    from pyshell.base import CLIEngine
+
 
 
 class BackupEngine(CLIEngine):
