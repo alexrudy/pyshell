@@ -111,6 +111,8 @@ from warnings import warn
 from .config import StructuredConfiguration as Config, Configuration as BConfig
 import logging, logging.config
 
+__all__ = ['CLIEngine']
+
 class CLIEngine(object):
     """A base class for Command Line Inteface facing tools. :class:`CLIEnigne` \
     provides the basic structure to set up a simple command-line interface,\
@@ -140,16 +142,16 @@ class CLIEngine(object):
     
     _module = __name__
     
-    def set_module(self,module):
+    def __set_module(self,module):
         self._module = module
     
-    def get_module(self):
+    def __get_module(self):
         return self._module
         
-    def del_module(self):
+    def __del_module(self):
         del self._module
         
-    module = abc.abstractproperty(get_module,set_module,del_module,
+    module = abc.abstractproperty(__get_module,__set_module,__del_module,
     """Set :attr:`module` to ``__name__`` to allow the class to\
     correctly detect the current module.""")
     
