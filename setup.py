@@ -20,6 +20,7 @@ setup(
     package_data = {'pyshell':['Defaults.yaml']},
     install_requires = ['distribute','PyYAML>=3.10'],
     test_suite = 'tests',
+    tests_require = ['nosetests','pinnochio'],
     author = 'Alexander Rudy',
     author_email = 'dev@alexrudy.org',
     entry_points = {
