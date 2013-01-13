@@ -39,10 +39,14 @@ class SCEngine(object):
         """docstring for parse"""
         self._opts = opts
         
-    def configure(self,config, opts):
-        """Configure this object."""
+    def __superconfig__(self, config, opts):
+        """docstring for __superconfig__"""
         self._config = config
         self._opts = opts
+        
+    def configure(self):
+        """Configure this object."""
+        pass
         
     def start(self):
         """docstring for start"""
@@ -103,6 +107,7 @@ class SCController(CLIEngine):
         self._subparsers = self._parser.add_subparsers(dest='mode',help=self._subparsers_help)
         for subEngine in self._subcommand:
             self._subcommand[subEngine].setup_parser(self._subparsers)
-            self._subcommand[subEngine].configure(self._config,self._opts)
+            self._subcommand[subEngine].__superconfig__(self._config,self._opts)
+            self._subcommand[subEngine].configure()
             
             
