@@ -9,6 +9,8 @@
 
 from .base import CLIEngine
 
+import sys
+
 class SCEngine(object):
     """A base engine for use as a subcommand to CLIEngine"""
     def __init__(self, command, **kwargs):

@@ -236,7 +236,9 @@ class CLIEngine(object):
         """
         if not self.defaultcfg:
             return
-        self.config.load(resource_filename(self.module, self.defaultcfg))
+        
+        if self.module != '__main__':
+            self.config.load(resource_filename(self.module, self.defaultcfg))
         if hasattr(self.opts, 'config') \
             and os.path.exists(os.path.expanduser("~/%s" % self.opts.config)):
             self.config.load(os.path.expanduser("~/%s" % self.opts.config))
