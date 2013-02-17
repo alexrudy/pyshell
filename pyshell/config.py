@@ -98,48 +98,17 @@ def deepmerge(d,u,s):
     return d
     
 
-
-def reformat(d,nt):
-    """Recursive extraction method for changing the type of nested dictionary objects.
-    
-    :param mapping d: The dictionary to re-type.
-    :param mapping-type nt: The new mapping type to use.
-    
-    """
-    #pylint: disable=C0103
-    if not isinstance(d, collections.Mapping):
-        return d
-    e = nt()
-    for k in d:
-        v = d.get(k)
-        if isinstance(v, collections.Mapping):
-            e[k] = reformat(v,nt)
-        elif isinstance(v, collections.Sequence) and not isinstance(v, (str, unicode)):
-            e[k] = [ reformat(i,nt) for i in v ]
-        else:
-            e[k] = v
-    return e
-    
-def deepmerge(d,u,s):
-    """Merge deep collection-like structures.
-    
-    :param d: Deep Structure
-    :param u: Updated Structure
-    :param s: Default structure to use when a new deep structure is required.
-    
-    """
-    if len(u)==0:
-        return d
-    for k, v in u.iteritems():
-        if isinstance(v, collections.Mapping):
-            r = deepmerge(d.get(k, s()), v, s)
-            d[k] = r
-        elif isinstance(v, collections.Sequence) and isinstance(d.get(k,None), collections.Sequence) and not (isinstance(v,(str,unicode)) or isinstance(d.get(k,None),(str,unicode))):
-            d[k] = [ i for i in v ] + [ i for i in d[k] ]
-        else:
-            d[k] = u[k]
-    return d
-    
+class ConfigurationError(Exception):
+    """Configuration error"""
+    def __init__(self, expected, config=None):
+        super(ConfigurationError, self).__init__()
+        self.expected = expected
+        self.config = config
+        
+    def __str__(self):
+        """Stringify!"""
+        return "Expected {key:r} in {config:s}!".format(key=self.expected,config=self.config)
+        
 
 
 class Configuration(collections.MutableMapping):
