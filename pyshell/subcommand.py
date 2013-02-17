@@ -13,10 +13,18 @@ import sys
 
 class SCEngine(object):
     """A base engine for use as a subcommand to CLIEngine"""
+    
+    supercfg = []
+    
     def __init__(self, command, **kwargs):
         super(SCEngine, self).__init__()
         self.command = command
         self._kwargs = kwargs
+        
+    @property
+    def help(self):
+        """Return the help"""
+        return None
         
     @property
     def config(self):
@@ -35,6 +43,7 @@ class SCEngine(object):
     
     def setup_parser(self,subparsers):
         """docstring for parser"""
+        self._kwargs.setdefault('help',self.help)
         self._parser = subparsers.add_parser(self.command,**self._kwargs)
         
     def parse(self,opts):
@@ -79,6 +88,7 @@ class SCController(CLIEngine):
         for subEngine in self._subEngines:
             subCommand = subEngine()
             self._subcommand[subCommand.command] = subCommand
+            self.supercfg += subCommand.supercfg
         
     def start(self):
         """docstring for start"""
