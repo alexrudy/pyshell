@@ -31,6 +31,8 @@ class PackageConfigError(Exception):
 class PyPackageBase(object):
     """docstring for PyPackageBase"""
     
+    module = __name__
+    
     _desc = """Create new python packages using the setup.py convention with distutils. This tool will help you set up your python package."""
     
     @property
@@ -275,6 +277,8 @@ class PackageEngine(BaseSubEngine):
 
 class PyPackageEngine(CLIEngine,PyPackageBase):
     """An engine for the creation of python packages"""
+    
+    module = __name__
     
     defaultcfg = "Package.yml"
     
