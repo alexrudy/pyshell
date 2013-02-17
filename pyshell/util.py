@@ -33,6 +33,7 @@
 """
 import os
 import sys
+import warnings
 
 def force_dir_path(path):
     """Force the input path to be a directory.
@@ -45,6 +46,25 @@ def force_dir_path(path):
     """
     path = os.path.normpath(path)
     return path.rstrip("/") + "/"
+    
+def collapseuser(path):
+    """Collapse the username from a path."""
+    userpath = os.path.expanduser("~")
+    if path.startswith(userpath):
+        relpath = os.path.relpath(path,userpath)
+        return os.path.normpath(os.path.join("~/",relpath))
+    else:
+        return path
+    
+def check_exists(path):
+    """Check whether the given directory exists."""
+    return os.path.exists(os.path.expanduser(path)):
+    
+def warn_exists(path,name="path",exists=True):
+    """docstring for warn_exists"""
+    if check_exists(path) != exists:
+        warnings.warn("{name} '{path}' does{exist} exist".format(name=name,path=path,
+            exist=" not" if exists else ""))
     
 def func_lineno(func):
     """Get the line number of a function. First looks for
