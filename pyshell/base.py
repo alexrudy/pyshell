@@ -140,6 +140,8 @@ class CLIEngine(object):
     """The name of the default configuration file to be loaded. If set to \
     ``False``, no configuration will occur."""
     
+    supercfg = []
+    
     _module = __name__
     
     def __set_module(self,module):
@@ -237,6 +239,8 @@ class CLIEngine(object):
         if not self.defaultcfg:
             return
         
+        for module,filename in self.supercfg:
+            self.config.load(resource_filename(module,filename))
         if self.module != '__main__':
             self.config.load(resource_filename(self.module, self.defaultcfg))
         if hasattr(self.opts, 'config') \
