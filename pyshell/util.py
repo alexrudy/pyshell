@@ -58,12 +58,12 @@ def collapseuser(path):
     
 def check_exists(path):
     """Check whether the given directory exists."""
-    return os.path.exists(os.path.expanduser(path)):
+    return os.path.exists(os.path.expanduser(path))
     
 def warn_exists(path,name="path",exists=True):
     """docstring for warn_exists"""
     if check_exists(path) != exists:
-        warnings.warn("{name} '{path}' does{exist} exist".format(name=name,path=path,
+        warnings.warn("{name} '{path}' does{exist} exist".format(name=name.capitalize(),path=path,
             exist=" not" if exists else ""))
     
 def func_lineno(func):
