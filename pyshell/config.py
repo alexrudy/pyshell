@@ -100,14 +100,11 @@ def deepmerge(d,u,s):
 
 class ConfigurationError(Exception):
     """Configuration error"""
-    def __init__(self, expected, config=None):
-        super(ConfigurationError, self).__init__()
+    def __init__(self, expected, config={}):
         self.expected = expected
         self.config = config
-        
-    def __str__(self):
-        """Stringify!"""
-        return "Expected {key:r} in {config:s}!".format(key=self.expected,config=self.config)
+        self.message = "Expected {key!r} in {config!r}!".format(key=self.expected,config=self.config)
+        super(ConfigurationError, self).__init__(self.message)
         
 
 
@@ -137,6 +134,7 @@ class Configuration(collections.MutableMapping):
         self.log = logging.getLogger(__name__)
         self._store = dict(*args, **kwargs)
         self._filename = None
+        self._strict = False
     
     name = "Configuration"
     """The name/type of this configuration."""
@@ -347,10 +345,12 @@ class DottedConfiguration(Configuration):
         """Recursive getitem calling function."""
         key = parts.pop(0)
         if len(parts) == 0:
+            if store.get(key) == self.dn():
+                raise KeyError
             return store[key]
-        else:
-            store[key] = store.get(key, self.dn())
-            return self._getitem(store[key], parts)
+        elif not self._strict:
+            store.setdefault(key, self.dn())
+        return self._getitem(store[key], parts)
             
     def _setitem(self, store, parts, value=None):
         """Recursive setitem calling function
@@ -363,18 +363,32 @@ class DottedConfiguration(Configuration):
         key = parts.pop(0)
         if len(parts) == 0:
             return store.__setitem__(key, value)
-        else:
-            store[key] = store.get(key, self.dn())
-            return self._setitem(store[key], parts, value)
+        elif not self._strict:
+            store.setdefault(key, self.dn())
+        return self._setitem(store[key], parts, value)
             
     def _delitem(self, store, parts):
         """Recursive delitem calling function"""
         key = parts.pop(0)
         if len(parts) == 0:
             return store.__delitem__(key)
+        elif not self._strict:
+            store.setdefault(key, self.dn())
+        return self._delitem(store[key], parts)
+            
+    def _contains(self, store, parts):
+        """Recursive containment algorithm"""
+        key = parts.pop(0)
+        if len(parts) == 0:
+            if ((isinstance(store.get(key),self.dn) 
+                and not bool(store.get(key))) 
+                and self._strict):
+                return False
+            return store.__contains__(key)
+        elif key in store:
+            return self._contains(store[key],parts)
         else:
-            store[key] = store.get(key, self.dn())
-            return self._delitem(store[key], parts)
+            return False
         
         
     def __getitem__(self, key):
@@ -383,6 +397,10 @@ class DottedConfiguration(Configuration):
         try:
             if len(keyparts) > 1:
                 return self._getitem(self, keyparts)
+            elif ((isinstance(self._store.get(key),self.dn) 
+                    and not bool(self._store.get(key)))
+                    and self._strict):
+                    raise KeyError
             return self._store[key]
         except KeyError:
             raise KeyError('%s' % key)
@@ -400,6 +418,18 @@ class DottedConfiguration(Configuration):
         if len(keyparts) > 1:
             return self._delitem(self, keyparts)        
         return self._store.__delitem__(key)
+        
+    def __contains__(self,key):
+        """Dictionary in"""
+        keyparts = key.split(".")
+        if len(keyparts) > 1:
+            return self._contains(self, keyparts)
+        elif ((isinstance(self._store.get(key),self.dn) 
+                and not bool(self._store.get(key)))
+                and self._strict):
+                return False
+        else:
+            return self._store.__contains__(key)
     
 
 
