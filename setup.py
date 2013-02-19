@@ -16,9 +16,11 @@ from pyshell import version
 setup(
     name = 'pyshell',
     version = version,
+    url = "https://github.com/alexrudy/pyshell"
     packages = find_packages(exclude=['tests']),
     package_data = {'pyshell':['Defaults.yaml']},
-    install_requires = ['distribute','PyYAML>=3.10','jinja2>2.0'],
+    setup_requires = ['gitpython>=0.3']
+    install_requires = ['distribute','PyYAML>=3.10','jinja2>2.0','gitpython>=0.3'],
     test_suite = 'tests',
     tests_require = ['nosetests','pinnochio'],
     author = 'Alexander Rudy',
