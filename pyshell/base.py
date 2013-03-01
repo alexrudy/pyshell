@@ -14,7 +14,7 @@ Using the :class:`CLIEngine`
 
 The :class:`CLIEngine` is designed with "Convention over Configuration" \
 in mind. That is, it aims to set everything up so that it will work out\
--of-the-box, and the user is responsbile for adjusting undesireable\
+-of-the-box, and the user is responsbile for adjusting undesireable \
 behavior.
 
 Class Construction
@@ -30,6 +30,9 @@ the following methods:
     
 These funcitons are used in the normal operation of the command line engine.
     
+
+The user should also override the desired instance variables on the class. `module` must be overridden.
+
 Other methods are used to control the engine.
     
 Using the Engine
@@ -101,6 +104,30 @@ traceback. If not, the traceback will be suppressed.
     CLIEngine
     :members:
     
+    .. autoproperty: module
+    
+
+Call structure of :meth:`run`
+=============================
+The call structure of the method :meth:`run`, the main script driver::
+    
+    if not(hasattr(self, '_rargs') and hasattr(self, '_opts')):
+        warn("Implied Command-line mode", UserWarning)
+        self.arguments()
+    self.configure()
+    self.parse()
+    try:
+        self.start()
+        self.do()
+        self.end()
+    except (KeyboardInterrupt, SystemExit):
+        self.kill()
+        if __debug__:
+            raise
+    
+
+
+
 """
 
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
@@ -156,6 +183,8 @@ class CLIEngine(object):
     module = abc.abstractproperty(__get_module,__set_module,__del_module,
     """Set :attr:`module` to ``__name__`` to allow the class to\
     correctly detect the current module.""")
+    """Set :attr:`module` to ``__name__`` to allow the class to\
+    correctly detect the current module."""
     
     def __init__(self, prefix_chars='-'):
         super(CLIEngine, self).__init__()
@@ -174,6 +203,7 @@ class CLIEngine(object):
         self._config.dn = BConfig
         self._opts = None
         self._rargs = None
+        self._exitcode = 0
         
         
     @property
@@ -236,22 +266,8 @@ class CLIEngine(object):
         intended to use a customized file).
         
         """
-        if not self.defaultcfg:
-            return
-        
-        for module,filename in self.supercfg:
-            self.config.load(resource_filename(module,filename))
-        if self.module != '__main__':
-            self.config.load(resource_filename(self.module, self.defaultcfg))
-        if hasattr(self.opts, 'config') \
-            and os.path.exists(os.path.expanduser("~/%s" % self.opts.config)):
-            self.config.load(os.path.expanduser("~/%s" % self.opts.config))
-        if hasattr(self.opts, 'config') and os.path.exists(self.opts.config):
-            self.config.load(self.opts.config, silent=False)
-        elif hasattr(self.opts, 'config') \
-            and self.opts.config != self.defaultcfg:
-            warn("Configuration File not found!", RuntimeWarning)
-
+        cfg = getattr(self.opts,'config',False)
+        self.config.configure(module=self.module,defaultcfg=self.defaultcfg,cfg=cfg,supercfg=self.supercfg)
                     
     
     def start(self):
@@ -277,7 +293,7 @@ class CLIEngine(object):
         if __debug__:
             raise NotImplementedError("Nothing to Kill!")
         else:
-            pass
+            self._exitcode = 1
             
     def run(self):
         """This method is used to run the command line engine in the expected \
@@ -292,10 +308,12 @@ class CLIEngine(object):
             self.start()
             self.do()
             self.end()
-        except (KeyboardInterrupt, SystemExit):
-            self.kill()
+        except (KeyboardInterrupt, SystemExit) as e:
+            if not getattr(e,'code',0):
+                self.kill()
             if __debug__:
                 raise
+        return self._exitcode
     
     @classmethod        
     def script(cls):
@@ -304,4 +322,4 @@ class CLIEngine(object):
         the command line, and is cleaned up at the end."""
         engine = cls()
         engine.arguments()
-        engine.run()
+        return engine.run()
