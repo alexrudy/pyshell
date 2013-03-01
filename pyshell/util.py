@@ -35,6 +35,19 @@ import os
 import sys
 import warnings
 
+def is_type_factory(ttype):
+    """Return a function which checks if an object can be cast as a given type."""
+    def is_type(obj):
+        try:
+            ttype(obj)
+        except:
+            return False
+        else:
+            return True
+    is_type.__doc__ = "Checks if obj can be *cast* as {type}.".format(type=repr(ttype))
+    is_type.__hlp__ = "Input must be of {!s}".format(ttype)
+    return is_type
+
 def force_dir_path(path):
     """Force the input path to be a directory.
     
@@ -56,6 +69,14 @@ def collapseuser(path):
     else:
         return path
     
+def join(*args):
+    """docstring for join"""
+    args = list(args)
+    path = args.pop(0)
+    for arg in args:
+        path = os.path.join(path,arg)
+    return os.path.expanduser(path)
+    
 def check_exists(path):
     """Check whether the given directory exists."""
     return os.path.exists(os.path.expanduser(path))
@@ -70,6 +91,10 @@ def func_lineno(func):
     """Get the line number of a function. First looks for
     compat_co_firstlineno, then func_code.co_first_lineno.
     """
+    try:
+        return func.compat_co_firstlineno
+    except AttributeError:
+        pass
     try:
         return func.func_code.co_firstlineno
     except AttributeError:
@@ -169,5 +194,9 @@ def query_string(question, default=None, validate=None):
         if validate is None or validate(answer):
             return answer
         else:
+            if hasattr(validate,'__hlp__'):
+                sys.stdout.write(validate.__hlp__+"\n")
+            else:
+                sys.stdout.write("Invalid input, the validation function has the following documentaion:\n"+validate.__doc__+"\n")
             sys.stdout.write("Invalid input. Please try again.\n")
             
