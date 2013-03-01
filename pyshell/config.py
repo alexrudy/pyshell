@@ -52,9 +52,14 @@ import os
 import collections
 import re
 import yaml
+import logging
+import warnings
+from warnings import warn
+
 
 # Submodules from this system
-import logging
+from . import util
+
 
 def reformat(d,nt):
     """Recursive extraction method for changing the type of nested dictionary objects.
@@ -132,6 +137,8 @@ class Configuration(collections.MutableMapping):
     def __init__(self, *args, **kwargs):
         super(Configuration, self).__init__()
         self.log = logging.getLogger(__name__)
+        if not len(self.log.handlers):
+            self.log.addHandler(logging.NullHandler())
         self._store = dict(*args, **kwargs)
         self._filename = None
         self._strict = False
@@ -264,21 +271,19 @@ class Configuration(collections.MutableMapping):
         """
         return self.store
         
-    @classmethod
-    def create(cls,module=__name__,cfg=None,defaultcfg=None):
-        """Create a configuration from a series of YAML files.
+    def configure(self,module=__name__,defaultcfg=False,cfg=False,supercfg=None):
+        """The configuration loads (starting with a blank configuration):
         
-        The configuration loads (starting with a blank configuration):
-        
-            1. The `module` configuration file named for \
-            `defaultcfg`
-            2. The command line specified file from the user's home folder \
+            1. The list of `supercfg`s. This list should contain tuples of \
+            (module,name) pairs.
+            2. The `module` configuration file named for `defaultcfg`
+            3. The command line specified file from the user's home folder \
             ``~/config.yml``
-            3. The command line specified file from the working directory.
+            4. The command line specified file from the working directory.
         
-        If the third file is not found, and the user specified a new name for \
+        If the fourth file is not found, and the user specified a new name for \
         the configuration file, then the user is warned that no configuration \
-        file could be found. This way the usre is only warned about a missing \
+        file could be found. This way the user is only warned about a missing \
         configuration file if they requested a file specifically (and so \
         intended to use a customized file).
         
@@ -286,34 +291,40 @@ class Configuration(collections.MutableMapping):
         :param cfg: The name of the requested configuration file.
         :param defaultcfg: The name of the default configuration file which might \
         exist in the module's file.
+        :param: supercfg: A list of configuration files to preload. The list should \
+        contian pairs of (module,name) as tuples.
+        
         """
+        from pkg_resources import resource_filename
+        if not defaultcfg:
+            return
+        if supercfg is None:
+            supercfg = []
+        for module,filename in supercfg:
+            if module == '__main__':
+                self.load(filename)
+            else:
+                self.load(resource_filename(module,filename))
+        if module != '__main__':
+            self.load(resource_filename(module,defaultcfg))
+        if cfg and util.check_exists("~/%s" % cfg):
+            self.load(os.path.expanduser("~/%s" % cfg))
+        if cfg and os.path.exists(cfg):
+            self.load(cfg, silent=False)
+        elif cfg and cfg != defaultcfg:
+            warn("Configuration File '{}' not found!".format(cfg), RuntimeWarning)
+            print "{} != {}".format(cfg,defaultcfg)
         
+        
+    @classmethod
+    def create(cls,module=__name__,defaultcfg=False,cfg=False,supercfg=None):
+        """Create a configuration from a series of YAML files.
+        
+        See :meth:`configure` for a detailed description of the resolution order of configuration files for this method.
+        """
         config = cls()
-        
-        if cfg is None and defaultcfg is None:
-            warn("No configuration requested.",RuntimeWarning)
-        elif cfg is None and defaultcfg is not None:
-            cfg = defaultcfg
-        
-        # Get the default configuration name from the module space.
-        if defaultcfg is not None \
-            and os.path.exists(resource_filename(module, defaultcfg)):
-            config.load(resource_filename(module, defaultcfg))
-        
-        # Get the requested configuration from the user's home folder
-        if cfg is not None \
-            and os.path.exists(os.path.expanduser("~/%s" % cfg)):
-            config.load(os.path.expanduser("~/%s" % cfg))
-        
-        # Get the requested configuration from a relative path.
-        if cfg is not None and os.path.exists(cfg):
-            config.load(cfg, silent=False)
-        elif cfg is not None \
-            and cfg != defaultcfg:
-            warn("Configuration File not found!", RuntimeWarning)
-            # This warning is only triggered if:
-            # 1) The configuration requested is not the default.
-            # 2) The non-default does not exist.
+        config.configure(module,defaultcfg,cfg,supercfg)
+        return config
 
 
 class DottedConfiguration(Configuration):
