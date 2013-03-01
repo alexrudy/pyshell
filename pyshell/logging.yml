@@ -1,3 +1,8 @@
+# This file is designed for use as a logging configuration for pyshell-based scripts.
+# It can easily be used by setting the script's supercfg attribute properly:
+#  supercfg = [('pyshell','logging.yml')]
+# or
+#  supercfg = PYSHELL_LOGGING
 logging:
   version: 1
   formatters:
@@ -15,7 +20,7 @@ logging:
       formatter: file
       when: 'H'
       interval: 2
-      filename: pyshell.log
+      filename: script.log
       backupCount: 2
       encoding: utf-8
     warnings:
@@ -23,7 +28,7 @@ logging:
       formatter: file
       when: 'H'
       interval: 2
-      filename: pyshell.Warnings.log
+      filename: script.Warnings.log
       backupCount: 2
       encoding: utf-8
       level: WARNING
