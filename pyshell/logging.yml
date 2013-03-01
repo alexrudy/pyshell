@@ -1,0 +1,42 @@
+logging:
+  version: 1
+  formatters:
+    stdout:
+      format: "%(levelname)-8s --> %(message)s"
+    file:
+      format: "%(asctime)s : %(levelname)s : %(processName)s %(message)s"
+  handlers:
+    console:
+      class: logging.StreamHandler
+      formatter: stdout
+      level: INFO
+    file:
+      class : logging.handlers.TimedRotatingFileHandler
+      formatter: file
+      when: 'H'
+      interval: 2
+      filename: pyshell.log
+      backupCount: 2
+      encoding: utf-8
+    warnings:
+      class : logging.handlers.TimedRotatingFileHandler
+      formatter: file
+      when: 'H'
+      interval: 2
+      filename: pyshell.Warnings.log
+      backupCount: 2
+      encoding: utf-8
+      level: WARNING
+  loggers:
+    py.warnings:
+      handlers:
+        - warnings
+    pyshell:
+      hanlders:
+        - file
+      level: DEBUG
+  root:
+    level: DEBUG
+    handlers:
+      - console
+      - file
