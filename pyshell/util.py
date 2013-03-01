@@ -196,7 +196,7 @@ def query_string(question, default=None, validate=None):
         else:
             if hasattr(validate,'__hlp__'):
                 sys.stdout.write(validate.__hlp__+"\n")
-            else:
+            elif hasattr(validate,'__doc__'):
                 sys.stdout.write("Invalid input, the validation function has the following documentaion:\n"+validate.__doc__+"\n")
             sys.stdout.write("Invalid input. Please try again.\n")
             
