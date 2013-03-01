@@ -169,6 +169,9 @@ class CLIEngine(object):
     
     supercfg = []
     
+    PYSHELL_LOGGING = [('pyshell','logging.yml')]
+    """This constant item can be added to the superconfiguration :attr:`supercfg` to enable a default logging configuration setup. It should probably be added first, so that your own code will override it."""
+    
     _module = __name__
     
     def __set_module(self,module):
