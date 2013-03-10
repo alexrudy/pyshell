@@ -82,6 +82,29 @@ def reformat(d,nt):
             e[k] = v
     return e
     
+def advanceddeepmerge(d,u,s,sequence=True):
+    """Merge deep collection-like structures.
+    
+    This version will merge sequence structures when they are found.
+    
+    :param d: Deep Structure
+    :param u: Updated Structure
+    :param s: Default structure to use when a new deep structure is required.
+    :param (bool) sequence: Control sequence merging
+    
+    """
+    if len(u)==0:
+        return d
+    for k, v in u.iteritems():
+        if isinstance(v, collections.Mapping):
+            r = deepmerge(d.get(k, s()), v, s)
+            d[k] = r
+        elif sequence and isinstance(v, collections.Sequence) and isinstance(d.get(k,None), collections.Sequence) and not (isinstance(v,(str,unicode)) or isinstance(d.get(k,None),(str,unicode))):
+            d[k] = [ i for i in v ] + [ i for i in d[k] ]
+        else:
+            d[k] = u[k]
+    return d
+
 def deepmerge(d,u,s):
     """Merge deep collection-like structures.
     
@@ -96,8 +119,6 @@ def deepmerge(d,u,s):
         if isinstance(v, collections.Mapping):
             r = deepmerge(d.get(k, s()), v, s)
             d[k] = r
-        elif isinstance(v, collections.Sequence) and isinstance(d.get(k,None), collections.Sequence) and not (isinstance(v,(str,unicode)) or isinstance(d.get(k,None),(str,unicode))):
-            d[k] = [ i for i in v ] + [ i for i in d[k] ]
         else:
             d[k] = u[k]
     return d
@@ -157,7 +178,7 @@ class Configuration(collections.MutableMapping):
         
     def __str__(self):
         """String for this object"""
-        return "<%s %r >" % (self.name,repr(self))
+        return "<%s %s >" % (self.name,repr(self))
         
     def __getitem__(self, key):
         """Dictionary getter"""
@@ -213,7 +234,7 @@ class Configuration(collections.MutableMapping):
         with open(filename, "w") as stream:
             stream.write("# %s: %s\n" % (self.name,filename))
             if re.search(r"(\.yaml|\.yml)$", filename):
-                yaml.dump(self.store, stream, default_flow_style=False)
+                yaml.dump(self.store, stream, default_flow_style=False, encoding='utf-8')
             elif re.search(r"\.dat$", filename):
                 stream.write(str(self.store))
             elif not silent:
@@ -300,11 +321,11 @@ class Configuration(collections.MutableMapping):
             return
         if supercfg is None:
             supercfg = []
-        for module,filename in supercfg:
-            if module == '__main__':
-                self.load(filename)
+        for supermodule,superfilename in supercfg:
+            if supermodule == '__main__':
+                self.load(superfilename)
             else:
-                self.load(resource_filename(module,filename))
+                self.load(resource_filename(supermodule,superfilename))
         if module != '__main__':
             self.load(resource_filename(module,defaultcfg))
         if cfg and util.check_exists("~/%s" % cfg):
@@ -313,7 +334,6 @@ class Configuration(collections.MutableMapping):
             self.load(cfg, silent=False)
         elif cfg and cfg != defaultcfg:
             warn("Configuration File '{}' not found!".format(cfg), RuntimeWarning)
-            print "{} != {}".format(cfg,defaultcfg)
         
         
     @classmethod
@@ -469,14 +489,24 @@ class StructuredConfiguration(DottedConfiguration):
         >>> Config.dn = DottedConfiguration
         
     """
+    
+    DEFAULT_FILENAME = "--NOFILE--"
+    
     def __init__(self,  *args, **kwargs):
         super(StructuredConfiguration, self).__init__(*args, **kwargs)
         if "Configurations" not in self:
-            self["Configurations"] = {}
+            self["Configurations"] = self.dn()
         if "This" not in self["Configurations"]:
-            self["Configurations.This"] = "AO.config.yaml"
+            self["Configurations.This"] = self.DEFAULT_FILENAME
+            self["Configurations.Loaded"] = []
+        self.__set_on_load = False
         
-    
+    @property
+    def _set_on_load(self):
+        """True for default filenames"""
+        if self["Configurations.This"] == self.DEFAULT_FILENAME:
+            self.__set_on_load = True
+        return self.__set_on_load
     
     def setFile(self, filename=None, name=None): #pylint: disable=C0103
         """Depricated Method"""
@@ -524,5 +554,6 @@ class StructuredConfiguration(DottedConfiguration):
         Uses :meth:`Configuration.load`."""
         if filename == None:
             filename = self["Configurations.This"]
-        return super(StructuredConfiguration, self).load(filename, silent)
-        
+        loaded = super(StructuredConfiguration, self).load(filename, silent)
+        if loaded and self._set_on_load:
+            self["Configurations.Loaded"].append(filename)
