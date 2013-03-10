@@ -172,6 +172,8 @@ class CLIEngine(object):
     PYSHELL_LOGGING = [('pyshell','logging.yml')]
     """This constant item can be added to the superconfiguration :attr:`supercfg` to enable a default logging configuration setup. It should probably be added first, so that your own code will override it."""
     
+    
+    
     _module = __name__
     
     def __set_module(self,module):
@@ -189,13 +191,14 @@ class CLIEngine(object):
     """Set :attr:`module` to ``__name__`` to allow the class to\
     correctly detect the current module."""
     
-    def __init__(self, prefix_chars='-'):
+    def __init__(self, prefix_chars='-', conflict_handler='error'):
         super(CLIEngine, self).__init__()
         self._parser = ArgumentParser(
             prefix_chars = prefix_chars, add_help = False,
             formatter_class = RawDescriptionHelpFormatter,
             description = self.description,
-            epilog = self.epilog)
+            epilog = self.epilog,
+            conflict_handler = conflict_handler)
         if self.defaultcfg:
             self._parser.add_argument('--config',
                 action='store', metavar='file.yml', default=self.defaultcfg,
@@ -206,7 +209,7 @@ class CLIEngine(object):
         self._config.dn = BConfig
         self._opts = None
         self._rargs = None
-        self._exitcode = 0
+        self.exitcode = 0
         
         
     @property
@@ -226,9 +229,23 @@ class CLIEngine(object):
         
     def parse(self):
         """Parse the command line arguments"""
-        self.parser.add_argument('-h', '--help',
-            action='help', help="Display this help text")
+        self._add_help()
         self._opts = self.parser.parse_args(self._rargs, self._opts)
+        self.configure_logging()
+    
+    def _remove_help(self):
+        """Remove the ``-h, --help`` argument. This is a dangerous swizzle!"""
+        for option_string in self.__help_action.option_strings:
+            del self._parser._option_string_actions[option_string]
+        self._parser._remove_action(self.__help_action)
+    
+    def _add_help(self):
+        """Add the ``-h, --help`` argument."""
+        self.__help_action = self.parser.add_argument('-h', '--help',
+            action='help', help="Display this help text")
+    
+    def configure_logging(self):
+        """Configure the logging system."""
         if "logging" in self.config:
             logging.config.dictConfig(self.config["logging"])
             if "py.warnings" in self.config["logging.loggers"]:
@@ -269,7 +286,7 @@ class CLIEngine(object):
         intended to use a customized file).
         
         """
-        cfg = getattr(self.opts,'config',False)
+        cfg = getattr(self.opts,'config',self.defaultcfg)
         self.config.configure(module=self.module,defaultcfg=self.defaultcfg,cfg=cfg,supercfg=self.supercfg)
                     
     
@@ -290,13 +307,8 @@ class CLIEngine(object):
         pass
         
     def kill(self):
-        """This function should forcibly kill any subprocesses. If it is not \
-        overwritten in a sub-class, and is called while in debug mode (see the \
-        ``__debug__`` variable), it will raise a not-implemented error."""
-        if __debug__:
-            raise NotImplementedError("Nothing to Kill!")
-        else:
-            self._exitcode = 1
+        """This function should forcibly kill any subprocesses."""
+        pass
             
     def run(self):
         """This method is used to run the command line engine in the expected \
@@ -311,12 +323,16 @@ class CLIEngine(object):
             self.start()
             self.do()
             self.end()
-        except (KeyboardInterrupt, SystemExit) as e:
+        except SystemExit as e:
             if not getattr(e,'code',0):
                 self.kill()
             if __debug__:
                 raise
-        return self._exitcode
+        except KeyboardInterrupt as e:
+            self.kill()
+            if __debug__:
+                raise
+        return self.exitcode
     
     @classmethod        
     def script(cls):
