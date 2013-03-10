@@ -32,11 +32,15 @@ Base Class API Documentation
 from .base import CLIEngine
 
 import sys
+from argparse import Action, SUPPRESS, RawDescriptionHelpFormatter
+
 
 class SCEngine(CLIEngine):
     """A base engine for use as a subcommand to CLIEngine"""
     
     supercfg = []
+    
+    defaultcfg = False
     
     def __init__(self, command, **kwargs):
         prefix_chars = kwargs.pop('prefix_chars',"-")
@@ -53,6 +57,9 @@ class SCEngine(CLIEngine):
     def __parser__(self,subparsers):
         """Set the parser for this subcommand."""
         self._kwargs.setdefault('help',self.help)
+        self._kwargs.setdefault('description',self.description)
+        self._kwargs.setdefault('add_help',False)
+        self._kwargs.setdefault('formatter_class',RawDescriptionHelpFormatter)
         self._parser = subparsers.add_parser(self.command,**self._kwargs)
         
     def __parse__(self,opts):
@@ -63,8 +70,13 @@ class SCEngine(CLIEngine):
         """Configure this subcommand."""
         self._config = config
         if self.defaultcfg:
-            self.config.configure(module=self.module,defaultcfg=self.defaultcfg)
+            self.config.configure(module=self.module,defaultcfg=self.defaultcfg,cfg=self.defaultcfg)
         self._opts = opts
+        self._add_help()
+        
+    def postinit(self):
+        """Post-initialization functions. These will be run after the sub-parser is established."""
+        pass
         
     def parse(self):
         """Parse. By default, does nothing if this object is a subcommand."""
@@ -76,8 +88,27 @@ class SCEngine(CLIEngine):
         """Configure this object. Does nothing if this object is a subcommand."""
         if not self._supercommand:
             super(SCEngine, self).configure()
+        else:
+            self.config.configure(module=self.module,defaultcfg=self.defaultcfg,cfg=False,supercfg=self.supercfg)
         
-        
+    
+class _LimitedHelpAction(Action):
+    """Only print the help when the action is triggered without a sub-command"""
+    def __init__(self,
+                 option_strings,
+                 dest=SUPPRESS,
+                 default=SUPPRESS,
+                 help=None):
+        super(_LimitedHelpAction, self).__init__(
+            option_strings=option_strings,
+            dest=dest,
+            default=default,
+            nargs=0,
+            help=help)
+    def __call__(self, parser, namespace, values, option_string=None):
+        if not hasattr(namespace,'mode'):
+            parser.print_help()
+            parser.exit()
     
 
 class SCController(CLIEngine):
@@ -88,6 +119,7 @@ class SCController(CLIEngine):
     _subparsers_help = "sub-command help"
     
     def __init__(self,**kwargs):
+        kwargs.setdefault('conflict_handler','resolve')
         super(SCController, self).__init__(**kwargs)
         self._subcommand = {}
         for subEngine in self._subEngines:
@@ -110,23 +142,38 @@ class SCController(CLIEngine):
             self._subparsers = self._parser.add_subparsers(dest='mode',help=self._subparsers_help)
         for subEngine in self._subcommand:
             self._subcommand[subEngine].__parser__(self._subparsers)
+            self._subcommand[subEngine].postinit()
+        self._add_limited_help()
         
+    def _add_limited_help(self):
+        """Add a limited help function"""
+        self.__help_action = self.parser.add_argument('-h','--help',action=_LimitedHelpAction,help="Display this help text.")
+        
+    @property
+    def mode(self):
+        """Return the mode"""
+        return getattr(self.opts,'mode',False)
+        
+    @property
+    def subcommand(self):
+        """The active subcommand."""
+        return self._subcommand[self.mode]
         
     def start(self):
         """docstring for start"""
-        self._subcommand[self._opts.mode].start()
+        self.subcommand.start()
         
     def do(self):
         """docstring for start"""
-        self._subcommand[self._opts.mode].do()
+        self.subcommand.do()
         
     def end(self):
         """docstring for end"""
-        self._subcommand[self._opts.mode].end()
+        self.subcommand.end()
         
     def kill(self):
         """Killing mid-command"""
-        self._subcommand[self._opts.mode].kill()
+        self.subcommand.kill()
         self._exitcode = 1
     
     def parse(self):
@@ -137,16 +184,15 @@ class SCController(CLIEngine):
             # it won't get parsed again.
             self._rargs.insert(0,self._opts.mode)
             delattr(self._opts,'mode')
-        super(SCController, self).parse()
-        for subEngine in self._subcommand:
-            self._subcommand[subEngine].__parse__(self._opts)
-            self._subcommand[subEngine].parse()
+        self._opts = self.parser.parse_args(self._rargs, self._opts)
+        self.configure_logging()
+        self.subcommand.__parse__(self._opts)
+        self.subcommand.parse()
         
     def configure(self):
         """Configure the package creator"""
         super(SCController, self).configure()
-        for subEngine in self._subcommand:
-            self._subcommand[subEngine].__superconfig__(self._config,self._opts)
-            self._subcommand[subEngine].configure()
-            
-            
+        self.subcommand.__superconfig__(self._config,self._opts)
+        self.subcommand.configure()
+        
+        
