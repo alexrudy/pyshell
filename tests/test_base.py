@@ -19,10 +19,18 @@ class test_base_cliengine(object):
     
     def setup(self):
         self.CLASS = pyshell.base.CLIEngine
+        class _Module(self.CLASS):
+            module = __name__
+        self.KLASS = _Module
         
     @nt.raises(TypeError)
     def test_base_init(self):
-        """__init__"""
+        """__init__ w/ abstract methods"""
         self.CLASS()
         
+    def test_base_init_na(self):
+        """__init__"""
+        self.KLASS()
+        
+    
     

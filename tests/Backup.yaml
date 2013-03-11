@@ -1,8 +1,8 @@
 origin: tests/
 destination: tests/
 main:
-  origin: a
-  destination: b
+  origin: a/
+  destination: b/
 other:
-  origin: c
-  destination: d
+  origin: c/
+  destination: d/
