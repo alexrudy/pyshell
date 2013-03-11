@@ -87,6 +87,11 @@ def warn_exists(path,name="path",exists=True):
         warnings.warn("{name} '{path}' does{exist} exist".format(name=name.capitalize(),path=path,
             exist=" not" if exists else ""))
     
+def is_remote_path(path):
+    """Path looks like an SSH or other URL compatible path?"""
+    base = path.split("/")[0]
+    return ":" in base
+    
 def func_lineno(func):
     """Get the line number of a function. First looks for
     compat_co_firstlineno, then func_code.co_first_lineno.
