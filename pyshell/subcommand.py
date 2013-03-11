@@ -45,6 +45,7 @@ class SCEngine(CLIEngine):
     def __init__(self, command, **kwargs):
         prefix_chars = kwargs.pop('prefix_chars',"-")
         super(SCEngine, self).__init__(prefix_chars=prefix_chars)
+        self._hasinit = False
         self.command = command
         self._kwargs = kwargs
         self._supercommand = False
@@ -61,6 +62,7 @@ class SCEngine(CLIEngine):
         self._kwargs.setdefault('add_help',False)
         self._kwargs.setdefault('formatter_class',RawDescriptionHelpFormatter)
         self._parser = subparsers.add_parser(self.command,**self._kwargs)
+        self._hasinit = True
         
     def __parse__(self,opts):
         """Save options for this subcommand."""
@@ -74,7 +76,7 @@ class SCEngine(CLIEngine):
         self._opts = opts
         self._add_help()
         
-    def postinit(self):
+    def init(self):
         """Post-initialization functions. These will be run after the sub-parser is established."""
         pass
         
@@ -142,7 +144,7 @@ class SCController(CLIEngine):
             self._subparsers = self._parser.add_subparsers(dest='mode',help=self._subparsers_help)
         for subEngine in self._subcommand:
             self._subcommand[subEngine].__parser__(self._subparsers)
-            self._subcommand[subEngine].postinit()
+            self._subcommand[subEngine].init()
         self._add_limited_help()
         
     def _add_limited_help(self):
