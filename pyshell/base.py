@@ -199,23 +199,29 @@ class CLIEngine(object):
             description = self.description,
             epilog = self.epilog,
             conflict_handler = conflict_handler)
-        if self.defaultcfg:
-            self._parser.add_argument('--config',
-                action='store', metavar='file.yml', default=self.defaultcfg,
-                help="Set configuration file. By default, load %(file)s and"\
-                " ~/%(file)s if it exists." % dict(file=self.defaultcfg))
         self._home = os.environ["HOME"]
         self._config = Config()
         self._config.dn = BConfig
         self._opts = None
         self._rargs = None
         self.exitcode = 0
+        self._hasinit = True
         
+    def init(self):
+        """Initialization after the parser has been created."""
+        if self.defaultcfg:
+            self.parser.add_argument('--config',
+                action='store', metavar='file.yml', default=self.defaultcfg,
+                help="Set configuration file. By default, load %(file)s and"\
+                " ~/%(file)s if it exists." % dict(file=self.defaultcfg))
         
     @property
     def parser(self):
         """:class:`argparse.ArgumentParser` instance for this engine."""
-        return self._parser
+        if getattr(self,'_hasinit',False):
+            return self._parser
+        else:
+            raise AttributeError("Parser has not yet been initialized!")
         
     @property
     def config(self):
@@ -340,5 +346,6 @@ class CLIEngine(object):
         point. This method ensures that the engine runs correctly on \
         the command line, and is cleaned up at the end."""
         engine = cls()
+        engine.init()
         engine.arguments()
         return engine.run()
