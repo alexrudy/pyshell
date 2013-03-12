@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # 
 #  backup.py
@@ -28,7 +29,8 @@ except ValueError:
 
 class _BackupDestination(object):
     """Private class for managing backup destinations"""
-    def __init__(self, name, command='rsync', destination=None, origin=None, delete=False, triggers=None, reverse=False):
+    def __init__(self, name, command='rsync', destination=None, origin=None, 
+        delete=False, triggers=None, reverse=False, reversedel=False):
         super(_BackupDestination, self).__init__()
         self.name = name
         self.pseudo = destination is None or origin is None
@@ -37,6 +39,7 @@ class _BackupDestination(object):
         self._origin = origin
         self.delete = delete
         self.reverse = reverse
+        self.reversedel = reversedel
         if triggers is None:
             triggers = []
         self.triggers = triggers
@@ -69,7 +72,7 @@ class _BackupDestination(object):
     @property
     def remote(self):
         """Detect if either path is remote"""
-        return is_remote_path(self.origin) or is_remote_path(self.destination)
+        return is_remote_path(self.origin) , is_remote_path(self.destination)
         
     @property
     def paths(self):
@@ -93,12 +96,12 @@ class _BackupDestination(object):
             warn("Mode '{mode}' already running.".format(mode=self.name),
                 RuntimeWarning)
             return False
-        elif not (os.path.isdir(self.origin) or is_remote_path(self.origin)):
+        elif not (os.path.isdir(self.origin) or self.remote[0]):
             warn("Skipping '{mode}' backup. Origin '{origin}' does not "\
                 "exist.".format(mode=self.name,origin=self.origin),
                 RuntimeWarning)
             return False
-        elif not (os.path.isdir(self.destination) or is_remote_path(self.destination)):
+        elif not (os.path.isdir(self.destination) or self.remote[1]):
             warn("Skipping '{mode}' backup. Destination '{destination}' "\
                 "does not exist.".format(mode=self.name,
                     destination=self.destination),
@@ -109,11 +112,16 @@ class _BackupDestination(object):
         self._pargs += list(args) + self.paths
         
         # Check whether we should use the '--del' option
-        if self.delete or delete:
+        if (self.delete or delete) and ((self.reverse and\
+            self.reversedel) or (not self.reverse)):
             self._pargs += ['--del']
             warn("{mode} is using '--del'.".format(mode=self.name), UserWarning)
+        elif (self.delete or delete) and not ((self.reverse and\
+            self.reversedel) or (not self.reverse)):
+            warn("{mode} is not using '--del' because '--reverse' is set. To \
+            override this, please use '--reverse-delete'".format(mode=self.name), UserWarning)
         
-        print("Starting {mode} backup...".format(mode=self.name))
+        print("Starting {mode} backup... {dryrun}".format(mode=self.name,dryrun="" if "-n" not in self._pargs else "(DRY RUN)"))
         
         # Print the command
         if prints:
@@ -150,11 +158,15 @@ class _BackupDestination(object):
         
     def help(self):
         """Return the constructed help string for this object."""
-        helpstring = "  %(mode)-18s Copy files using the '%(mode)s' target "\
-        "%(delete)s\n%(s)-20s  from %(origin)r\n%(s)-20s  to   "\
-        "%(destination)r\n" % dict(s=" ", mode=self.name, origin=self.origin,
-            destination=self.destination,
-            delete="removing old files" if self.delete else "")
+        if self.pseudo:
+            helpstring = "  %(mode)-18s Trigger modes %(triggers)s" \
+                % dict(mode=self.name,triggers=",".join(self.triggers))
+        else:
+            helpstring = "  %(mode)-18s Copy files using the '%(mode)s' target "\
+                "%(delete)s\n%(s)-20s  from %(origin)r\n%(s)-20s  to   "\
+                "%(destination)r\n" % dict(s=" ", mode=self.name, origin=self.origin,
+                    destination=self.destination,
+                    delete="removing old files" if self.delete else "")
         return helpstring
         
         
@@ -175,6 +187,9 @@ class BackupEngine(CLIEngine):
         "simultaneous {cmd} processes for efficiency.".format(cmd=self._cmd))\
         + "\n\n" + fill("Using {version}".format(version=self._cmd_version))
         
+        
+    cfgbase = ""
+    
     defaultcfg = "Backup.yml"
     
     module = __name__
@@ -197,7 +212,7 @@ class BackupEngine(CLIEngine):
         
         self._destinations = {}
         self._help  = [    ]
-        self._pargs = ['-a']
+        self._pargs = ['-a','--partial']
     
     def init(self):
         """Initialize the command line arguments"""
@@ -209,8 +224,26 @@ class BackupEngine(CLIEngine):
             action='store', default=[],
             metavar='path/to/', nargs='+',
             help="Set the backup prefixes")
-        self.parser.usage = "%(prog)s [-nqdvh] [--config file.yml] [--prefix "\
-        "origin [destination]]\n            target [target ...]"
+        self.parser.add_argument('--root',
+            action='store_false',dest='cwd',
+            help="Use the root ('/') directory as origin base")
+        self.parser.add_argument('-r','--reverse',
+            action='store_true',
+            help="Flip destination and origin flags." \
+            "Will disable any --del flag.")
+        self.parser.add_argument('--reverse-delete',
+            action='store_true',dest='reversedel',
+            help="Use --del flag even when reversed.")
+        self.parser.usage = "%(prog)s [-nqdvpr] [--config file.yml] [--prefix "\
+        "origin [destination] | --root ]\n            target [target ...]"
+        
+    @property
+    def backup_config(self):
+        """docstring for backup_config"""
+        if self.cfgbase == "":
+            return self.config
+        else:
+            return self.config[self.cfgbase]
     
     def set_destination(self, argname, origin, destination,
         delete=False, triggers=None):
@@ -235,6 +268,7 @@ class BackupEngine(CLIEngine):
             delete = delete,
             triggers = triggers,
             reverse = reverse,
+            reversedel = getattr(self.opts,'reversedel',False)
         )
         
         # Set program help:
@@ -242,41 +276,30 @@ class BackupEngine(CLIEngine):
         
     def parse(self):
         """Parse the command line arguments"""
-        self._parser.add_argument('-n', '--dry-run', action='store_false',
-            dest='run', help="Print what would be copied, but don't copy")
-        self._parser.add_argument('-q', action='store_false', dest='verbose',
-            help="Silence the noisy output")
-        self._parser.add_argument('-d', '--delete', action='store_true',
-            dest='delete', help="Delete duplicated files")
-        self._parser.add_argument('-v', '--print', action='store_true',
-            dest='prints', help="Print {cmd} commands".format(cmd=self._cmd))
-        self._parser.add_argument('--version', action='version',
-            version="%(prog)s version {version}\n{cmd_version}".format(
-                version=version, cmd_version=self._cmd_version))
-        self._parser.add_argument('modes', metavar='target', nargs='+', 
-            default=[], help="The %(prog)s target's name.")
-        self._parser.epilog = "\n".join(self._help)
         super(BackupEngine, self).parse()
         
-        if not self._opts.modes:
-            self._parser.error("No backup routine selected. "\
+        if not self.opts.modes:
+            self.parser.error("No backup routine selected. "\
             "Must select at least one:\n+%s" % " +".join(self._origins.keys()))
-        if self._opts.verbose:
+        for mode in self.opts.modes:
+            if mode not in self._destinations:
+                self.parser.error("Target '{}' does not exist.".format(mode))
+        if self.opts.verbose:
             self._pargs += ['-v']
-        if not self._opts.run:
+        if not self.opts.run:
             self._pargs += ['-n']
     
     def start(self):
         """Run all the given stored processes"""
-        for mode in self._opts.modes:
+        for mode in self.opts.modes:
             self._start_mode(mode)
             
     def _start_mode(self,mode):
         """Start a single mode"""
-        if self._destinations[mode].launch(self._pargs):
+        if self._destinations[mode].launch(self._pargs,prints=self.opts.prints):
             # Run any post-dependent commands.
             for t_mode in self._destinations[mode].triggers:
-                self.start_mode(t_mode)
+                self._start_mode(t_mode)
             
         
     def _end_mode(self, mode):
@@ -303,28 +326,42 @@ class BackupEngine(CLIEngine):
         """Configure the simulator"""
         super(BackupEngine, self).configure()
         
-        if len(self._opts.prefix) == 2:
-            self._config["destination"] = self._opts.prefix[1]
-            self._config["origin"] = self._opts.prefix[0]
-        elif len(self._opts.prefix) == 1:
-            self._config["destination"] = self._opts.prefix[0]
-        elif len(self._opts.prefix) > 2:
-            self._parser.error("Cannot specificy more than two prefixes."\
+        if len(self.opts.prefix) == 2:
+            self.backup_config["destination"] = self.opts.prefix[1]
+            self.backup_config["origin"] = self.opts.prefix[0]
+        elif len(self.opts.prefix) == 1:
+            self.backup_config["destination"] = self.opts.prefix[0]
+        elif len(self.opts.prefix) > 2:
+            self.parser.error("Cannot specificy more than two prefixes."\
                 " Usage: --prefix [origin] destination")
         
-        self._help += [ 'Configured from \'%s\'' % self._opts.config,
+        self._help += [ 'Configured from \'%s\'' % self.opts.config,
             '', 'targets:' ]
         
-        dest_prefix = self._config.pop('destination',"")
-        orig_prefix = self._config.pop('origin',"")
+        dest_prefix = self.config.pop('destination',"")
+        orig_prefix = self.config.pop('origin',"")
         
-        for mode, mcfg in self._config.iteritems():
-            destination = os.path.join(dest_prefix, mcfg.get("destination",""))
-            origin = os.path.join(orig_prefix, mcfg.get("origin",""))
-            self.set_destination(argname = mode, origin = origin,
-                destination = destination, delete = mcfg.pop('delete',False))
-            
-            
+        for mode, mcfg in self.backup_config.iteritems():
+            if "destination" in mcfg or "origin" in mcfg:
+                destination = os.path.join(dest_prefix, mcfg.get("destination",""))
+                origin = os.path.join(orig_prefix, mcfg.get("origin",""))
+                self.set_destination(argname = mode, origin = origin,
+                    destination = destination, delete = mcfg.pop('delete',False))
+        
+        self.parser.add_argument('-n', '--dry-run', action='store_false',
+            dest='run', help="Print what would be copied, but don't copy")
+        self.parser.add_argument('-q', action='store_false', dest='verbose',
+            help="Silence the noisy output")
+        self.parser.add_argument('-d', '--delete', action='store_true',
+            dest='delete', help="Delete duplicated files")
+        self.parser.add_argument('-v', '--print', action='store_true',
+            dest='prints', help="Print {cmd} commands".format(cmd=self._cmd))
+        self.parser.add_argument('--version', action='version',
+            version="%(prog)s version {version}\n{cmd_version}".format(
+                version=version, cmd_version=self._cmd_version))
+        self.parser.add_argument('modes', metavar='target', nargs='+', 
+            default=[], help="The %(prog)s target's name.")
+        self.parser.epilog = "\n".join(self._help)
         
     
 if __name__ == '__main__':
