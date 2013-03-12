@@ -42,11 +42,11 @@ class SCEngine(CLIEngine):
     
     defaultcfg = False
     
-    def __init__(self, command, **kwargs):
+    def __init__(self, command=None, **kwargs):
         prefix_chars = kwargs.pop('prefix_chars',"-")
         super(SCEngine, self).__init__(prefix_chars=prefix_chars)
         self._hasinit = False
-        self.command = command
+        self.command = command if command is not None else self.command
         self._kwargs = kwargs
         self._supercommand = False
         
