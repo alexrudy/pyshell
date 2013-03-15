@@ -172,24 +172,8 @@ class CLIEngine(object):
     PYSHELL_LOGGING = [('pyshell','logging.yml')]
     """This constant item can be added to the superconfiguration :attr:`supercfg` to enable a default logging configuration setup. It should probably be added first, so that your own code will override it."""
     
-    
-    
-    _module = __name__
-    
-    def __set_module(self,module):
-        self._module = module
-    
-    def __get_module(self):
-        return self._module
-        
-    def __del_module(self):
-        del self._module
-        
-    module = abc.abstractproperty(__get_module,__set_module,__del_module,
-    """Set :attr:`module` to ``__name__`` to allow the class to\
-    correctly detect the current module.""")
-    """Set :attr:`module` to ``__name__`` to allow the class to\
-    correctly detect the current module."""
+    PYSHELL_LOGGING_STREAM = [('pyshell','logging-stream-only.yml')]
+    """This constant item can be added to the superconfiguration :attr:`supercfg` to enable a default logging configuration setup. It should probably be added first, so that your own code will override it. It only provides stream loggers, not file handlers."""
     
     def __init__(self, prefix_chars='-', conflict_handler='error'):
         super(CLIEngine, self).__init__()
@@ -293,7 +277,7 @@ class CLIEngine(object):
         
         """
         cfg = getattr(self.opts,'config',self.defaultcfg)
-        self.config.configure(module=self.module,defaultcfg=self.defaultcfg,cfg=cfg,supercfg=self.supercfg)
+        self.config.configure(module=self.__module__,defaultcfg=self.defaultcfg,cfg=cfg,supercfg=self.supercfg)
                     
     
     def start(self):

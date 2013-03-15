@@ -5,6 +5,7 @@
 #  supercfg = PYSHELL_LOGGING
 logging:
   version: 1
+  disable_existing_loggers: false
   formatters:
     stdout:
       format: "%(levelname)-8s --> %(message)s"
