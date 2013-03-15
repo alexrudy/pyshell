@@ -376,7 +376,7 @@ class DottedConfiguration(Configuration):
         """Recursive getitem calling function."""
         key = parts.pop(0)
         if len(parts) == 0:
-            if store.get(key) == self.dn():
+            if store.get(key) == self.dn() and self._strict:
                 raise KeyError
             return store[key]
         elif not self._strict:
