@@ -338,8 +338,8 @@ class BackupEngine(CLIEngine):
         self._help += [ 'Configured from \'%s\'' % self.opts.config,
             '', 'targets:' ]
         
-        dest_prefix = self.config.pop('destination',"")
-        orig_prefix = self.config.pop('origin',"")
+        dest_prefix = self.backup_config.get('destination',"")
+        orig_prefix = self.backup_config.get('origin',"")
         
         for mode, mcfg in self.backup_config.iteritems():
             if "destination" in mcfg or "origin" in mcfg:
@@ -347,6 +347,9 @@ class BackupEngine(CLIEngine):
                 origin = os.path.join(orig_prefix, mcfg.get("origin",""))
                 self.set_destination(argname = mode, origin = origin,
                     destination = destination, delete = mcfg.pop('delete',False))
+            else:
+                self._destinations[mode] = _BackupDestination(name=mode)
+                self._help += [ self._destinations[mode].help() ]
         
         self.parser.add_argument('-n', '--dry-run', action='store_false',
             dest='run', help="Print what would be copied, but don't copy")
