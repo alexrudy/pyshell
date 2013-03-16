@@ -180,7 +180,8 @@ can be customized using the 'Default' configuration variable in the configuratio
         self._parser.add_argument('--configure',action='append',metavar="Option.Key='literal value'",help="add configuration items in the form of dotted names and value pairs: Option.Key='literal value' will set config[\"Option.Key\"] = 'literal value'",dest='literalconfig')
         
         self.registerFunction('-n','--dry-run', self.dry_run, run='post',help="run the simulation, but do not execute pipes.")
-        self.registerFunction('--show-tree', self.pipe_tree, run='end',help="show a dependcy tree of all pipes run.")
+        self.registerFunction('--show-tree', self.pipe_tree, run='end',help="show a dependcy tree of all pipes run.")  
+        self.registerFunction('--list-pipes', self.pipe_list, run='end', help="show a list of all pipes.")
         
         # Default Macro
         self.registerPipe(None,"all",description="Run all pipes",help="Run all pipes",include=False)
@@ -331,7 +332,7 @@ can be customized using the 'Default' configuration variable in the configuratio
         Other keyword arguments are passed to :meth:`ArgumentParser.add_argument`
         """
         if self.running or self.starting:
-            raise SimulatorStateError("Cannot add macro after pipeline has started!")
+            raise PipelineStateError("Cannot add macro after pipeline has started!")
         
         if "help" not in kwargs:
             help = argparse.SUPPRESS
@@ -348,7 +349,7 @@ can be customized using the 'Default' configuration variable in the configuratio
         
     
     def collect(self, matching=r'^(?!\_)', genericClasses=(), **kwargs):
-        """Collect class methods for inclusion as pipeline pipes. Instance methods are collected if they do not belong to the parent :class:`Simulator` class (i.e. this method, and others like :meth:`registerPipe` will not be collected.). Registered pipes will default to having no dependents, to be named similar to thier own methods (``collected_pipe`` becomes ``*collected-pipe`` on the command line) and will use thier doc-string as the pipe description. The way in which these pipes are collected can be adjusted using the decorators provided in this module.
+        """Collect class methods for inclusion as pipeline pipes. Instance methods are collected if they do not belong to the parent :class:`Pipeline` class (i.e. this method, and others like :meth:`registerPipe` will not be collected.). Registered pipes will default to having no dependents, to be named similar to thier own methods (``collected_pipe`` becomes ``*collected-pipe`` on the command line) and will use thier doc-string as the pipe description. The way in which these pipes are collected can be adjusted using the decorators provided in this module.
         
         To define a method as a pipe with a dependent, help string, and by default inclusion, use::
             
@@ -434,11 +435,11 @@ can be customized using the 'Default' configuration variable in the configuratio
         
         This command can be used to run specific pipes and their dependents. The control is far less flow control than the command-line interface (there is currently no argument interface to inclusion and exclusion lists, ``+`` and ``-``.), but can be used to call single macros in simulators froms scripts. In these cases, it is often beneficial to set up your own macro (calling :func:`registerPipe` with ``None`` as the pipe action) to wrap the actions you want taken in each phase.
         
-        It is possible to stop execution in the middle of this function. Simply raise an :exc:`SimulatorPause` exception and the simulator will return, and remain in a state where you are free to call :meth:`do` again."""
+        It is possible to stop execution in the middle of this function. Simply raise an :exc:`PipelinePause` exception and the simulator will return, and remain in a state where you are free to call :meth:`do` again."""
         if not self.started:
-            raise PipelineStateException("Simulator has not yet started!")
+            raise PipelineStateException("Pipeline has not yet started!")
         elif self.running:
-            raise PipelineStateException(u"Simulator is already running!")
+            raise PipelineStateException(u"Pipeline is already running!")
         self.running = True
         self.include = []
         self.include += list(pipes)
@@ -446,7 +447,7 @@ can be customized using the 'Default' configuration variable in the configuratio
         if self.attempt == []:
             self.inorder = True
             self.complete = []
-        if len(self.include) == 0 and self.config["Default"] is not None:
+        if len(self.include) == 0 and self.config.get("Default",None) is not None:
             self.include += self.config.get("Default",[])
         if len(self.include) == 0:
             self.parser.error(u"No pipes triggered to run!")
@@ -524,11 +525,16 @@ can be customized using the 'Default' configuration variable in the configuratio
                     self.execute(dependent,level=level+1,code="D")
                 else:
                     self._pipe_tree += ["%-30s : (done already)" % (u"  " * (level+1) + u"└ %s" % dependent)]
-                if dependent not in self.complete:
-                    if self.pipes[dependent].optional:
-                        self.log.debug(u"Pipe '%s' requested by '%s' but skipped" % (dependent,pipe))
-                    else:
-                        self.log.warning(u"Pipe '%s' required by '%s' but failed to complete." % (dependent,pipe))
+        
+        for dependent in self.pipes[pipe].dependencies:
+            if dependent not in self.orders:
+                self.log.error("Pipe %r requested dependent %r which doesn't exist." % (pipe, dependent))
+            elif dependent not in self.complete and self.pipes[dependent].optional:
+                self.log.debug(u"Pipe %r requested by %r but skipped" % (dependent,pipe))
+            elif dependent not in self.complete:
+                self.log.warning(u"Pipe '%s' required by '%s' but failed to complete." % (dependent,pipe))
+            
+        
         
         s = self.pipes[pipe]
         self._pipe_tree += [u"%-30s : %s" % (u"  " * level + indicator % pipe,s.description)]
@@ -591,12 +597,12 @@ can be customized using the 'Default' configuration variable in the configuratio
             self.log.info(msg)
         self._reset()
         if code != 0 and self.commandLine:
-            self.log.critical("Simulator exiting abnormally: %d" % code)
+            self.log.critical("Pipeline exiting abnormally: %d" % code)
             sys.exit(code)
         elif code != 0:
-            self.log.critical("Simulator closing out, exit code %d" % code)
+            self.log.critical("Pipeline closing out, exit code %d" % code)
         else:
-            self.log.info(u"Simulator %s Finished" % self.name)
+            self.log.info(u"Pipeline %s Finished" % self.name)
             
     def pipe_tree(self):
         """Displays the pipe tree."""
@@ -604,6 +610,14 @@ can be customized using the 'Default' configuration variable in the configuratio
         text = u"Dependency Tree, request order:\n"
         text += "\n".join(self._pipe_tree)
         self.log.log(25,text)
+        
+    def pipe_list(self):
+        """A list of all available pipes and their descriptions."""
+        text = [u"Pipes loaded in %s" % self]
+        for pipe in self.orders:
+            p = self.pipes[pipe]
+            text += [u"%s : %s" % (p.name,p.description)]
+        self.log.log(25,"\n".join(text))
         
     def dry_run(self):
         """Flip the simulator into dry-run mode."""
