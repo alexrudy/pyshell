@@ -23,9 +23,7 @@ Class Construction
 This class should be subclassed by the user, who should re-implement \
 the following methods:
     
-- :meth:`~CLIEngine.start` - Called at the beginning of the operation.
 - :meth:`~CLIEngine.do`  - Does the 'real work'.
-- :meth:`~CLIEngine.end` - Called at end of operation.
 - :meth:`~CLIEngine.kill` - Called if the engine tries to exit abnormally.
     
 These funcitons are used in the normal operation of the command line engine.
@@ -76,7 +74,7 @@ to print the best `--help` message.
 function loads the following configuration files in order (such that the \
 last one loaded is the one that takes precedence):
     
-* The ``defaultcfg`` file from ``engine.module``. This allows the \
+* The ``defaultcfg`` file from ``engine.__module__``. This allows the \
 developer to provide a base configuration for the engine.
 * The requested configuration file from the user's home directory.
 * The requested configuration file form the current directory.
@@ -89,8 +87,8 @@ a warning will be issued.
 parsed by :meth:`parse`. At this point, the entire configuration process \
 is complete.
     
-5. The functions :meth:`start`, :meth:`do` and :meth:`end` are called, \
-in that order. These functions should do the bulk of the engine's work.
+5. The function :meth:`do` is called, \
+This should do the bulk of the engine's work.
 
 6. If the user interrupts the operation of the program, :meth:`kill` will \
 be called. If python is in ``__debug__`` mode, this will raise a full \
@@ -104,8 +102,6 @@ traceback. If not, the traceback will be suppressed.
     CLIEngine
     :members:
     
-    .. autoproperty: module
-    
 
 Call structure of :meth:`run`
 =============================
@@ -117,13 +113,9 @@ The call structure of the method :meth:`run`, the main script driver::
     self.configure()
     self.parse()
     try:
-        self.start()
         self.do()
-        self.end()
     except (KeyboardInterrupt, SystemExit):
         self.kill()
-        if __debug__:
-            raise
     
 
 
