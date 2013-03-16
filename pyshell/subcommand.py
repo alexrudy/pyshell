@@ -29,11 +29,12 @@ Base Class API Documentation
     :inherited-members:
 
 """
-from .base import CLIEngine
+from . import CLIEngine
 
 import sys
 from argparse import Action, SUPPRESS, RawDescriptionHelpFormatter
 
+__all__ = ['SCEngine','SCController']
 
 class SCEngine(CLIEngine):
     """A base engine for use as a subcommand to CLIEngine"""

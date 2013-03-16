@@ -19,13 +19,13 @@ from textwrap import fill
 from warnings import warn
 
 try:
-    from . import version
+    from . import version, CLIEngine
     from .util import force_dir_path, is_remote_path
-    from .base import CLIEngine
 except ValueError:
-    from pyshell import version
+    from pyshell import version, CLIEngine
     from pyshell.util import force_dir_path, is_remote_path
-    from pyshell.base import CLIEngine
+
+__all__ = ['BackupEngine']
 
 class _BackupDestination(object):
     """Private class for managing backup destinations"""
