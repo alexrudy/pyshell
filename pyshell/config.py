@@ -60,6 +60,8 @@ from warnings import warn
 # Submodules from this system
 from . import util
 
+__all__ = ['reformat','advanceddeepmerge','deepmerge','ConfigurationError','Configuration','DottedConfiguration','StructuredConfiguration']
+
 
 def reformat(d,nt):
     """Recursive extraction method for changing the type of nested dictionary objects.
@@ -494,17 +496,16 @@ class StructuredConfiguration(DottedConfiguration):
     
     def __init__(self,  *args, **kwargs):
         super(StructuredConfiguration, self).__init__(*args, **kwargs)
-        if "Configurations" not in self:
-            self["Configurations"] = self.dn()
-        if "This" not in self["Configurations"]:
-            self["Configurations.This"] = self.DEFAULT_FILENAME
-            self["Configurations.Loaded"] = []
+        self._files = self.dn()
+        self._files["This"] = self.DEFAULT_FILENAME
+        self._files["Loaded"] = []
+        self._files["Configurations"] = self.dn()
         self.__set_on_load = False
         
     @property
     def _set_on_load(self):
         """True for default filenames"""
-        if self["Configurations.This"] == self.DEFAULT_FILENAME:
+        if self._files["This"] == self.DEFAULT_FILENAME:
             self.__set_on_load = True
         return self.__set_on_load
     
@@ -524,14 +525,14 @@ class StructuredConfiguration(DottedConfiguration):
         if not filename:
             if not name:
                 raise ValueError("Must provide name or filename")
-            if name not in self["Configurations"]:
+            if name not in  self._files["Configurations"]:
                 raise KeyError("Key %s does not represent a configuration file." % name)
         else:
             if not name:
                 name = os.path.basename(filename)
-        if name not in self["Configurations"]:
-            self["Configurations"][name] = filename
-        self["Configurations.This"] = self["Configurations"][name]
+        if name not in self._files["Configurations"]:
+            self._files["Configurations"][name] = filename
+        self._files["This"] = self._files["Configurations"][name]
     
     def save(self, filename=None, silent=True):
         """Save the configuration to a YAML file. If ``filename`` is not provided, the configuration will use the file set by :meth:`setFile`.
@@ -541,7 +542,7 @@ class StructuredConfiguration(DottedConfiguration):
         Uses :meth:`Configuration.save`.
         """
         if filename == None:
-            filename = self["Configurations.This"]
+            filename = self["This"]
         return super(StructuredConfiguration, self).save(filename)
     
         
@@ -553,7 +554,7 @@ class StructuredConfiguration(DottedConfiguration):
         
         Uses :meth:`Configuration.load`."""
         if filename == None:
-            filename = self["Configurations.This"]
+            filename = self["This"]
         loaded = super(StructuredConfiguration, self).load(filename, silent)
         if loaded and self._set_on_load:
             self["Configurations.Loaded"].append(filename)
