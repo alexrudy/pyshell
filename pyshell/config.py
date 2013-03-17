@@ -542,7 +542,7 @@ class StructuredConfiguration(DottedConfiguration):
         Uses :meth:`Configuration.save`.
         """
         if filename == None:
-            filename = self["This"]
+            filename = self._files["This"]
         return super(StructuredConfiguration, self).save(filename)
     
         
@@ -554,7 +554,7 @@ class StructuredConfiguration(DottedConfiguration):
         
         Uses :meth:`Configuration.load`."""
         if filename == None:
-            filename = self["This"]
+            filename = self._files["This"]
         loaded = super(StructuredConfiguration, self).load(filename, silent)
         if loaded and self._set_on_load:
-            self["Configurations.Loaded"].append(filename)
+            self._files["Loaded"].append(filename)
