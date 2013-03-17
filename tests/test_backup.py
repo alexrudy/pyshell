@@ -40,8 +40,8 @@ class test_BackupEngine(object):
         engine = pyshell.backup.BackupEngine()
         engine.set_destination('test1','a/','b/','test2')
         engine.set_destination('test2','a/','c/','test3')
-        assert engine._destinations['test2'] == 'c/'
-        assert engine._destinations['test1'] == 'b/'
+        assert engine._destinations['test2'].destination == 'c/'
+        assert engine._destinations['test1'].destination == 'b/'
         
     def test_set_destination_duplicates(self):
         """Set duplicate destinations."""
@@ -51,7 +51,7 @@ class test_BackupEngine(object):
             engine.set_destination('test1','a/','b/','test2')
             engine.set_destination('test1','a/','c/','test3')
         assert warned[0].message.message == "Mode test1 will be overwritten."
-        assert engine._destinations['test1'] == 'c/'
+        assert engine._destinations['test1'].destination == 'c/'
         
     
 
@@ -79,6 +79,7 @@ class test_BackupScript(object):
             shutil.copy2(os.path.join(self.PATH,'c/c.%03d.test' % (i * self.SKIP_FACT)),os.path.join(self.PATH,'d/'))
             
         self.engine = pyshell.backup.BackupEngine()
+        self.engine.init()
     
     def teardown(self):
         """Tear down the environment"""
@@ -94,6 +95,8 @@ class test_BackupScript(object):
         assert len(os.listdir(os.path.join(self.PATH,'c/'))) != len(os.listdir(os.path.join(self.PATH,'d/')))
         self.engine.arguments("-q --config tests/Backup.yaml main other".split())
         self.engine.run()
+        print os.listdir(os.path.join(self.PATH,'a/'))
+        print os.listdir(os.path.join(self.PATH,'b/'))
         assert len(os.listdir(os.path.join(self.PATH,'a/'))) == len(os.listdir(os.path.join(self.PATH,'b/')))
         assert len(os.listdir(os.path.join(self.PATH,'c/'))) == len(os.listdir(os.path.join(self.PATH,'d/')))
         

@@ -52,51 +52,15 @@ import os
 import collections
 import re
 import yaml
+import logging
+import warnings
+from warnings import warn
+
 
 # Submodules from this system
-import logging
+from . import util
 
-def reformat(d,nt):
-    """Recursive extraction method for changing the type of nested dictionary objects.
-    
-    :param mapping d: The dictionary to re-type.
-    :param mapping-type nt: The new mapping type to use.
-    
-    """
-    #pylint: disable=C0103
-    if not isinstance(d, collections.Mapping):
-        return d
-    e = nt()
-    for k in d:
-        v = d.get(k)
-        if isinstance(v, collections.Mapping):
-            e[k] = reformat(v,nt)
-        elif isinstance(v, collections.Sequence) and not isinstance(v, (str, unicode)):
-            e[k] = [ reformat(i,nt) for i in v ]
-        else:
-            e[k] = v
-    return e
-    
-def deepmerge(d,u,s):
-    """Merge deep collection-like structures.
-    
-    :param d: Deep Structure
-    :param u: Updated Structure
-    :param s: Default structure to use when a new deep structure is required.
-    
-    """
-    if len(u)==0:
-        return d
-    for k, v in u.iteritems():
-        if isinstance(v, collections.Mapping):
-            r = deepmerge(d.get(k, s()), v, s)
-            d[k] = r
-        elif isinstance(v, collections.Sequence) and isinstance(d.get(k,None), collections.Sequence) and not (isinstance(v,(str,unicode)) or isinstance(d.get(k,None),(str,unicode))):
-            d[k] = [ i for i in v ] + [ i for i in d[k] ]
-        else:
-            d[k] = u[k]
-    return d
-    
+__all__ = ['reformat','advanceddeepmerge','deepmerge','ConfigurationError','Configuration','DottedConfiguration','StructuredConfiguration']
 
 
 def reformat(d,nt):
@@ -120,6 +84,29 @@ def reformat(d,nt):
             e[k] = v
     return e
     
+def advanceddeepmerge(d,u,s,sequence=True):
+    """Merge deep collection-like structures.
+    
+    This version will merge sequence structures when they are found.
+    
+    :param d: Deep Structure
+    :param u: Updated Structure
+    :param s: Default structure to use when a new deep structure is required.
+    :param (bool) sequence: Control sequence merging
+    
+    """
+    if len(u)==0:
+        return d
+    for k, v in u.iteritems():
+        if isinstance(v, collections.Mapping):
+            r = deepmerge(d.get(k, s()), v, s)
+            d[k] = r
+        elif sequence and isinstance(v, collections.Sequence) and isinstance(d.get(k,None), collections.Sequence) and not (isinstance(v,(str,unicode)) or isinstance(d.get(k,None),(str,unicode))):
+            d[k] = [ i for i in v ] + [ i for i in d[k] ]
+        else:
+            d[k] = u[k]
+    return d
+
 def deepmerge(d,u,s):
     """Merge deep collection-like structures.
     
@@ -134,12 +121,19 @@ def deepmerge(d,u,s):
         if isinstance(v, collections.Mapping):
             r = deepmerge(d.get(k, s()), v, s)
             d[k] = r
-        elif isinstance(v, collections.Sequence) and isinstance(d.get(k,None), collections.Sequence) and not (isinstance(v,(str,unicode)) or isinstance(d.get(k,None),(str,unicode))):
-            d[k] = [ i for i in v ] + [ i for i in d[k] ]
         else:
             d[k] = u[k]
     return d
     
+
+class ConfigurationError(Exception):
+    """Configuration error"""
+    def __init__(self, expected, config={}):
+        self.expected = expected
+        self.config = config
+        self.message = "Expected {key!r} in {config!r}!".format(key=self.expected,config=self.config)
+        super(ConfigurationError, self).__init__(self.message)
+        
 
 
 class Configuration(collections.MutableMapping):
@@ -166,8 +160,11 @@ class Configuration(collections.MutableMapping):
     def __init__(self, *args, **kwargs):
         super(Configuration, self).__init__()
         self.log = logging.getLogger(__name__)
+        if not len(self.log.handlers):
+            self.log.addHandler(logging.NullHandler())
         self._store = dict(*args, **kwargs)
         self._filename = None
+        self._strict = False
     
     name = "Configuration"
     """The name/type of this configuration."""
@@ -183,7 +180,7 @@ class Configuration(collections.MutableMapping):
         
     def __str__(self):
         """String for this object"""
-        return "<%s %r >" % (self.name,repr(self))
+        return "<%s %s >" % (self.name,repr(self))
         
     def __getitem__(self, key):
         """Dictionary getter"""
@@ -239,7 +236,7 @@ class Configuration(collections.MutableMapping):
         with open(filename, "w") as stream:
             stream.write("# %s: %s\n" % (self.name,filename))
             if re.search(r"(\.yaml|\.yml)$", filename):
-                yaml.dump(self.store, stream, default_flow_style=False)
+                yaml.dump(self.store, stream, default_flow_style=False, encoding='utf-8')
             elif re.search(r"\.dat$", filename):
                 stream.write(str(self.store))
             elif not silent:
@@ -297,21 +294,19 @@ class Configuration(collections.MutableMapping):
         """
         return self.store
         
-    @classmethod
-    def create(cls,module=__name__,cfg=None,defaultcfg=None):
-        """Create a configuration from a series of YAML files.
+    def configure(self,module=__name__,defaultcfg=False,cfg=False,supercfg=None):
+        """The configuration loads (starting with a blank configuration):
         
-        The configuration loads (starting with a blank configuration):
-        
-            1. The `module` configuration file named for \
-            `defaultcfg`
-            2. The command line specified file from the user's home folder \
+            1. The list of `supercfg`s. This list should contain tuples of \
+            (module,name) pairs.
+            2. The `module` configuration file named for `defaultcfg`
+            3. The command line specified file from the user's home folder \
             ``~/config.yml``
-            3. The command line specified file from the working directory.
+            4. The command line specified file from the working directory.
         
-        If the third file is not found, and the user specified a new name for \
+        If the fourth file is not found, and the user specified a new name for \
         the configuration file, then the user is warned that no configuration \
-        file could be found. This way the usre is only warned about a missing \
+        file could be found. This way the user is only warned about a missing \
         configuration file if they requested a file specifically (and so \
         intended to use a customized file).
         
@@ -319,34 +314,39 @@ class Configuration(collections.MutableMapping):
         :param cfg: The name of the requested configuration file.
         :param defaultcfg: The name of the default configuration file which might \
         exist in the module's file.
+        :param: supercfg: A list of configuration files to preload. The list should \
+        contian pairs of (module,name) as tuples.
+        
         """
+        from pkg_resources import resource_filename
+        if not defaultcfg:
+            return
+        if supercfg is None:
+            supercfg = []
+        for supermodule,superfilename in supercfg:
+            if supermodule == '__main__':
+                self.load(superfilename)
+            else:
+                self.load(resource_filename(supermodule,superfilename))
+        if module != '__main__':
+            self.load(resource_filename(module,defaultcfg))
+        if cfg and util.check_exists("~/%s" % cfg):
+            self.load(os.path.expanduser("~/%s" % cfg))
+        if cfg and os.path.exists(cfg):
+            self.load(cfg, silent=False)
+        elif cfg and cfg != defaultcfg:
+            warn("Configuration File '{}' not found!".format(cfg), RuntimeWarning)
         
+        
+    @classmethod
+    def create(cls,module=__name__,defaultcfg=False,cfg=False,supercfg=None):
+        """Create a configuration from a series of YAML files.
+        
+        See :meth:`configure` for a detailed description of the resolution order of configuration files for this method.
+        """
         config = cls()
-        
-        if cfg is None and defaultcfg is None:
-            warn("No configuration requested.",RuntimeWarning)
-        elif cfg is None and defaultcfg is not None:
-            cfg = defaultcfg
-        
-        # Get the default configuration name from the module space.
-        if defaultcfg is not None \
-            and os.path.exists(resource_filename(module, defaultcfg)):
-            config.load(resource_filename(module, defaultcfg))
-        
-        # Get the requested configuration from the user's home folder
-        if cfg is not None \
-            and os.path.exists(os.path.expanduser("~/%s" % cfg)):
-            config.load(os.path.expanduser("~/%s" % cfg))
-        
-        # Get the requested configuration from a relative path.
-        if cfg is not None and os.path.exists(cfg):
-            config.load(cfg, silent=False)
-        elif cfg is not None \
-            and cfg != defaultcfg:
-            warn("Configuration File not found!", RuntimeWarning)
-            # This warning is only triggered if:
-            # 1) The configuration requested is not the default.
-            # 2) The non-default does not exist.
+        config.configure(module,defaultcfg,cfg,supercfg)
+        return config
 
 
 class DottedConfiguration(Configuration):
@@ -378,10 +378,12 @@ class DottedConfiguration(Configuration):
         """Recursive getitem calling function."""
         key = parts.pop(0)
         if len(parts) == 0:
+            if store.get(key) == self.dn() and self._strict:
+                raise KeyError
             return store[key]
-        else:
-            store[key] = store.get(key, self.dn())
-            return self._getitem(store[key], parts)
+        elif not self._strict:
+            store.setdefault(key, self.dn())
+        return self._getitem(store[key], parts)
             
     def _setitem(self, store, parts, value=None):
         """Recursive setitem calling function
@@ -394,18 +396,32 @@ class DottedConfiguration(Configuration):
         key = parts.pop(0)
         if len(parts) == 0:
             return store.__setitem__(key, value)
-        else:
-            store[key] = store.get(key, self.dn())
-            return self._setitem(store[key], parts, value)
+        elif not self._strict:
+            store.setdefault(key, self.dn())
+        return self._setitem(store[key], parts, value)
             
     def _delitem(self, store, parts):
         """Recursive delitem calling function"""
         key = parts.pop(0)
         if len(parts) == 0:
             return store.__delitem__(key)
+        elif not self._strict:
+            store.setdefault(key, self.dn())
+        return self._delitem(store[key], parts)
+            
+    def _contains(self, store, parts):
+        """Recursive containment algorithm"""
+        key = parts.pop(0)
+        if len(parts) == 0:
+            if ((isinstance(store.get(key),self.dn) 
+                and not bool(store.get(key))) 
+                and self._strict):
+                return False
+            return store.__contains__(key)
+        elif key in store:
+            return self._contains(store[key],parts)
         else:
-            store[key] = store.get(key, self.dn())
-            return self._delitem(store[key], parts)
+            return False
         
         
     def __getitem__(self, key):
@@ -414,6 +430,10 @@ class DottedConfiguration(Configuration):
         try:
             if len(keyparts) > 1:
                 return self._getitem(self, keyparts)
+            elif ((isinstance(self._store.get(key),self.dn) 
+                    and not bool(self._store.get(key)))
+                    and self._strict):
+                    raise KeyError
             return self._store[key]
         except KeyError:
             raise KeyError('%s' % key)
@@ -431,6 +451,18 @@ class DottedConfiguration(Configuration):
         if len(keyparts) > 1:
             return self._delitem(self, keyparts)        
         return self._store.__delitem__(key)
+        
+    def __contains__(self,key):
+        """Dictionary in"""
+        keyparts = key.split(".")
+        if len(keyparts) > 1:
+            return self._contains(self, keyparts)
+        elif ((isinstance(self._store.get(key),self.dn) 
+                and not bool(self._store.get(key)))
+                and self._strict):
+                return False
+        else:
+            return self._store.__contains__(key)
     
 
 
@@ -459,14 +491,23 @@ class StructuredConfiguration(DottedConfiguration):
         >>> Config.dn = DottedConfiguration
         
     """
+    
+    DEFAULT_FILENAME = "--NOFILE--"
+    
     def __init__(self,  *args, **kwargs):
         super(StructuredConfiguration, self).__init__(*args, **kwargs)
-        if "Configurations" not in self:
-            self["Configurations"] = {}
-        if "This" not in self["Configurations"]:
-            self["Configurations.This"] = "AO.config.yaml"
+        self._files = self.dn()
+        self._files["This"] = self.DEFAULT_FILENAME
+        self._files["Loaded"] = []
+        self._files["Configurations"] = self.dn()
+        self.__set_on_load = False
         
-    
+    @property
+    def _set_on_load(self):
+        """True for default filenames"""
+        if self._files["This"] == self.DEFAULT_FILENAME:
+            self.__set_on_load = True
+        return self.__set_on_load
     
     def setFile(self, filename=None, name=None): #pylint: disable=C0103
         """Depricated Method"""
@@ -484,14 +525,14 @@ class StructuredConfiguration(DottedConfiguration):
         if not filename:
             if not name:
                 raise ValueError("Must provide name or filename")
-            if name not in self["Configurations"]:
+            if name not in  self._files["Configurations"]:
                 raise KeyError("Key %s does not represent a configuration file." % name)
         else:
             if not name:
                 name = os.path.basename(filename)
-        if name not in self["Configurations"]:
-            self["Configurations"][name] = filename
-        self["Configurations.This"] = self["Configurations"][name]
+        if name not in self._files["Configurations"]:
+            self._files["Configurations"][name] = filename
+        self._files["This"] = self._files["Configurations"][name]
     
     def save(self, filename=None, silent=True):
         """Save the configuration to a YAML file. If ``filename`` is not provided, the configuration will use the file set by :meth:`setFile`.
@@ -501,7 +542,7 @@ class StructuredConfiguration(DottedConfiguration):
         Uses :meth:`Configuration.save`.
         """
         if filename == None:
-            filename = self["Configurations.This"]
+            filename = self["This"]
         return super(StructuredConfiguration, self).save(filename)
     
         
@@ -513,6 +554,7 @@ class StructuredConfiguration(DottedConfiguration):
         
         Uses :meth:`Configuration.load`."""
         if filename == None:
-            filename = self["Configurations.This"]
-        return super(StructuredConfiguration, self).load(filename, silent)
-        
+            filename = self["This"]
+        loaded = super(StructuredConfiguration, self).load(filename, silent)
+        if loaded and self._set_on_load:
+            self["Configurations.Loaded"].append(filename)

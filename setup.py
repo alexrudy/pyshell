@@ -18,7 +18,7 @@ setup(
     version = version,
     packages = find_packages(exclude=['tests']),
     package_data = {'pyshell':['Defaults.yaml']},
-    install_requires = ['distribute','PyYAML>=3.10'],
+    install_requires = ['distribute','PyYAML>=3.10','jinja2>2.0'],
     test_suite = 'tests',
     tests_require = ['nosetests','pinnochio'],
     author = 'Alexander Rudy',
