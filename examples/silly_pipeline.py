@@ -9,17 +9,16 @@
 # 
 from __future__ import division
 
-from pyshell.pipeline import Pipeline
+from pyshell.pipeline2 import Pipeline
 from pyshell.pipelinehelp import *
 
 
 class SillyPipeline(Pipeline):
     """docstring for SillyPipeline"""
-    
-    module = __name__
-    
-    def __init__(self):
-        super(SillyPipeline, self).__init__(name='A Silly Pipeline')
+        
+    def init(self):
+        """docstring for init"""
+        super(SillyPipeline, self).init()
         self.collect()
         
     def stepA(self):
