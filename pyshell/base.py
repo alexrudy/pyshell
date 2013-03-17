@@ -190,6 +190,10 @@ class CLIEngine(object):
                 action='store', metavar='file.yml', default=self.defaultcfg,
                 help="Set configuration file. By default, load %(file)s and"\
                 " ~/%(file)s if it exists." % dict(file=self.defaultcfg))
+            self.parser.add_argument('--configure',action='store',default=[],
+                nargs="+",metavar="Option.Key='literal value'",dest='literalconfig',
+                help="add configuration items in the form of dotted names and value pairs: "
+                " Option.Key='literal value' will set config[\"Option.Key\"] = 'literal value'")
         
     @property
     def parser(self):
@@ -270,7 +274,7 @@ class CLIEngine(object):
         """
         cfg = getattr(self.opts,'config',self.defaultcfg)
         self.config.configure(module=self.__module__,defaultcfg=self.defaultcfg,cfg=cfg,supercfg=self.supercfg)
-                    
+        self.config.parse_literals(*self.opts.literalconfig)
     
     def start(self):
         """This function is called at the start of the :class:`CLIEngine` \
@@ -325,3 +329,4 @@ class CLIEngine(object):
         engine.init()
         engine.arguments()
         return engine.run()
+        
