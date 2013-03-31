@@ -13,6 +13,8 @@ import nose.tools as nt
 import warnings
 from nose.plugins.skip import Skip,SkipTest
 from subprocess import CalledProcessError, Popen, PIPE
+import nose.tools as nt
+
 
 def clear_dir(tdir):
     """Clear directory"""
@@ -40,8 +42,8 @@ class test_BackupEngine(object):
         engine = pyshell.backup.BackupEngine()
         engine.set_destination('test1','a/','b/','test2')
         engine.set_destination('test2','a/','c/','test3')
-        assert engine._destinations['test2'].destination == 'c/'
-        assert engine._destinations['test1'].destination == 'b/'
+        nt.eq_(engine._destinations['test2'].destination, 'c/')
+        nt.eq_(engine._destinations['test1'].destination, 'b/')
         
     def test_set_destination_duplicates(self):
         """Set duplicate destinations."""
@@ -50,8 +52,8 @@ class test_BackupEngine(object):
             warnings.simplefilter("always")
             engine.set_destination('test1','a/','b/','test2')
             engine.set_destination('test1','a/','c/','test3')
-        assert warned[0].message.message == "Mode test1 will be overwritten."
-        assert engine._destinations['test1'].destination == 'c/'
+        nt.eq_(warned[0].message.message, "Mode test1 will be overwritten.")
+        nt.eq_(engine._destinations['test1'].destination, 'c/')
         
     
 
@@ -97,8 +99,8 @@ class test_BackupScript(object):
         self.engine.run()
         print os.listdir(os.path.join(self.PATH,'a/'))
         print os.listdir(os.path.join(self.PATH,'b/'))
-        assert len(os.listdir(os.path.join(self.PATH,'a/'))) == len(os.listdir(os.path.join(self.PATH,'b/')))
-        assert len(os.listdir(os.path.join(self.PATH,'c/'))) == len(os.listdir(os.path.join(self.PATH,'d/')))
+        nt.eq_(len(os.listdir(os.path.join(self.PATH,'a/'))), len(os.listdir(os.path.join(self.PATH,'b/'))))
+        nt.eq_(len(os.listdir(os.path.join(self.PATH,'c/'))), len(os.listdir(os.path.join(self.PATH,'d/'))))
         
     def test_engine_subproc(self):
         """Test full engine as a subprocess."""
@@ -109,8 +111,8 @@ class test_BackupScript(object):
         backup_py_args = ("python %s -q --config %s main other" % (backup_py_path,backup_py_config)).split()
         backup_py = Popen(backup_py_args,stdin=PIPE,stdout=PIPE,stderr=PIPE)
         backup_py_retcode = backup_py.wait()
-        assert backup_py_retcode == 0
-        assert len(os.listdir(os.path.join(self.PATH,'a/'))) == len(os.listdir(os.path.join(self.PATH,'b/')))
-        assert len(os.listdir(os.path.join(self.PATH,'c/'))) == len(os.listdir(os.path.join(self.PATH,'d/')))
+        nt.eq_(backup_py_retcode, 0)
+        nt.eq_(len(os.listdir(os.path.join(self.PATH,'a/'))), len(os.listdir(os.path.join(self.PATH,'b/'))))
+        nt.eq_(len(os.listdir(os.path.join(self.PATH,'c/'))), len(os.listdir(os.path.join(self.PATH,'d/'))))
         
         
