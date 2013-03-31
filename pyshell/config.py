@@ -233,15 +233,19 @@ class Configuration(collections.MutableMapping):
         :param bool silent: Unused.
         
         """
-        with open(filename, "w") as stream:
-            stream.write("# %s: %s\n" % (self.name,filename))
-            if re.search(r"(\.yaml|\.yml)$", filename):
-                yaml.dump(self.store, stream, default_flow_style=False, encoding='utf-8')
-            elif re.search(r"\.dat$", filename):
-                stream.write(str(self.store))
-            elif not silent:
-                raise ValueError("Filename Error, not (.dat,.yaml,.yml): %s" % filename)
-            self._filename = filename
+        if hasattr(filename,'read') and hasattr(filename,'readlines'):
+            stream.write("# %s: stream" % self.name)
+            yaml.dump(self.store, stream, default_flow_style=False)
+        else:
+            with open(filename, "w") as stream:
+                stream.write("# %s: %s\n" % (self.name,filename))
+                if re.search(r"(\.yaml|\.yml)$", filename):
+                    yaml.dump(self.store, stream, default_flow_style=False, encoding='utf-8')
+                elif re.search(r"\.dat$", filename):
+                    stream.write(str(self.store))
+                elif not silent:
+                    raise ValueError("Filename Error, not (.dat,.yaml,.yml): %s" % filename)
+                self._filename = filename
         
     def load(self, filename, silent=True):
         """Loads a configuration from a yaml file, and merges it into the master configuration.
@@ -253,8 +257,11 @@ class Configuration(collections.MutableMapping):
         """
         loaded = False
         try:
-            with open(filename, "r") as stream:
-                new = yaml.load(stream)
+            if hasattr(filename,'read') and hasattr(filename,'readlines'):
+                new = yaml.load(filename)
+            else:
+                with open(filename, "r") as stream:
+                    new = yaml.load(stream)
         except IOError:
             if silent:
                 self.log.warning("Could not load configuration from file: %s" % filename)
