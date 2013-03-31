@@ -28,7 +28,7 @@ def make_files(tdir,N):
     
     
 class test_BackupEngine(object):
-    """pyshell.bakcup.BackupEngine.script()"""
+    """pyshell.backup.BackupEngine"""
     
     @nt.raises(CalledProcessError)
     def test_command_change(self):
@@ -56,7 +56,7 @@ class test_BackupEngine(object):
     
 
 class test_BackupScript(object):
-    """pyshell.bakcup.BackupEngine.script()"""
+    """pyshell.backup.BackupEngine.script()"""
     
     NUM_FILES = 50
     SKIP_FACT = 5

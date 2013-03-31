@@ -21,7 +21,7 @@ class test_base_cliengine(object):
         self.CLASS = pyshell.base.CLIEngine
         
     def test_base_init(self):
-        """__init__ w/ abstract methods"""
+        """__init__"""
         self.CLASS()
         
     
