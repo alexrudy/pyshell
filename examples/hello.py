@@ -25,7 +25,7 @@ class Hello(CLIEngine):
         """Arguments to be set up at the beginning. By default, this function will set up the --config argument."""
         super(Hello, self).init()
         self.parser.add_argument("-f",dest='flourish',action='store_true',help=u"Add a little flourish!")
-        self.parser.add_argument("--name",action='store',default=unicode(os.environ["USER"]),
+        self.parser.add_argument("--name",action='store',type=unicode,default=unicode(os.environ["USER"]),
             help=u"Set the name. (Default '{:s}')".format(os.environ["USER"]))
         
     def configure(self):
@@ -43,7 +43,7 @@ class Hello(CLIEngine):
         self.parser.add_argument("language",action='store')
         # We add this argument here, becauase it is required.
         
-        self.parser.add_argument("-t","--title",action='store',default=self.config["Address"],
+        self.parser.add_argument("-t","--title",action='store',default=self.config["Address"],type=unicode,
             help=u"Change from the default title '{:s}'".format(self.config["Address"]),metavar="MR")
         # We add this argument here because it uses information from the configuration.
         
@@ -53,7 +53,7 @@ class Hello(CLIEngine):
         if self.opts.language not in self.config["Language"]:
             self.parser.error(u"Language '{:s}' not understood.".format(self.opts.language))
         self.opts.greeting = self.config["Language"].get(self.opts.language)
-        self.opts.punct = u"!" if self.opts.flourish else "."
+        self.opts.punct = u"!" if self.opts.flourish else u"."
         self.opts.name = self.opts.name.capitalize()
         
     def do(self):
