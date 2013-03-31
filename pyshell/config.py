@@ -14,25 +14,25 @@
 This module provides structured, YAML based, deep dictionary configuration objects. The objects have a built-in deep-update function and use deep-update behavior by default. They act otherwise like dictionaries, and handle thier internal operation using a storage dictionary. The objects also provide a YAML configuration file reading and writing interface.
 
 .. inheritance-diagram::
-    AstroObject.config.Configuration
-    AstroObject.config.StructuredConfiguration
+    pyshell.config.Configuration
+    pyshell.config.StructuredConfiguration
     :parts: 1
     
 .. autofunction::
-    AstroObject.config.reformat
+    pyshell.config.reformat
 
 Basic Configurations: :class:`Configuration`
 --------------------------------------------
 
 .. autoclass::
-    AstroObject.config.Configuration
+    pyshell.config.Configuration
     :members:
 
 Dotted Configurations: :class:`Configuration`
 ---------------------------------------------
 
 .. autoclass::
-    AstroObject.config.DottedConfiguration
+    pyshell.config.DottedConfiguration
     :members:
     :inherited-members:
 
@@ -41,7 +41,7 @@ Structured Configurations: :class:`StructuredConfiguration`
 -----------------------------------------------------------
 
 .. autoclass::
-    AstroObject.config.StructuredConfiguration
+    pyshell.config.StructuredConfiguration
     :members:
     :inherited-members:
 
@@ -134,12 +134,17 @@ class ConfigurationError(Exception):
         self.message = "Expected {key!r} in {config!r}!".format(key=self.expected,config=self.config)
         super(ConfigurationError, self).__init__(self.message)
         
+class DeepNestDict(dict):
+    """Class for deep nestinging emptiness"""
+    pass
+        
+        
 
 
 class Configuration(collections.MutableMapping):
     """Adds extra methods to dictionary for configuration"""
     
-    _dn = dict
+    _dn = DeepNestDict
     """Deep nesting dictionary setting. This class will be used to create deep nesting structures for this dictionary.""" #pylint: disable=W0105
     
     dt = dict
@@ -154,8 +159,7 @@ class Configuration(collections.MutableMapping):
     def dn(self,new_type):
         """Deep nesting type setter."""
         if new_type != self._dn:
-            self._dn = new_type
-            self.renest()
+            self.renest(new_type)
     
     def __init__(self, *args, **kwargs):
         super(Configuration, self).__init__()
@@ -380,15 +384,35 @@ class DottedConfiguration(Configuration):
         10
         
     """
+    def _isempty(self, item):
+        """Test if the given item is empty"""
+        if isinstance(item,collections.Mapping):
+            return all([self._isempty(value) for value in item.itervalues()])
+        elif isinstance(item,collections.Sized):
+            return len(item) == 0
+        else:
+            try:
+                return not bool(item)
+            except:
+                return False
         
     def _getitem(self, store, parts):
         """Recursive getitem calling function."""
-        key = parts.pop(0)
         if len(parts) == 0:
-            if store.get(key) == self.dn() and self._strict:
-                raise KeyError
-            return store[key]
-        elif not self._strict:
+            return store
+        # elif len(parts) == 1:
+        #     return store[parts[0]]
+        if not isinstance(store,collections.Mapping):
+            raise KeyError
+        for i in range(len(parts)):
+            key = ".".join(parts[:i+1])
+            if key in store:
+                if self._isempty(store[key]) and self._strict:
+                    raise KeyError
+                elif not self._isempty(store[key]):
+                    return self._getitem(store[key], parts[i+1:])
+        key = parts.pop(0)
+        if len(parts) != 0 and not self._strict:
             store.setdefault(key, self.dn())
         return self._getitem(store[key], parts)
             
@@ -443,7 +467,8 @@ class DottedConfiguration(Configuration):
                     raise KeyError
             return self._store[key]
         except KeyError:
-            raise KeyError('%s' % key)
+            # raise KeyError('%s' % key)
+            raise
         
     def __setitem__(self, key, value):
         """Dictonary setter"""
