@@ -150,6 +150,7 @@ class _BackupDestination(object):
                 warn("Mode {mode} terminated with code "\
                     "{code}".format(mode=self.name, code=self.returncode), RuntimeWarning)
             print("Terminated {mode} backup".format(mode=self.name))
+            return self._returncode == 0
         else:
             warn("Mode {mode} was never started.".format(mode=self.name),
                 UserWarning)
@@ -298,9 +299,7 @@ class BackupEngine(CLIEngine):
         """Start a single mode"""
         if self._destinations[mode].launch(self._pargs,prints=self.opts.prints):
             # Run any post-dependent commands.
-            for t_mode in self._destinations[mode].triggers:
-                self._start_mode(t_mode)
-            
+            map(self._start_mode,self._destinations[mode].triggers)            
         
     def _end_mode(self, mode):
         """Wait for a particular process to end."""
