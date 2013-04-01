@@ -11,12 +11,16 @@
 :mod:`config` — YAML-based Configuration Dictionaries
 ==========================================================
 
+.. testsetup ::
+    
+    from pyshell.config import *
+
 This module provides structured, YAML based, deep dictionary configuration objects. The objects have a built-in deep-update function and use deep-update behavior by default. They act otherwise like dictionaries, and handle thier internal operation using a storage dictionary. The objects also provide a YAML configuration file reading and writing interface.
 
-.. inheritance-diagram::
-    pyshell.config.Configuration
-    pyshell.config.StructuredConfiguration
-    :parts: 1
+.. .. inheritance-diagram::
+..    pyshell.config.Configuration
+..    pyshell.config.StructuredConfiguration
+..    :parts: 1
     
 .. autofunction::
     pyshell.config.reformat
@@ -227,6 +231,13 @@ class Configuration(collections.MutableMapping):
         
         :param dict-like other: The other dictionary to be merged.
         
+        .. doctest::
+            
+            >>> a = Configuration(**{'a':'b'})
+            >>> a.merge({'c':'d'})
+            >>> a
+            {'a': 'b', 'c': 'd'}
+        
         """
         deepmerge(self, other, self.dn)
     
@@ -308,11 +319,9 @@ class Configuration(collections.MutableMapping):
     def configure(self,module=__name__,defaultcfg=False,cfg=False,supercfg=None):
         """The configuration loads (starting with a blank configuration):
         
-            1. The list of `supercfg`s. This list should contain tuples of \
-            (module,name) pairs.
-            2. The `module` configuration file named for `defaultcfg`
-            3. The command line specified file from the user's home folder \
-            ``~/config.yml``
+            1. The list of ``supercfg`` 's. This list should contain tuples of ``(module,name)`` pairs.
+            2. The ``module`` configuration file named for ``defaultcfg``
+            3. The command line specified file from the user's home folder ``~/config.yml``
             4. The command line specified file from the working directory.
         
         If the fourth file is not found, and the user specified a new name for \
