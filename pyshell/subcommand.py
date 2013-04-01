@@ -14,9 +14,7 @@
 
 
 Base Class API Documentation
-============================
-
-
+----------------------------
 
 .. autoclass::
     SCEngine

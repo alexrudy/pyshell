@@ -104,7 +104,7 @@ traceback. If not, the traceback will be suppressed.
     
 
 Call structure of :meth:`run`
-=============================
+-----------------------------
 The call structure of the method :meth:`run`, the main script driver::
     
     if not(hasattr(self, '_rargs') and hasattr(self, '_opts')):
