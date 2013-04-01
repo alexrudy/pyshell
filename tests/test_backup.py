@@ -13,6 +13,7 @@ import nose.tools as nt
 import warnings
 from nose.plugins.skip import Skip,SkipTest
 from subprocess import CalledProcessError, Popen, PIPE
+import shlex
 import nose.tools as nt
 
 
@@ -66,8 +67,13 @@ class test_BackupScript(object):
     def setup(self):
         """Set up the environment"""
         
-        self.PATH = os.path.relpath(os.path.dirname(__file__))
+        self.PATH = os.path.relpath(os.path.join(os.path.dirname(__file__),'test_backup'))
         self.EXEPATH = os.path.relpath(os.path.dirname(pyshell.backup.__file__))
+        
+        try:
+            os.makedirs(self.PATH)
+        except:
+            pass
         
         clear_dir(os.path.join(self.PATH,'a/'))
         make_files(os.path.join(self.PATH,'a/'),self.NUM_FILES)
@@ -95,7 +101,9 @@ class test_BackupScript(object):
         """Test full engine"""
         assert len(os.listdir(os.path.join(self.PATH,'a/'))) != len(os.listdir(os.path.join(self.PATH,'b/')))
         assert len(os.listdir(os.path.join(self.PATH,'c/'))) != len(os.listdir(os.path.join(self.PATH,'d/')))
-        self.engine.arguments("-q --config tests/Backup.yaml main other".split())
+        backup_py_config = os.path.join(self.PATH,"Backup.yaml")
+        backup_py_args = shlex.split("-q --config %s main other" % (backup_py_config))
+        self.engine.arguments(backup_py_args)
         self.engine.run()
         print os.listdir(os.path.join(self.PATH,'a/'))
         print os.listdir(os.path.join(self.PATH,'b/'))
@@ -108,8 +116,10 @@ class test_BackupScript(object):
         assert len(os.listdir(os.path.join(self.PATH,'c/'))) != len(os.listdir(os.path.join(self.PATH,'d/')))
         backup_py_path = os.path.join(self.EXEPATH,"backup.py")
         backup_py_config = os.path.join(self.PATH,"Backup.yaml")
-        backup_py_args = ("python %s -q --config %s main other" % (backup_py_path,backup_py_config)).split()
-        backup_py = Popen(backup_py_args,stdin=PIPE,stdout=PIPE,stderr=PIPE)
+        backup_py_command = shlex.split("python %s " % backup_py_path)
+        backup_py_args = shlex.split("-q --config %s main other" % backup_py_config)
+        print " ".join(backup_py_args)
+        backup_py = Popen(backup_py_command + backup_py_args,stdin=PIPE,stdout=PIPE,stderr=PIPE)
         backup_py_retcode = backup_py.wait()
         nt.eq_(backup_py_retcode, 0)
         nt.eq_(len(os.listdir(os.path.join(self.PATH,'a/'))), len(os.listdir(os.path.join(self.PATH,'b/'))))
