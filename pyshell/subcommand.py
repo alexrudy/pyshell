@@ -107,7 +107,7 @@ class _LimitedHelpAction(Action):
             nargs=0,
             help=help)
     def __call__(self, parser, namespace, values, option_string=None):
-        if not hasattr(namespace,'mode'):
+        if not getattr(namespace,'mode',False):
             parser.print_help()
             parser.exit()
     
@@ -122,6 +122,7 @@ class SCController(CLIEngine):
     def __init__(self,**kwargs):
         kwargs.setdefault('conflict_handler','resolve')
         super(SCController, self).__init__(**kwargs)
+        self._add_limited_help()
         self._subcommand = {}
         for subEngine in self._subEngines:
             # For specific cases, where the master engine sets the module name, pass that module name
@@ -144,7 +145,6 @@ class SCController(CLIEngine):
         for subEngine in self._subcommand:
             self._subcommand[subEngine].__parser__(self._subparsers)
             self._subcommand[subEngine].init()
-        self._add_limited_help()
         
     def _add_limited_help(self):
         """Add a limited help function"""
