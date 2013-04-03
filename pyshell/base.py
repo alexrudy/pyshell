@@ -128,6 +128,7 @@ import os, os.path
 import abc
 from warnings import warn
 from .config import StructuredConfiguration as Config, Configuration as BConfig
+from .util import semiabstractmethod
 import logging, logging.config
 
 __all__ = ['CLIEngine']
@@ -260,17 +261,21 @@ class CLIEngine(object):
         self._opts = self.parser.parse_args(self._rargs, self._opts)
         self.configure_logging()
         
+    @semiabstractmethod
     def start(self):
         """This function is called at the start of the :class:`CLIEngine` \
         operation. It should contain any process spawning that needs to \
         occur."""
         pass
         
+    
     def do(self):
         """This function should handle the main operations for the command \
         line tool."""
-        pass
+        self.start()
+        self.end()
         
+    @semiabstractmethod
     def end(self):
         """This function is called at the end of the :class:`CLIEngine` \
         operation and should ensure that all subprocesses have ended."""
@@ -290,9 +295,7 @@ class CLIEngine(object):
         self.configure()
         self.parse()
         try:
-            self.start()
             self.do()
-            self.end()
         except SystemExit as e:
             if not getattr(e,'code',0):
                 self.kill()

@@ -162,7 +162,10 @@ class test_base_cliengine(object):
     
     def test_run(self):
         """.run()"""
-        IN = self.CLASS()
+        class TestCLI(self.CLASS):
+            def do(self):
+                self.do_done = True
+        IN = TestCLI()
         IN.arguments(tuple())
         nt.eq_(IN.run(),0)
 
