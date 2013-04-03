@@ -136,8 +136,29 @@ def semiabstractmethod(txt):
 def depricatedmethod(message=None,version=None,replacement=None):
     """Mark a method as depricated"""
     def decorator(func):
-        """docstring for decorator"""
-    pass
+        try:
+            txt.format(method=func.__name__)
+        except KeyError:
+            pass
+        @functools.wraps(func)
+        def warner(*args, **kwargs):
+            warnings.warn(txt,warnings.DepricationWarning)
+            return func(*args,**kwargs)
+        return warner
+    if callable(message) or message is None:
+        txt = "Method {method} will be depricated"
+    else:
+        txt = message
+    if version is not None:
+        txt += "in version {version}".format(version=version)
+    else:
+        txt += "soon"
+    if replacement is not None:
+        txt += "please use {replacement} instead".format(replacement=replacement)
+    txt += "."
+    if callable(message):
+        return decorator(message)
+    return decorator
 
 # Borrowed from:
 # http://stackoverflow.com/questions/3041986/python-command-line-yes-no-input  
