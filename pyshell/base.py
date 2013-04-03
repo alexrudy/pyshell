@@ -185,14 +185,6 @@ class CLIEngine(object):
         self._hasargs = False
         self._hasvars = True
         
-    def init(self):
-        """Initialization after the parser has been created."""
-        self._hasinit = True
-        if self.defaultcfg:
-            self.parser.add_argument('--config',
-                action='store', metavar='file.yml', default=self.defaultcfg,
-                help="Set configuration file. By default, load %(file)s and"\
-                " ~/%(file)s if it exists." % dict(file=self.defaultcfg))
         
     @property
     def parser(self):
@@ -212,30 +204,16 @@ class CLIEngine(object):
         """Command Line Options, as paresed, for this engine"""
         return self._opts
         
-    def parse(self):
-        """Parse the command line arguments"""
-        self._add_help()
-        self._opts = self.parser.parse_args(self._rargs, self._opts)
-        self.configure_logging()
+    def init(self):
+        """Initialization after the parser has been created."""
+        self._hasinit = True
+        if self.defaultcfg:
+            self.parser.add_argument('--config',
+                action='store', metavar='file.yml', default=self.defaultcfg,
+                help="Set configuration file. By default, load %(file)s and"\
+                " ~/%(file)s if it exists." % dict(file=self.defaultcfg))
+        
     
-    def _remove_help(self):
-        """Remove the ``-h, --help`` argument. This is a dangerous swizzle!"""
-        for option_string in self.__help_action.option_strings:
-            del self._parser._option_string_actions[option_string]
-        self._parser._remove_action(self.__help_action)
-    
-    def _add_help(self):
-        """Add the ``-h, --help`` argument."""
-        self.__help_action = self.parser.add_argument('-h', '--help',
-            action='help', help="Display this help text")
-    
-    def configure_logging(self):
-        """Configure the logging system."""
-        if "logging" in self.config:
-            logging.config.dictConfig(self.config["logging"])
-            if "py.warnings" in self.config["logging.loggers"]:
-                logging.captureWarnings(True)
-            
     def arguments(self, *args):
         """Parse the given arguments. If no arguments are given, parses \
         the known arguments on the command line. Generally this should \
@@ -275,8 +253,13 @@ class CLIEngine(object):
         """
         cfg = getattr(self.opts,'config',self.defaultcfg)
         self.config.configure(module=self.__module__,defaultcfg=self.defaultcfg,cfg=cfg,supercfg=self.supercfg)
-                    
-    
+        
+    def parse(self):
+        """Parse the command line arguments"""
+        self._add_help()
+        self._opts = self.parser.parse_args(self._rargs, self._opts)
+        self.configure_logging()
+        
     def start(self):
         """This function is called at the start of the :class:`CLIEngine` \
         operation. It should contain any process spawning that needs to \
@@ -329,3 +312,21 @@ class CLIEngine(object):
         engine = cls()
         engine.arguments()
         return engine.run()
+        
+    def _remove_help(self):
+        """Remove the ``-h, --help`` argument. This is a dangerous swizzle!"""
+        for option_string in self.__help_action.option_strings:
+            del self._parser._option_string_actions[option_string]
+        self._parser._remove_action(self.__help_action)
+    
+    def _add_help(self):
+        """Add the ``-h, --help`` argument."""
+        self.__help_action = self.parser.add_argument('-h', '--help',
+            action='help', help="Display this help text")
+    
+    def configure_logging(self):
+        """Configure the logging system."""
+        if "logging" in self.config:
+            logging.config.dictConfig(self.config["logging"])
+            if "py.warnings" in self.config["logging.loggers"]:
+                logging.captureWarnings(True)
