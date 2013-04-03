@@ -18,7 +18,7 @@ class test_Configuration(object):
     CLASS = config.Configuration
     
     def setup(self):
-        filename = resource_filename(__name__,"test_config.yml")
+        filename = resource_filename(__name__,"test_config/test_config.yml")
         with open(filename,'r') as stream:
             self.test_dict = yaml.load(stream)
         self.test_dict_A = {"Hi":{"A":1,"B":2,},}
