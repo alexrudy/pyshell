@@ -31,28 +31,28 @@ class test_Configuration(object):
         self.remove("Test.dat")
     
     def remove(self,filename):
-        """docstring for remove"""
+        """Catch and remove a file whether it exists or not."""
         try:
             os.remove(filename)
         except:
             pass
         
     def test_update(self):
-        """update() deep updates"""
+        """.update() deep updates"""
         cfg = self.CLASS(self.test_dict_A)
         cfg.update(self.test_dict_B)
         assert cfg == self.test_dict_C
     
         
     def test_merge(self):
-        """merge() deep updates"""
+        """.merge() deep updates"""
         cfg = self.CLASS(self.test_dict_A)
         cfg.merge(self.test_dict_B)
         print self.test_dict_C
         assert cfg == self.test_dict_C
         
     def test_save(self):
-        """save() writes yaml file or dat file"""
+        """.save() writes yaml file or dat file"""
         cfg = self.CLASS(self.test_dict_C)
         cfg.save("Test.yaml")
         loaded = self.CLASS()
@@ -63,7 +63,7 @@ class test_Configuration(object):
         
         
     def test_read(self):
-        """load() reads a yaml file."""
+        """.load() reads a yaml file."""
         cfg = self.CLASS(self.test_dict_C)
         cfg.save("Test.yaml")
         cfg = self.CLASS()

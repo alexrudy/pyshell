@@ -39,18 +39,19 @@ class test_base_cliengine(object):
         
     
     def teardown(self):
-        """docstring for teardown_config"""
+        """Teardown configuration"""
         try:
             os.remove(os.path.join(self.CWD,self.CONFIG))
         except IOError:
             pass
     
     def test_base_init(self):
-        """__init__()"""
+        """.__init__()"""
         import argparse
         IN = self.CLASS()
         nt.eq_(IN.exitcode,0)
-        nt.ok_(isinstance(IN.parser,argparse.ArgumentParser))
+        nt.ok_(isinstance(IN.parser,argparse.ArgumentParser),
+            "The .parser attribute must be an <type 'argparse.ArgumentParser'>")
         nt.eq_(IN.config.store,{})
         nt.eq_(IN.description,"A command line interface.")
         nt.eq_(IN.epilog,"")
@@ -98,17 +99,21 @@ class test_base_cliengine(object):
         IN.arguments(('',))
         IN.opts.config = os.path.join(self.CWD,self.CONFIG)
         IN.configure()
-        nt.eq_(IN.config["c.d"],1)
+        nt.eq_(IN.config["c.d"],1,
+            "Dotted configuration access failed.")
         
     def test_help(self):
         """._add_help() and ._remove_help()"""
         IN = self.CLASS()
         IN.init()
-        nt.ok_("help" not in dests_from_argparse(IN.parser))
+        nt.ok_("help" not in dests_from_argparse(IN.parser),
+            "'help' shoud not be an argument destination before it is added.")
         IN._add_help()
-        nt.ok_("help" in dests_from_argparse(IN.parser))
+        nt.ok_("help" in dests_from_argparse(IN.parser),
+            "'help' should be an argument destination after it is added.")
         IN._remove_help()
-        nt.ok_("help" not in dests_from_argparse(IN.parser))
+        nt.ok_("help" not in dests_from_argparse(IN.parser),
+            "'help' should not be an argument destination after it is removed.")
         
     def test_parse(self):
         """.parse()"""
@@ -116,10 +121,13 @@ class test_base_cliengine(object):
         IN.init()
         IN.arguments(('--hi',))
         nt.eq_(IN._rargs,['--hi'])
+        nt.ok_(not hasattr(IN.opts,'hi'),
+            ".opts should not have a 'hi' attribute.")
         IN.configure()
         IN.parser.add_argument('--hi',action='store_true')
         IN.parse()
-        nt.ok_(IN.opts.hi)
+        nt.ok_(IN.opts.hi,
+            ".opts should have a 'hi' attribute.")
         
     def test_parse_fail(self):
         """.parse() failure"""
@@ -142,9 +150,25 @@ class test_base_cliengine(object):
         IN.configure()
         IN.parse()
         IN.do()
-        nt.ok_(IN.do_done)
+        nt.ok_(IN.do_done,".do() has not run.")
         
     def test_kill(self):
+        """.kill() with SystemExit"""
+        class TestCLI(self.CLASS):
+            def do(self):
+                raise SystemExit
+            
+            def kill(self):
+                self.killed = True
+        
+        IN = TestCLI()
+        IN.init()
+        IN.arguments(tuple())
+        with nt.assert_raises(SystemExit):
+            IN.run()
+        nt.ok_(IN.killed,'.kill() has not run')
+        
+    def test_kill_keyboard(self):
         """.kill() with KeyboardInterrupt"""
         class TestCLI(self.CLASS):
             def do(self):
@@ -158,7 +182,7 @@ class test_base_cliengine(object):
         IN.arguments(tuple())
         with nt.assert_raises(KeyboardInterrupt):
             IN.run()
-        nt.ok_(IN.killed)
+        nt.ok_(IN.killed,'.kill() has not run')
     
     def test_run(self):
         """.run()"""
@@ -168,5 +192,7 @@ class test_base_cliengine(object):
         IN = TestCLI()
         IN.arguments(tuple())
         nt.eq_(IN.run(),0)
+        nt.ok_(IN.do_done,".do() has not run.")
+        
 
     
