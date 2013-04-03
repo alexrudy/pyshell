@@ -12,6 +12,9 @@
 :mod:`util` - Utilities
 =======================
 
+.. testsetup::
+    from pyshell.util import *
+
 .. autofunction::
     force_dir_path
     
@@ -20,9 +23,6 @@
     
 .. autofunction::
     func_lineno
-    
-.. autofunction::
-    make_decorator
 
 .. autofunction::
     query_yes_no
@@ -34,6 +34,7 @@
 import os
 import sys
 import warnings
+import functools
 
 def is_type_factory(ttype):
     """Return a function which checks if an object can be cast as a given type."""
@@ -65,7 +66,7 @@ def collapseuser(path):
     userpath = os.path.expanduser("~")
     if path.startswith(userpath):
         relpath = os.path.relpath(path,userpath)
-        return os.path.normpath(os.path.join("~/",relpath))
+        return os.path.normpath(os.path.join("~",relpath))
     else:
         return path
     
@@ -85,7 +86,7 @@ def warn_exists(path,name="path",exists=True):
     """docstring for warn_exists"""
     if check_exists(path) != exists:
         warnings.warn("{name} '{path}' does{exist} exist".format(name=name.capitalize(),path=path,
-            exist=" not" if exists else ""))
+            exist=" not" if exists else ""),warnings.RuntimeWarning)
     
 def is_remote_path(path):
     """Path looks like an SSH or other URL compatible path?"""
@@ -105,41 +106,58 @@ def func_lineno(func):
     except AttributeError:
         return -1
 
-def make_decorator(func):
-    """
-    Wraps a test decorator so as to properly replicate metadata
-    of the decorated function, including nose's additional stuff
-    (namely, setup and teardown).
-    """
-    def decorate(newfunc):
-        if hasattr(func, 'compat_func_name'):
-            name = func.compat_func_name
-        else:
-            name = func.__name__
-        newfunc.__dict__ = func.__dict__
-        newfunc.__doc__ = func.__doc__
-        newfunc.__module__ = func.__module__
-        if not hasattr(newfunc, 'compat_co_firstlineno'):
-            newfunc.compat_co_firstlineno = func.func_code.co_firstlineno
-        try:
-            newfunc.__name__ = name
-        except TypeError:
-            # can't set func name in 2.3
-            newfunc.compat_func_name = name
-        return newfunc
-    return decorate
-
 def semiabstractmethod(txt):
-    """Convert semi-abstract-methods into raisers for NotImplementedErrors"""
+    """Convert semi-abstract-methods into raisers for NotImplementedErrors
+    
+    .. doctest::
+    
+        >>> @semiabstractmethod
+        ... def myfunc():
+        ...     print "Inside myfunc"
+        >>> myfunc()
+        NotImplementedError
+    
+    """
+    def decorator(func):
+        @functools.wraps(func)
+        def raiser(*args, **kwargs):
+            name = func.__name__
+            if hasattr(func,'im_class'):
+                name = ".".join([func.im_class.__name__,name])
+            msg = txt % (name)
+            raise NotImplementedError(msg)
+        return raiser
     if callable(txt):
         func = txt
-        txt = u"Abstract method %s.%s() cannot be called."
+        txt = u"Abstract method %s() cannot be called."
+        return decorator(func)
+    return decorator
+
+def depricatedmethod(message=None,version=None,replacement=None):
+    """Mark a method as depricated"""
     def decorator(func):
-        def raiser(self, *args, **kwargs):
-            msg = txt % (self, func.__name__)
-            raise NotImplementedError(msg)
-        newfunc = make_decorator(func)(raiser)
-        return newfunc
+        try:
+            txt.format(method=func.__name__)
+        except KeyError:
+            pass
+        @functools.wraps(func)
+        def warner(*args, **kwargs):
+            warnings.warn(txt,warnings.DepricationWarning)
+            return func(*args,**kwargs)
+        return warner
+    if callable(message) or message is None:
+        txt = "Method {method} will be depricated"
+    else:
+        txt = message
+    if version is not None:
+        txt += "in version {version}".format(version=version)
+    else:
+        txt += "soon"
+    if replacement is not None:
+        txt += "please use {replacement} instead".format(replacement=replacement)
+    txt += "."
+    if callable(message):
+        return decorator(message)
     return decorator
 
 # Borrowed from:

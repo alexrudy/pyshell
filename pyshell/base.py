@@ -104,7 +104,7 @@ traceback. If not, the traceback will be suppressed.
     
 
 Call structure of :meth:`run`
-=============================
+-----------------------------
 The call structure of the method :meth:`run`, the main script driver::
     
     if not(hasattr(self, '_rargs') and hasattr(self, '_opts')):
@@ -128,6 +128,7 @@ import os, os.path
 import abc
 from warnings import warn
 from .config import StructuredConfiguration as Config, Configuration as BConfig
+from .util import semiabstractmethod, depricatedmethod
 import logging, logging.config
 
 __all__ = ['CLIEngine']
@@ -181,24 +182,15 @@ class CLIEngine(object):
         self._opts = None
         self._rargs = None
         self.exitcode = 0
-        self._hasinit = True
+        self._hasinit = False
+        self._hasargs = False
+        self._hasvars = True
         
-    def init(self):
-        """Initialization after the parser has been created."""
-        if self.defaultcfg:
-            self.parser.add_argument('--config',
-                action='store', metavar='file.yml', default=self.defaultcfg,
-                help="Set configuration file. By default, load %(file)s and"\
-                " ~/%(file)s if it exists." % dict(file=self.defaultcfg))
-            self.parser.add_argument('--configure',action='store',default=[],
-                nargs="+",metavar="Option.Key='literal value'",dest='literalconfig',
-                help="add configuration items in the form of dotted names and value pairs: "
-                " Option.Key='literal value' will set config[\"Option.Key\"] = 'literal value'")
         
     @property
     def parser(self):
         """:class:`argparse.ArgumentParser` instance for this engine."""
-        if getattr(self,'_hasinit',False):
+        if getattr(self,'_hasvars',False):
             return self._parser
         else:
             raise AttributeError("Parser has not yet been initialized!")
@@ -213,30 +205,16 @@ class CLIEngine(object):
         """Command Line Options, as paresed, for this engine"""
         return self._opts
         
-    def parse(self):
-        """Parse the command line arguments"""
-        self._add_help()
-        self._opts = self.parser.parse_args(self._rargs, self._opts)
-        self.configure_logging()
+    def init(self):
+        """Initialization after the parser has been created."""
+        self._hasinit = True
+        if self.defaultcfg:
+            self.parser.add_argument('--config',
+                action='store', metavar='file.yml', default=self.defaultcfg,
+                help="Set configuration file. By default, load %(file)s and"\
+                " ~/%(file)s if it exists." % dict(file=self.defaultcfg))
+        
     
-    def _remove_help(self):
-        """Remove the ``-h, --help`` argument. This is a dangerous swizzle!"""
-        for option_string in self.__help_action.option_strings:
-            del self._parser._option_string_actions[option_string]
-        self._parser._remove_action(self.__help_action)
-    
-    def _add_help(self):
-        """Add the ``-h, --help`` argument."""
-        self.__help_action = self.parser.add_argument('-h', '--help',
-            action='help', help="Display this help text")
-    
-    def configure_logging(self):
-        """Configure the logging system."""
-        if "logging" in self.config:
-            logging.config.dictConfig(self.config["logging"])
-            if "py.warnings" in self.config["logging.loggers"]:
-                logging.captureWarnings(True)
-            
     def arguments(self, *args):
         """Parse the given arguments. If no arguments are given, parses \
         the known arguments on the command line. Generally this should \
@@ -251,8 +229,10 @@ class CLIEngine(object):
         for :meth:`argparse.ArgumentParser.parse_args()`
         
         """
+        if not self._hasinit:
+            self.init()
         self._opts, self._rargs = self.parser.parse_known_args(*args)        
-        
+        self._hasargs = True
     
     def configure(self):
         """Configure the command line engine from a series of YAML files.
@@ -274,19 +254,30 @@ class CLIEngine(object):
         """
         cfg = getattr(self.opts,'config',self.defaultcfg)
         self.config.configure(module=self.__module__,defaultcfg=self.defaultcfg,cfg=cfg,supercfg=self.supercfg)
-        self.config.parse_literals(*self.opts.literalconfig)
-    
+        
+    def parse(self):
+        """Parse the command line arguments"""
+        self._add_help()
+        self._opts = self.parser.parse_args(self._rargs, self._opts)
+        self.configure_logging()
+        
+    @depricatedmethod(version="0.3",replacement=".do()")
+    @semiabstractmethod("Method .start() will be depricated after version 0.3")
     def start(self):
         """This function is called at the start of the :class:`CLIEngine` \
         operation. It should contain any process spawning that needs to \
         occur."""
         pass
         
+    
     def do(self):
         """This function should handle the main operations for the command \
         line tool."""
-        pass
+        self.start()
+        self.end()
         
+    @depricatedmethod(version="0.3",replacement=".do()")
+    @semiabstractmethod("Method .end() will be depricated after version 0.3")
     def end(self):
         """This function is called at the end of the :class:`CLIEngine` \
         operation and should ensure that all subprocesses have ended."""
@@ -300,15 +291,13 @@ class CLIEngine(object):
         """This method is used to run the command line engine in the expected \
         order. This method should be called to run the engine from another \
         program."""
-        if not(hasattr(self, '_rargs') and hasattr(self, '_opts')):
+        if not self._hasargs:
             warn("Implied Command-line mode", UserWarning)
             self.arguments()
         self.configure()
         self.parse()
         try:
-            self.start()
             self.do()
-            self.end()
         except SystemExit as e:
             if not getattr(e,'code',0):
                 self.kill()
@@ -326,7 +315,23 @@ class CLIEngine(object):
         point. This method ensures that the engine runs correctly on \
         the command line, and is cleaned up at the end."""
         engine = cls()
-        engine.init()
         engine.arguments()
         return engine.run()
         
+    def _remove_help(self):
+        """Remove the ``-h, --help`` argument. This is a dangerous swizzle!"""
+        for option_string in self.__help_action.option_strings:
+            del self._parser._option_string_actions[option_string]
+        self._parser._remove_action(self.__help_action)
+    
+    def _add_help(self):
+        """Add the ``-h, --help`` argument."""
+        self.__help_action = self.parser.add_argument('-h', '--help',
+            action='help', help="Display this help text")
+    
+    def configure_logging(self):
+        """Configure the logging system."""
+        if "logging" in self.config:
+            logging.config.dictConfig(self.config["logging"])
+            if "py.warnings" in self.config["logging.loggers"]:
+                logging.captureWarnings(True)

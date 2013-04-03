@@ -1,0 +1,13 @@
+a: b
+c:
+  d: value
+  e: 
+    - f
+    - g
+    - h
+    - i
+    - j
+  f: {}
+g:
+  h.i.j:
+    k: value
