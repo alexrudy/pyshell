@@ -89,7 +89,6 @@ class test_BackupEngine(object):
         engine.init()
         engine.arguments(["main"])
         nt.eq_(engine._rargs,['main'])
-        print dir(engine.opts)
         nt.ok_(hasattr(engine.opts,'prefix'),'engine.opts.mode')
         
     def test_configure(self):
@@ -144,8 +143,6 @@ class test_BackupScript(object):
         backup_py_args = shlex.split("-q --config %s main other" % (backup_py_config))
         self.engine.arguments(backup_py_args)
         self.engine.run()
-        print os.listdir(os.path.join(self.PATH,'a/'))
-        print os.listdir(os.path.join(self.PATH,'b/'))
         nt.eq_(len(os.listdir(os.path.join(self.PATH,'a/'))), len(os.listdir(os.path.join(self.PATH,'b/'))))
         nt.eq_(len(os.listdir(os.path.join(self.PATH,'c/'))), len(os.listdir(os.path.join(self.PATH,'d/'))))
         
@@ -157,7 +154,6 @@ class test_BackupScript(object):
         backup_py_config = os.path.join(self.PATH,"Backup.yaml")
         backup_py_command = shlex.split("python %s " % backup_py_path)
         backup_py_args = shlex.split("-q --config %s main other" % backup_py_config)
-        print " ".join(backup_py_args)
         backup_py = Popen(backup_py_command + backup_py_args,stdin=PIPE,stdout=PIPE,stderr=PIPE)
         backup_py_retcode = backup_py.wait()
         nt.eq_(backup_py_retcode, 0)

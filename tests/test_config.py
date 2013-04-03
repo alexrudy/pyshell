@@ -48,7 +48,6 @@ class test_Configuration(object):
         """.merge() deep updates"""
         cfg = self.CLASS(self.test_dict_A)
         cfg.merge(self.test_dict_B)
-        print self.test_dict_C
         assert cfg == self.test_dict_C
         
     def test_save(self):
@@ -57,7 +56,6 @@ class test_Configuration(object):
         cfg.save("Test.yaml")
         loaded = self.CLASS()
         loaded.load("Test.yaml")
-        print self.test_dict_C, loaded
         assert self.test_dict_C == loaded.extract()
         cfg.save("Test.dat")
         
@@ -68,7 +66,6 @@ class test_Configuration(object):
         cfg.save("Test.yaml")
         cfg = self.CLASS()
         cfg.load("Test.yaml")
-        print cfg, self.test_dict_C
         assert cfg == self.test_dict_C
         
 class test_DottedConfiguration(test_Configuration):
