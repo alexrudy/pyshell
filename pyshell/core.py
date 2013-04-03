@@ -43,13 +43,13 @@ class Typedkwargs(object):
             
 class State(OrderedDict):
     """Controls the state of a system."""
-    
+    pass
     
 
 class Stateful(object):
-    """docstring for Stateful"""
-    def __init__(self):
-        super(Stateful, self).__init__()
+    """A base class for objects which have some sort of state."""
+    def __init__(self,*args,**kwargs):
+        super(Stateful, self).__init__(*args,**kwargs)
         self._state = State()
         
     @property
