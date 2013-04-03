@@ -170,6 +170,7 @@ class CLIEngine(object):
     
     def __init__(self, prefix_chars='-', conflict_handler='error'):
         super(CLIEngine, self).__init__()
+        self._log = logging.getLogger(self.__module__)
         self._parser = ArgumentParser(
             prefix_chars = prefix_chars, add_help = False,
             formatter_class = RawDescriptionHelpFormatter,
@@ -204,6 +205,11 @@ class CLIEngine(object):
     def opts(self):
         """Command Line Options, as paresed, for this engine"""
         return self._opts
+        
+    @property
+    def log(self):
+        """Return this item's logger"""
+        return self._log
         
     def init(self):
         """Initialization after the parser has been created."""
