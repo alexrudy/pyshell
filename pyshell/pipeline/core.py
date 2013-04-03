@@ -349,6 +349,8 @@ can be customized using the 'Default' configuration variable in the configuratio
     def do(self):
         """The action verb!"""
         self.start_actions()
+        if not self.call:
+            self.parser.error("No stages were set to run!")
         for pipe in self.call:
             self._execute(pipe)
         self.end_actions()
@@ -376,7 +378,7 @@ can be customized using the 'Default' configuration variable in the configuratio
         try:
             pipe.run(dry=self.config.get("System.DryRun",False))
         except (SystemExit,KeyboardInterrupt):
-            print("")
+            print(" ...killed...") #This accounts for the User's ^C in the stdout stream.
             self.log.critical(u"Keyboard Interrupt during %(pipe)s... ending simulator." % {'pipe':pipe.name})
             self.log.critical(u"Last completed pipe: %(pipe)s" % {'pipe':self.completed[-1]})
             self.log.debug(u"Pipes completed: %s" % ", ".join(self.completed))
