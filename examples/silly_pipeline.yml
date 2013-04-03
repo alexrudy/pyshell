@@ -1,0 +1,12 @@
+logging:
+  loggers:
+    __main__:
+      handlers:
+        - console
+      level: DEBUG
+  handlers:
+    console:
+      level: 1
+  root:
+    handlers: []
+    

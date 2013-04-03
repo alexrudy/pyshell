@@ -11,10 +11,15 @@ from __future__ import division
 
 from pyshell.pipeline2 import Pipeline
 from pyshell.pipelinehelp import *
+import time
 
 
 class SillyPipeline(Pipeline):
     """docstring for SillyPipeline"""
+        
+    supercfg = Pipeline.PYSHELL_LOGGING_STREAM
+        
+    defaultcfg = "silly_pipeline.yml"
         
     def init(self):
         """docstring for init"""
@@ -40,17 +45,18 @@ class SillyPipeline(Pipeline):
         
     @triggers("stepE","stepF")
     def stepD(self):
-        """docstring for stepD"""
-        pass
+        """stepD"""
+        time.sleep(1)
+        
     
     
     def stepE(self):
-        """docstring for stepE"""
+        """stepE"""
         pass
         
     @replaces("stepE")
     def stepF(self):
-        """docstring for stepF"""
+        """stepF"""
         pass
 
 

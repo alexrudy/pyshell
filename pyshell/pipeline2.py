@@ -10,6 +10,7 @@
 import time
 import argparse
 import re
+import logging
 from collections import OrderedDict
 
 from . import CLIEngine
@@ -20,6 +21,8 @@ import sys
 from IPython.core import ultratb
 sys.excepthook = ultratb.FormattedTB(mode='Verbose',
 color_scheme='Linux', call_pdb=1)
+
+logging.addLevelName(25,'STATUS')
 
 class PipelineException(Exception):
     """Exceptions in Pipelines"""
@@ -39,31 +42,43 @@ class Pipe(Stateful,Typedkwargs):
         'optional' : bool,
         'include' : bool,
         'parent': str,
+        'handle': lambda : (lambda a : a),
     }
     
-    def __init__(self,action=lambda : None,name=None, description=None,help=None,**kwargs):
+    def __init__(self,action=lambda : None,name=None, description=None,help=None,module=None,**kwargs):
         super(Pipe, self).__init__()
+        self.log = logging.getLogger(module if module is not None else self.__module__)
         self._name = name
         self._state = State.fromkeys(["initialized","included","primed","replaced","triggered","started","excepted","completed","finished"],False)
         self.do = action
         self._desc = description
         self._help = help
-        self._parse_keyword_args(kwargs)
+        self._parse_keyword_args(kwargs,vars(self.do))
         self.set_state("initialized")
     
     
-    def run(self):
+    def run(self,dry=False):
         """This pipe will run the program here."""
         try:
             self.set_state("started")
-            self.do()
+            self.log.debug("Started pipe {name}".format(name=self.name))
+            self.log.log(25,unicode(self.description))
+            if not dry:
+                self.do()
         except Exception:
             self.set_state("excepted")
-            raise
+            self.log.debug("Exception in pipe {name}".format(name=self.name))
+            try:
+                raise
+            except self.exceptions as e:
+                self.handle(e)
         else:
             self.set_state("completed")
+            self.log.debug("Completed pipe {name}".format(name=self.name))
         finally:
             self.set_state("finished")
+            self.log.debug("Finished pipe {name}".format(name=self.name))
+            
     
     @property
     def arg(self):
@@ -108,16 +123,16 @@ class Pipe(Stateful,Typedkwargs):
     def tree(self,pipes,level=0,dup=False):
         """Return the tree line."""
         if self.state["replaced"]:
-            arrow = u"x "
+            arrow = u"╎  "
             space = u" "
         elif self.state["triggered"] and self.state["primed"]:
-            arrow = u"┌>" if not dup else u"┌ "
+            arrow = u"┌─>" if not dup else u"┌  "
             space = u" "
         elif self.state["included"]:
-            arrow = u"+>" if not dup else u"- "
+            arrow = u"┼─>" if not dup else u"┼  "
             space = u" "
         elif self.state["primed"]:
-            arrow = u"└>" if not dup else u"└ "
+            arrow = u"└─>" if not dup else u"└  "
             space = u" "
             
         lines = []
@@ -195,10 +210,10 @@ can be customized using the 'Default' configuration variable in the configuratio
     
     def pipes_with_state(self,*states):
         """Return the pipes with a specific state set."""
-        result = []
+        result = set()
         for state in states:
-             result += [ pipe.name for pipe in self.pipes if pipe.state[state] ]
-        return result
+             result.update([ pipe.name for pipe in self.pipes.values() if pipe.state[state] ])
+        return list(result)
     
     @property
     def attempted(self):
@@ -250,8 +265,9 @@ can be customized using the 'Default' configuration variable in the configuratio
                 
         # Config Commands
         self.register_config({"System":{"DryRun":True}},'-n','--dry-run', help="run the simulation, but do not execute pipes.")
-        self.register_config({"System":{"ShowTree":True}},'--show-tree', help="show a dependcy tree of all pipes run.")
-        self.register_config({"System":{"ListPipe":True}},'--list-pipes', help="show a list of all pipes.")
+        self.register_config({"Actions":{"ShowTree":True}},'--show-tree', help="show a dependcy tree of all pipes run.")
+        self.register_config({"Actions":{"ListPipe":True}},'--list-pipes', help="show a list of all pipes.")
+        self.register_config({"Actions":{"Profile":True}},'-p','--profile', help="output a profile to a file 'profile.html'")
         
         # Default Macro
         self.register_pipe(lambda : None,name="all",description="Run all pipes",help="Run all pipes",include=False)
@@ -288,7 +304,7 @@ can be customized using the 'Default' configuration variable in the configuratio
         if self.state["started"]:
             raise PipelineStateException("Cannot add a new pipe to the pipeline, the simulation has already started!")
         
-        pipe = Pipe(action=action,**kwargs)
+        pipe = Pipe(action=action,module=self.__module__,**kwargs)
         if pipe.name in self.pipes:
             raise PipelineException("Cannot have duplicate pipe named %s" % name)
         
@@ -390,6 +406,10 @@ can be customized using the 'Default' configuration variable in the configuratio
         self.resolve()
         
         
+    #########################
+    ## PIPELINE RESOLUTION ##
+    #########################
+        
     def resolve(self):
         """Resolve this system's order."""
         self.set_state("started")
@@ -452,9 +472,49 @@ can be customized using the 'Default' configuration variable in the configuratio
             if pipe.state["included"]:
                 tree += pipe.tree(self.pipes.values(),0)
         return tree
+        
+    def get_profile(self):
+        """Get the profile object."""
+        pass
     
+    
+    ######################
+    ## PIPELINE ACTIONS ##
+    ######################
     
     def do(self):
         """The action verb!"""
-        print "\n".join(self.get_dependency_tree())
-    
+        self.start_actions()
+        for pipe in self.call:
+            self._execute(pipe)
+        self.end_actions()
+        
+    def start_actions(self):
+        """Actions completed before running the system."""
+        if self.config.get("System.DryRun",False):
+            self.log.log(25,"(DRYRUN) Starting...")
+        else:
+            self.log.log(25,"Starting...")
+            
+    def end_actions(self):
+        """Actions completed after running the system."""
+        if self.config.get("Actions.ShowTree"):
+            print "\n".join(self.get_dependency_tree())
+        if self.config.get("Actions.ShowProfile"):
+            print self.get_profile().to_ascii()
+        
+    def execute(self,pipename):
+        """Execute an individual pipe by name."""
+        self._execute(self.pipes[pipename])
+        
+    def _execute(self,pipe):
+        """Execute an individual pipe object."""
+        try:
+            pipe.run(dry=self.config.get("System.DryRun",False))
+        except (SystemExit,KeyboardInterrupt):
+            print("")
+            self.log.critical(u"Keyboard Interrupt during %(pipe)s... ending simulator." % {'pipe':pipe.name})
+            self.log.critical(u"Last completed pipe: %(pipe)s" % {'pipe':self.completed[-1]})
+            self.log.debug(u"Pipes completed: %s" % ", ".join(self.completed))
+            raise
+            
