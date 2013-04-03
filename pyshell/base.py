@@ -14,7 +14,7 @@ Using the :class:`CLIEngine`
 
 The :class:`CLIEngine` is designed with "Convention over Configuration" \
 in mind. That is, it aims to set everything up so that it will work out\
--of-the-box, and the user is responsbile for adjusting undesireable\
+-of-the-box, and the user is responsbile for adjusting undesireable \
 behavior.
 
 Class Construction
@@ -23,13 +23,14 @@ Class Construction
 This class should be subclassed by the user, who should re-implement \
 the following methods:
     
-- :meth:`~CLIEngine.start` - Called at the beginning of the operation.
 - :meth:`~CLIEngine.do`  - Does the 'real work'.
-- :meth:`~CLIEngine.end` - Called at end of operation.
 - :meth:`~CLIEngine.kill` - Called if the engine tries to exit abnormally.
     
 These funcitons are used in the normal operation of the command line engine.
     
+
+The user should also override the desired instance variables on the class. `module` must be overridden.
+
 Other methods are used to control the engine.
     
 Using the Engine
@@ -73,7 +74,7 @@ to print the best `--help` message.
 function loads the following configuration files in order (such that the \
 last one loaded is the one that takes precedence):
     
-* The ``defaultcfg`` file from ``engine.module``. This allows the \
+* The ``defaultcfg`` file from ``engine.__module__``. This allows the \
 developer to provide a base configuration for the engine.
 * The requested configuration file from the user's home directory.
 * The requested configuration file form the current directory.
@@ -86,8 +87,8 @@ a warning will be issued.
 parsed by :meth:`parse`. At this point, the entire configuration process \
 is complete.
     
-5. The functions :meth:`start`, :meth:`do` and :meth:`end` are called, \
-in that order. These functions should do the bulk of the engine's work.
+5. The function :meth:`do` is called, \
+This should do the bulk of the engine's work.
 
 6. If the user interrupts the operation of the program, :meth:`kill` will \
 be called. If python is in ``__debug__`` mode, this will raise a full \
@@ -101,6 +102,24 @@ traceback. If not, the traceback will be suppressed.
     CLIEngine
     :members:
     
+
+Call structure of :meth:`run`
+-----------------------------
+The call structure of the method :meth:`run`, the main script driver::
+    
+    if not(hasattr(self, '_rargs') and hasattr(self, '_opts')):
+        warn("Implied Command-line mode", UserWarning)
+        self.arguments()
+    self.configure()
+    self.parse()
+    try:
+        self.do()
+    except (KeyboardInterrupt, SystemExit):
+        self.kill()
+    
+
+
+
 """
 
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
@@ -109,6 +128,7 @@ import os, os.path
 import abc
 from warnings import warn
 from .config import StructuredConfiguration as Config, Configuration as BConfig
+from .util import semiabstractmethod, depricatedmethod
 import logging, logging.config
 
 __all__ = ['CLIEngine']
@@ -140,44 +160,40 @@ class CLIEngine(object):
     """The name of the default configuration file to be loaded. If set to \
     ``False``, no configuration will occur."""
     
-    _module = __name__
+    supercfg = []
     
-    def __set_module(self,module):
-        self._module = module
+    PYSHELL_LOGGING = [('pyshell','logging.yml')]
+    """This constant item can be added to the superconfiguration :attr:`supercfg` to enable a default logging configuration setup. It should probably be added first, so that your own code will override it."""
     
-    def __get_module(self):
-        return self._module
-        
-    def __del_module(self):
-        del self._module
-        
-    module = abc.abstractproperty(__get_module,__set_module,__del_module,
-    """Set :attr:`module` to ``__name__`` to allow the class to\
-    correctly detect the current module.""")
+    PYSHELL_LOGGING_STREAM = [('pyshell','logging-stream-only.yml')]
+    """This constant item can be added to the superconfiguration :attr:`supercfg` to enable a default logging configuration setup. It should probably be added first, so that your own code will override it. It only provides stream loggers, not file handlers."""
     
-    def __init__(self, prefix_chars='-'):
+    def __init__(self, prefix_chars='-', conflict_handler='error'):
         super(CLIEngine, self).__init__()
         self._parser = ArgumentParser(
             prefix_chars = prefix_chars, add_help = False,
             formatter_class = RawDescriptionHelpFormatter,
             description = self.description,
-            epilog = self.epilog)
-        if self.defaultcfg:
-            self._parser.add_argument('--config',
-                action='store', metavar='file.yml', default=self.defaultcfg,
-                help="Set configuration file. By default, load %(file)s and"\
-                " ~/%(file)s if it exists." % dict(file=self.defaultcfg))
+            epilog = self.epilog,
+            conflict_handler = conflict_handler)
         self._home = os.environ["HOME"]
         self._config = Config()
         self._config.dn = BConfig
         self._opts = None
         self._rargs = None
+        self.exitcode = 0
+        self._hasinit = False
+        self._hasargs = False
+        self._hasvars = True
         
         
     @property
     def parser(self):
         """:class:`argparse.ArgumentParser` instance for this engine."""
-        return self._parser
+        if getattr(self,'_hasvars',False):
+            return self._parser
+        else:
+            raise AttributeError("Parser has not yet been initialized!")
         
     @property
     def config(self):
@@ -189,16 +205,16 @@ class CLIEngine(object):
         """Command Line Options, as paresed, for this engine"""
         return self._opts
         
-    def parse(self):
-        """Parse the command line arguments"""
-        self.parser.add_argument('-h', '--help',
-            action='help', help="Display this help text")
-        self._opts = self.parser.parse_args(self._rargs, self._opts)
-        if "logging" in self.config:
-            logging.config.dictConfig(self.config["logging"])
-            if "py.warnings" in self.config["logging.loggers"]:
-                logging.captureWarnings(True)
-            
+    def init(self):
+        """Initialization after the parser has been created."""
+        self._hasinit = True
+        if self.defaultcfg:
+            self.parser.add_argument('--config',
+                action='store', metavar='file.yml', default=self.defaultcfg,
+                help="Set configuration file. By default, load %(file)s and"\
+                " ~/%(file)s if it exists." % dict(file=self.defaultcfg))
+        
+    
     def arguments(self, *args):
         """Parse the given arguments. If no arguments are given, parses \
         the known arguments on the command line. Generally this should \
@@ -213,8 +229,10 @@ class CLIEngine(object):
         for :meth:`argparse.ArgumentParser.parse_args()`
         
         """
+        if not self._hasinit:
+            self.init()
         self._opts, self._rargs = self.parser.parse_known_args(*args)        
-        
+        self._hasargs = True
     
     def configure(self):
         """Configure the command line engine from a series of YAML files.
@@ -234,62 +252,62 @@ class CLIEngine(object):
         intended to use a customized file).
         
         """
-        if not self.defaultcfg:
-            return
-        self.config.load(resource_filename(self.module, self.defaultcfg))
-        if hasattr(self.opts, 'config') \
-            and os.path.exists(os.path.expanduser("~/%s" % self.opts.config)):
-            self.config.load(os.path.expanduser("~/%s" % self.opts.config))
-        if hasattr(self.opts, 'config') and os.path.exists(self.opts.config):
-            self.config.load(self.opts.config, silent=False)
-        elif hasattr(self.opts, 'config') \
-            and self.opts.config != self.defaultcfg:
-            warn("Configuration File not found!", RuntimeWarning)
-
-                    
-    
+        cfg = getattr(self.opts,'config',self.defaultcfg)
+        self.config.configure(module=self.__module__,defaultcfg=self.defaultcfg,cfg=cfg,supercfg=self.supercfg)
+        
+    def parse(self):
+        """Parse the command line arguments"""
+        self._add_help()
+        self._opts = self.parser.parse_args(self._rargs, self._opts)
+        self.configure_logging()
+        
+    @depricatedmethod(version="0.3",replacement=".do()")
+    @semiabstractmethod("Method .start() will be depricated after version 0.3")
     def start(self):
         """This function is called at the start of the :class:`CLIEngine` \
         operation. It should contain any process spawning that needs to \
         occur."""
         pass
         
+    
     def do(self):
         """This function should handle the main operations for the command \
         line tool."""
-        pass
+        self.start()
+        self.end()
         
+    @depricatedmethod(version="0.3",replacement=".do()")
+    @semiabstractmethod("Method .end() will be depricated after version 0.3")
     def end(self):
         """This function is called at the end of the :class:`CLIEngine` \
         operation and should ensure that all subprocesses have ended."""
         pass
         
     def kill(self):
-        """This function should forcibly kill any subprocesses. If it is not \
-        overwritten in a sub-class, and is called while in debug mode (see the \
-        ``__debug__`` variable), it will raise a not-implemented error."""
-        if __debug__:
-            raise NotImplementedError("Nothing to Kill!")
-        else:
-            pass
+        """This function should forcibly kill any subprocesses."""
+        pass
             
     def run(self):
         """This method is used to run the command line engine in the expected \
         order. This method should be called to run the engine from another \
         program."""
-        if not(hasattr(self, '_rargs') and hasattr(self, '_opts')):
+        if not self._hasargs:
             warn("Implied Command-line mode", UserWarning)
             self.arguments()
         self.configure()
         self.parse()
         try:
-            self.start()
             self.do()
-            self.end()
-        except (KeyboardInterrupt, SystemExit):
+        except SystemExit as e:
+            if not getattr(e,'code',0):
+                self.kill()
+            if __debug__:
+                raise
+        except KeyboardInterrupt as e:
             self.kill()
             if __debug__:
                 raise
+        return self.exitcode
     
     @classmethod        
     def script(cls):
@@ -298,4 +316,22 @@ class CLIEngine(object):
         the command line, and is cleaned up at the end."""
         engine = cls()
         engine.arguments()
-        engine.run()
+        return engine.run()
+        
+    def _remove_help(self):
+        """Remove the ``-h, --help`` argument. This is a dangerous swizzle!"""
+        for option_string in self.__help_action.option_strings:
+            del self._parser._option_string_actions[option_string]
+        self._parser._remove_action(self.__help_action)
+    
+    def _add_help(self):
+        """Add the ``-h, --help`` argument."""
+        self.__help_action = self.parser.add_argument('-h', '--help',
+            action='help', help="Display this help text")
+    
+    def configure_logging(self):
+        """Configure the logging system."""
+        if "logging" in self.config:
+            logging.config.dictConfig(self.config["logging"])
+            if "py.warnings" in self.config["logging.loggers"]:
+                logging.captureWarnings(True)

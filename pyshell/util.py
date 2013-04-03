@@ -12,6 +12,9 @@
 :mod:`util` - Utilities
 =======================
 
+.. testsetup::
+    from pyshell.util import *
+
 .. autofunction::
     force_dir_path
     
@@ -20,9 +23,6 @@
     
 .. autofunction::
     func_lineno
-    
-.. autofunction::
-    make_decorator
 
 .. autofunction::
     query_yes_no
@@ -33,6 +33,21 @@
 """
 import os
 import sys
+import warnings
+import functools
+
+def is_type_factory(ttype):
+    """Return a function which checks if an object can be cast as a given type."""
+    def is_type(obj):
+        try:
+            ttype(obj)
+        except:
+            return False
+        else:
+            return True
+    is_type.__doc__ = "Checks if obj can be *cast* as {type}.".format(type=repr(ttype))
+    is_type.__hlp__ = "Input must be of {!s}".format(ttype)
+    return is_type
 
 def force_dir_path(path):
     """Force the input path to be a directory.
@@ -46,50 +61,103 @@ def force_dir_path(path):
     path = os.path.normpath(path)
     return path.rstrip("/") + "/"
     
+def collapseuser(path):
+    """Collapse the username from a path."""
+    userpath = os.path.expanduser("~")
+    if path.startswith(userpath):
+        relpath = os.path.relpath(path,userpath)
+        return os.path.normpath(os.path.join("~",relpath))
+    else:
+        return path
+    
+def join(*args):
+    """docstring for join"""
+    args = list(args)
+    path = args.pop(0)
+    for arg in args:
+        path = os.path.join(path,arg)
+    return os.path.expanduser(path)
+    
+def check_exists(path):
+    """Check whether the given directory exists."""
+    return os.path.exists(os.path.expanduser(path))
+    
+def warn_exists(path,name="path",exists=True):
+    """docstring for warn_exists"""
+    if check_exists(path) != exists:
+        warnings.warn("{name} '{path}' does{exist} exist".format(name=name.capitalize(),path=path,
+            exist=" not" if exists else ""),warnings.RuntimeWarning)
+    
+def is_remote_path(path):
+    """Path looks like an SSH or other URL compatible path?"""
+    base = path.split("/")[0]
+    return ":" in base
+    
 def func_lineno(func):
     """Get the line number of a function. First looks for
     compat_co_firstlineno, then func_code.co_first_lineno.
     """
     try:
+        return func.compat_co_firstlineno
+    except AttributeError:
+        pass
+    try:
         return func.func_code.co_firstlineno
     except AttributeError:
         return -1
 
-def make_decorator(func):
-    """
-    Wraps a test decorator so as to properly replicate metadata
-    of the decorated function, including nose's additional stuff
-    (namely, setup and teardown).
-    """
-    def decorate(newfunc):
-        if hasattr(func, 'compat_func_name'):
-            name = func.compat_func_name
-        else:
-            name = func.__name__
-        newfunc.__dict__ = func.__dict__
-        newfunc.__doc__ = func.__doc__
-        newfunc.__module__ = func.__module__
-        if not hasattr(newfunc, 'compat_co_firstlineno'):
-            newfunc.compat_co_firstlineno = func.func_code.co_firstlineno
-        try:
-            newfunc.__name__ = name
-        except TypeError:
-            # can't set func name in 2.3
-            newfunc.compat_func_name = name
-        return newfunc
-    return decorate
-
 def semiabstractmethod(txt):
-    """Convert semi-abstract-methods into raisers for NotImplementedErrors"""
+    """Convert semi-abstract-methods into raisers for NotImplementedErrors
+    
+    .. doctest::
+    
+        >>> @semiabstractmethod
+        ... def myfunc():
+        ...     print "Inside myfunc"
+        >>> myfunc()
+        NotImplementedError
+    
+    """
+    def decorator(func):
+        @functools.wraps(func)
+        def raiser(*args, **kwargs):
+            name = func.__name__
+            if hasattr(func,'im_class'):
+                name = ".".join([func.im_class.__name__,name])
+            msg = txt % (name)
+            raise NotImplementedError(msg)
+        return raiser
     if callable(txt):
         func = txt
-        txt = u"Abstract method %s.%s() cannot be called."
+        txt = u"Abstract method %s() cannot be called."
+        return decorator(func)
+    return decorator
+
+def depricatedmethod(message=None,version=None,replacement=None):
+    """Mark a method as depricated"""
     def decorator(func):
-        def raiser(self, *args, **kwargs):
-            msg = txt % (self, func.__name__)
-            raise NotImplementedError(msg)
-        newfunc = make_decorator(func)(raiser)
-        return newfunc
+        try:
+            txt.format(method=func.__name__)
+        except KeyError:
+            pass
+        @functools.wraps(func)
+        def warner(*args, **kwargs):
+            warnings.warn(txt,warnings.DepricationWarning)
+            return func(*args,**kwargs)
+        return warner
+    if callable(message) or message is None:
+        txt = "Method {method} will be depricated"
+    else:
+        txt = message
+    if version is not None:
+        txt += "in version {version}".format(version=version)
+    else:
+        txt += "soon"
+    if replacement is not None:
+        txt += "please use {replacement} instead".format(replacement=replacement)
+    txt += "."
+    if callable(message):
+        return decorator(message)
     return decorator
 
 # Borrowed from:
@@ -149,5 +217,9 @@ def query_string(question, default=None, validate=None):
         if validate is None or validate(answer):
             return answer
         else:
+            if hasattr(validate,'__hlp__'):
+                sys.stdout.write(validate.__hlp__+"\n")
+            elif hasattr(validate,'__doc__'):
+                sys.stdout.write("Invalid input, the validation function has the following documentaion:\n"+validate.__doc__+"\n")
             sys.stdout.write("Invalid input. Please try again.\n")
             
