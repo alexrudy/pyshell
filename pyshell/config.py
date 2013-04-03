@@ -53,6 +53,7 @@ Structured Configurations: :class:`StructuredConfiguration`
 """
 # Standard Python Modules
 import os
+import sys
 import collections
 import re
 import yaml
@@ -348,7 +349,10 @@ class Configuration(collections.MutableMapping):
                 self.load(superfilename)
             else:
                 self.load(resource_filename(supermodule,superfilename))
-        if module != '__main__':
+        if module == '__main__':
+            # NOTE: This is a special case for when the calling module is '__main__'. This tries to reconstruct the filename from the calling path.
+            self.load(os.path.join(resource_filename(module,''),os.path.dirname(sys.argv[0]),defaultcfg))
+        else:
             self.load(resource_filename(module,defaultcfg))
         if cfg and util.check_exists("~/%s" % cfg):
             self.load(os.path.expanduser("~/%s" % cfg))
@@ -549,6 +553,11 @@ class StructuredConfiguration(DottedConfiguration):
         self._files["Loaded"] = []
         self._files["Configurations"] = self.dn()
         self.__set_on_load = False
+        
+    @property
+    def files(self):
+        """The set of loaded filenames"""
+        return set(self._files["Loaded"])
         
     @property
     def _set_on_load(self):
