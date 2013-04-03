@@ -9,8 +9,8 @@
 # 
 from __future__ import division
 
-from pyshell.pipeline2 import Pipeline
-from pyshell.pipelinehelp import *
+from pyshell.pipeline import Pipeline
+from pyshell.pipeline._oldhelp import *
 import time
 
 
