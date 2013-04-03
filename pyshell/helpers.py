@@ -17,13 +17,13 @@ class Typedkwargs(object):
     
     keywords = {}
     
-    def _parse_keyword_args(self,kwargs):
+    def _parse_keyword_args(self,kwargs,lookup):
         """docstring for _parse_keywords"""
         for key in self.keywords:
             if key in kwargs and kwargs.get(key) is not None:
                 value = kwargs.get(key)
-            elif hasattr(self.do,key):
-                value = getattr(self.do,key)
+            elif key in lookup:
+                value = lookup.get(key)
             else:
                 value = self.keywords[key]()
             try:
