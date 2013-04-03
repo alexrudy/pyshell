@@ -14,7 +14,7 @@ import warnings
 from nose.plugins.skip import Skip,SkipTest
 from subprocess import CalledProcessError, Popen, PIPE
 import shlex
-import nose.tools as nt
+from .util import dests_from_argparse
 
 
 def clear_dir(tdir):
@@ -38,6 +38,33 @@ class test_BackupEngine(object):
         """Change command to 'scp' fails."""
         engine = pyshell.backup.BackupEngine(cmd='scp')
         
+    def test_attrs(self):
+        """BackupEngine attributes"""
+        from argparse import ArgumentParser
+        engine = pyshell.backup.BackupEngine()
+        nt.eq_(engine.description.splitlines()[0],u"BackUp – A simple backup utility using rsync. The utility has")
+        nt.eq_(engine.cfgbase,'')
+        nt.eq_(engine.defaultcfg,"Backup.yml")
+        nt.ok_(isinstance(engine.parser,ArgumentParser),"engine.parser should be an argparse.ArgumentParser")
+
+    def test_init_args(self):
+        """BackupEngine args set by init()"""
+        engine = pyshell.backup.BackupEngine()
+        engine.init()
+        dests = dests_from_argparse(engine.parser)
+        nt.ok_('prefix' in dests,"--prefix missing")
+        nt.ok_('cwd' in dests,"--root missing")
+        nt.ok_('reverse' in dests,'--reverse missing')
+        nt.ok_('reversedel' in dests,'--reverse-delete missing')
+        
+    def test_backup_config(self):
+        """BackupEngine.backup_config"""
+        engine = pyshell.backup.BackupEngine()
+        if engine.cfgbase == "":
+            nt.eq_(engine.backup_config,engine.config,"Backup Config should match full config.")
+        else:
+            nt.eq_(engine.backup_config,engine.config[cfgbase],"Backup Config should match config['%s']." % engine.cfgbase)
+        
     def test_set_destination(self):
         """Set destinations."""
         engine = pyshell.backup.BackupEngine()
@@ -56,6 +83,18 @@ class test_BackupEngine(object):
         nt.eq_(warned[0].message.message, "Mode test1 will be overwritten.")
         nt.eq_(engine._destinations['test1'].destination, 'c/')
         
+    def test_arguments(self):
+        """BackupEngine.arguments()"""
+        engine = pyshell.backup.BackupEngine()
+        engine.init()
+        engine.arguments(["main"])
+        nt.eq_(engine._rargs,['main'])
+        print dir(engine.opts)
+        nt.ok_(hasattr(engine.opts,'prefix'),'engine.opts.mode')
+        
+    def test_configure(self):
+        """BackupEngine.configure()"""
+    pass
     
 
 class test_BackupScript(object):
