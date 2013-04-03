@@ -128,7 +128,7 @@ import os, os.path
 import abc
 from warnings import warn
 from .config import StructuredConfiguration as Config, Configuration as BConfig
-from .util import semiabstractmethod
+from .util import semiabstractmethod, depricatedmethod
 import logging, logging.config
 
 __all__ = ['CLIEngine']
@@ -261,7 +261,8 @@ class CLIEngine(object):
         self._opts = self.parser.parse_args(self._rargs, self._opts)
         self.configure_logging()
         
-    @semiabstractmethod
+    @depricatedmethod(version="0.3",replacement=".do()")
+    @semiabstractmethod("Method .start() will be depricated after version 0.3")
     def start(self):
         """This function is called at the start of the :class:`CLIEngine` \
         operation. It should contain any process spawning that needs to \
@@ -275,7 +276,8 @@ class CLIEngine(object):
         self.start()
         self.end()
         
-    @semiabstractmethod
+    @depricatedmethod(version="0.3",replacement=".do()")
+    @semiabstractmethod("Method .end() will be depricated after version 0.3")
     def end(self):
         """This function is called at the end of the :class:`CLIEngine` \
         operation and should ensure that all subprocesses have ended."""
