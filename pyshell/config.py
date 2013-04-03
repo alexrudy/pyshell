@@ -321,11 +321,11 @@ class Configuration(collections.MutableMapping):
         
             1. The list of ``supercfg`` 's. This list should contain tuples of ``(module,name)`` pairs.
             2. The ``module`` configuration file named for ``defaultcfg``
-            3. The command line specified file from the user's home folder ``~/config.yml``
-            4. The command line specified file from the working directory.
+            3. The ``cfg`` file from the user's home folder ``~/config.yml``
+            4. The ``cfg`` file from the working directory.
         
         If the fourth file is not found, and the user specified a new name for \
-        the configuration file, then the user is warned that no configuration \
+        the configuration file (i.e. ``cfg != defaultcfg``), then the user is warned that no configuration \
         file could be found. This way the user is only warned about a missing \
         configuration file if they requested a file specifically (and so \
         intended to use a customized file).
@@ -366,6 +366,13 @@ class Configuration(collections.MutableMapping):
         """
         config = cls()
         config.configure(module,defaultcfg,cfg,supercfg)
+        return config
+        
+    @classmethod
+    def fromfile(cls,filename):
+        """Create a configuration from a single YAML file."""
+        config = cls()
+        config.load(filename,silent=False)
         return config
 
 
