@@ -181,10 +181,13 @@ class CLIEngine(object):
         self._opts = None
         self._rargs = None
         self.exitcode = 0
-        self._hasinit = True
+        self._hasinit = False
+        self._hasargs = False
+        self._hasvars = True
         
     def init(self):
         """Initialization after the parser has been created."""
+        self._hasinit = True
         if self.defaultcfg:
             self.parser.add_argument('--config',
                 action='store', metavar='file.yml', default=self.defaultcfg,
@@ -194,7 +197,7 @@ class CLIEngine(object):
     @property
     def parser(self):
         """:class:`argparse.ArgumentParser` instance for this engine."""
-        if getattr(self,'_hasinit',False):
+        if getattr(self,'_hasvars',False):
             return self._parser
         else:
             raise AttributeError("Parser has not yet been initialized!")
@@ -247,8 +250,10 @@ class CLIEngine(object):
         for :meth:`argparse.ArgumentParser.parse_args()`
         
         """
+        if not self._hasinit:
+            self.init()
         self._opts, self._rargs = self.parser.parse_known_args(*args)        
-        
+        self._hasargs = True
     
     def configure(self):
         """Configure the command line engine from a series of YAML files.
@@ -296,7 +301,7 @@ class CLIEngine(object):
         """This method is used to run the command line engine in the expected \
         order. This method should be called to run the engine from another \
         program."""
-        if not(hasattr(self, '_rargs') and hasattr(self, '_opts')):
+        if not self._hasargs:
             warn("Implied Command-line mode", UserWarning)
             self.arguments()
         self.configure()
@@ -322,6 +327,5 @@ class CLIEngine(object):
         point. This method ensures that the engine runs correctly on \
         the command line, and is cleaned up at the end."""
         engine = cls()
-        engine.init()
         engine.arguments()
         return engine.run()
