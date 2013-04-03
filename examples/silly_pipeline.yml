@@ -6,7 +6,7 @@ logging:
       level: DEBUG
   handlers:
     console:
-      level: 1
+      level: INFO
   root:
     handlers: []
     
