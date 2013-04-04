@@ -321,7 +321,11 @@ class Configuration(collections.MutableMapping):
     def parse_literals(self,*literals,**kwargs):
         """docstring for parse_literals"""
         for item in literals:    
-            key,value = item.split(kwargs.get('sep',"="))
+            parts = item.split(kwargs.get('sep',"="))
+            if len(parts) != 2:
+                raise ValueError("Invalid literal: %s" % item)
+            else:
+                key, value = parts
             try:
                 self[key] = ast.literal_eval(value)
             except:
@@ -366,6 +370,7 @@ class Configuration(collections.MutableMapping):
             self.load(cfg, silent=False)
         elif cfg and cfg != defaultcfg:
             warn("Configuration File '{}' not found!".format(cfg), RuntimeWarning)
+        
         
         
     @classmethod

@@ -222,6 +222,10 @@ class CLIEngine(object):
                 action='store', metavar='file.yml', default=self.defaultcfg,
                 help="Set configuration file. By default, load %(file)s and"\
                 " ~/%(file)s if it exists." % dict(file=self.defaultcfg))
+            self.parser.add_argument('--configure',
+                action='append', metavar='Item.Key=value',default=[],
+                help="Set configuration value. The value is parsed as a python literal.",
+                nargs="?")
         
     
     def arguments(self, *args):
@@ -263,6 +267,7 @@ class CLIEngine(object):
         """
         cfg = getattr(self.opts,'config',self.defaultcfg)
         self.config.configure(module=self.__module__,defaultcfg=self.defaultcfg,cfg=cfg,supercfg=self.supercfg)
+        self.config.parse_literals(*getattr(self.opts,'configure',[]))
         
     def parse(self):
         """Parse the command line arguments"""
