@@ -281,7 +281,7 @@ class Configuration(collections.MutableMapping):
                     new = yaml.load(stream)
         except IOError:
             if silent:
-                self.log.warning("Could not load configuration from file: %s" % filename)
+                warnings.warn("Could not load configuration from file: %s" % filename,UserWarning)
             else:
                 raise
         else:
@@ -359,11 +359,7 @@ class Configuration(collections.MutableMapping):
                 self.load(superfilename)
             else:
                 self.load(resource_filename(supermodule,superfilename))
-        if module == '__main__':
-            # NOTE: This is a special case for when the calling module is '__main__'. This tries to reconstruct the filename from the calling path.
-            self.load(os.path.join(resource_filename(module,''),os.path.dirname(sys.argv[0]),defaultcfg))
-        else:
-            self.load(resource_filename(module,defaultcfg))
+        self.load(resource_filename(module,defaultcfg))
         if cfg and util.check_exists("~/%s" % cfg):
             self.load(os.path.expanduser("~/%s" % cfg))
         if cfg and os.path.exists(cfg):
