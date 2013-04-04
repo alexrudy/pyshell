@@ -168,6 +168,9 @@ class CLIEngine(object):
     PYSHELL_LOGGING_STREAM = [('pyshell','logging-stream-only.yml')]
     """This constant item can be added to the superconfiguration :attr:`supercfg` to enable a default logging configuration setup. It should probably be added first, so that your own code will override it. It only provides stream loggers, not file handlers."""
     
+    PYSHELL_LOGGING_STREAM_ALL = [('pyshell','logging-stream-all.yml')]
+    """This constant item can be added to the superconfiguration :attr:`supercfg` to enable a default logging configuration setup. It should probably be added first, so that your own code will override it. It only provides stream loggers, not file handlers. Its logger is just a root logger at the lowest level!"""
+    
     def __init__(self, prefix_chars='-', conflict_handler='error'):
         super(CLIEngine, self).__init__()
         self._log = logging.getLogger(self.__module__)

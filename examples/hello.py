@@ -12,10 +12,15 @@ This is a basic usage example for CLIEngine.
 """
 
 from pyshell import CLIEngine
+from pyshell.util import ipydb
 import os
+
+ipydb()
 
 class Hello(CLIEngine):
     """Say hello in English, French, or another language."""
+    
+    supercfg = CLIEngine.PYSHELL_LOGGING_STREAM_ALL
     
     defaultcfg = "hello.yml"
     
@@ -39,7 +44,7 @@ class Hello(CLIEngine):
                 'Spanish' : u"Hola",
             }
         )
-        
+         
         self.parser.add_argument("language",action='store')
         # We add this argument here, becauase it is required.
         
