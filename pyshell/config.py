@@ -60,6 +60,7 @@ import yaml
 import logging
 import warnings
 from warnings import warn
+import ast
 
 
 # Submodules from this system
@@ -316,6 +317,15 @@ class Configuration(collections.MutableMapping):
         
         """
         return self.store
+        
+    def parse_literals(self,*literals,**kwargs):
+        """docstring for parse_literals"""
+        for item in literals:    
+            key,value = item.split(kwargs.get('sep',"="))
+            try:
+                self[key] = ast.literal_eval(value)
+            except:
+                self[key] = value
         
     def configure(self,module=__name__,defaultcfg=False,cfg=False,supercfg=None):
         """The configuration loads (starting with a blank configuration):
