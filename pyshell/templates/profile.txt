@@ -1,0 +1,12 @@
+{% extends "base.txt" %}
+{%- block title -%}
+Profile of {{ name }}.
+{%- endblock -%}
+{% block header %}
+Profile of {{ name }}.
+{% endblock %}
+{%- block content -%}
+{%- for item in sequence -%}
+{{ loop.index }}. {{ "%-15s"|format(item.name) }} {{ "%.1f"|format(item.profile["processing time"]) }}s {{ "% 3d"|format((item.profile["processing time"]/total)*100) }}% 
+{% endfor -%}
+{%- endblock -%}

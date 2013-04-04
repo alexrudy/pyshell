@@ -143,7 +143,8 @@ class Pipe(Stateful,Typedkwargs):
     @property
     def profile(self):
         """A profile of this timing object"""
-        data = self.state
+        import copy
+        data = copy.deepcopy(self.timing)
         if data["started"] and data["finished"]:
             data["processing time"] = self._state["finished"] - self._state["started"]
         elif data["started"]:

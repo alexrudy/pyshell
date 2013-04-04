@@ -57,8 +57,13 @@ class Stateful(object):
         """The boolean dictionary defining the state of this system."""
         return { key : bool(value) for key,value in self._state.iteritems() }
         
+    @property
+    def timing(self):
+        """The dictionary of timing values for each state flag."""
+        return self._state
+        
     def set_state(self,state):
         """Set a state to the current time."""
-        self._state[state] = time.clock()
+        self._state[state] = time.time()
         
     

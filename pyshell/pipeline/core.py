@@ -16,6 +16,7 @@ from collections import OrderedDict
 from .. import CLIEngine
 from ..core import Stateful, State, Typedkwargs
 from .pipe import Pipe
+from .profile import Profile
 from ..util import func_lineno
 
 import sys
@@ -339,7 +340,7 @@ can be customized using the 'Default' configuration variable in the configuratio
         
     def get_profile(self):
         """Get the profile object."""
-        pass
+        return Profile(self)
     
     
     ######################
@@ -364,10 +365,11 @@ can be customized using the 'Default' configuration variable in the configuratio
             
     def end_actions(self):
         """Actions completed after running the system."""
-        if self.config.get("Actions.ShowTree"):
+        self.log.log(25,"Finishing...")
+        if self.config.get("Actions.ShowTree",False):
             print "\n".join(self.get_dependency_tree())
-        if self.config.get("Actions.ShowProfile"):
-            print self.get_profile().to_ascii()
+        if self.config.get("Actions.Profile",False):
+            self.get_profile().to_txt()
         
     def execute(self,pipename):
         """Execute an individual pipe by name."""

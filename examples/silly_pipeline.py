@@ -57,7 +57,7 @@ class SillyPipeline(Pipeline):
     @replaces("stepE")
     def stepF(self):
         """stepF"""
-        pass
+        time.sleep(3)
 
 
 if __name__ == '__main__':
