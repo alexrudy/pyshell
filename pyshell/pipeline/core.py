@@ -17,12 +17,10 @@ from .. import CLIEngine
 from ..core import Stateful, State, Typedkwargs
 from .pipe import Pipe
 from .profile import Profile
-from ..util import func_lineno
+from ..util import func_lineno, ipydb
 
-import sys
-from IPython.core import ultratb
-sys.excepthook = ultratb.FormattedTB(mode='Verbose',
-color_scheme='Linux', call_pdb=1)
+ipydb()
+
 
 logging.addLevelName(25,'STATUS')
 
