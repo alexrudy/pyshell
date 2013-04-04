@@ -3,8 +3,10 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to PyShell's documentation!
-===================================
+PyShell - Command Line Classes for Python
+=========================================
+
+This is a class-based command-line interface system. Using object-inheritance (my favorite thing, but maybe not yours), this module provides structure for command-line tools and configurable objects. 
 
 Contents:
 
@@ -12,7 +14,10 @@ Contents:
    :maxdepth: 2
    
    base
+   subcommand
+   config
    util
+   pipeline
 
 
 

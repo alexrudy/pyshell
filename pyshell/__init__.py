@@ -6,4 +6,8 @@
 #  Copyright 2012 Alexander Rudy. All rights reserved.
 # 
 
-version = "0.1.0"
+version = "0.2.0"
+
+from .base import CLIEngine
+from .subcommand import SCEngine, SCController
+__all__ = ['CLIEngine','SCEngine','SCController']

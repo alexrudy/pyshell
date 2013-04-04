@@ -1,0 +1,10 @@
+
+{% block title %}{% endblock %}
+{{ module }}
+{% block header %}
+{% endblock %}
+
+{% block content %}{% endblock %}
+
+{% block footer %}
+{% endblock %}

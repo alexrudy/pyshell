@@ -1,0 +1,8 @@
+origin: tests/test_backup/
+destination: tests/test_backup/
+main:
+  origin: a/
+  destination: b/
+other:
+  origin: c/
+  destination: d/
