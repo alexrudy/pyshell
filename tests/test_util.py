@@ -11,6 +11,14 @@
 import pyshell.util
 import nose.tools as nt
 
+def test_ipydb():
+    """Test activation of the iPython debugger."""
+    import sys, os.path
+    original_file = sys.modules['__main__'].__file__
+    pyshell.util.ipydb()
+    nt.eq_(sys.modules['__main__'].__file__,original_file)
+    
+    
 def test_is_type_factory():
     """is_type_factory(type)"""
     is_int = pyshell.util.is_type_factory(int)

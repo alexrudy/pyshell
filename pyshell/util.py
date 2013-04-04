@@ -36,6 +36,14 @@ import sys
 import warnings
 import functools
 
+def ipydb():
+    """Require the ipython debugger"""
+    _file = getattr(sys.modules['__main__'],'__file__')
+    from IPython.core import ultratb
+    sys.excepthook = ultratb.FormattedTB(mode='Verbose',
+    color_scheme='Linux', call_pdb=1)
+    setattr(sys.modules['__main__'],'__file__',_file)
+
 def is_type_factory(ttype):
     """Return a function which checks if an object can be cast as a given type."""
     def is_type(obj):
