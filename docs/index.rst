@@ -11,14 +11,21 @@ This is a class-based command-line interface system. Using object-inheritance (m
 Contents:
 
 .. toctree::
-   :maxdepth: 2
-   
-   base
-   subcommand
-   config
-   util
-   pipeline
+    :maxdepth: 2
+    
+    base
+    subcommand
+    config
+    util
+    pipeline
 
+
+Examples:
+
+.. toctree::
+    :maxdepth: 2
+    
+    examples/cliengine
 
 
 Indices and tables
