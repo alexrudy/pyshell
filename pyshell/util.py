@@ -141,8 +141,8 @@ def semiabstractmethod(txt):
         return decorator(func)
     return decorator
 
-def depricatedmethod(message=None,version=None,replacement=None):
-    """Mark a method as depricated"""
+def deprecatedmethod(message=None,version=None,replacement=None):
+    """Mark a method as deprecated"""
     def decorator(func):
         try:
             txt.format(method=func.__name__)
@@ -154,7 +154,7 @@ def depricatedmethod(message=None,version=None,replacement=None):
             return func(*args,**kwargs)
         return warner
     if callable(message) or message is None:
-        txt = "Method {method} will be depricated"
+        txt = "Method {method} will be deprecated"
     else:
         txt = message
     if version is not None:
