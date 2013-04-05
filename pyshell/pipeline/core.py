@@ -6,7 +6,12 @@
 #  Created by Alexander Rudy on 2013-03-16.
 #  Copyright 2013 Alexander Rudy. All rights reserved.
 # 
+"""
+.. autoclass:: Pipeline
+    :members:
+    :inherited-members:
 
+"""
 import time
 import argparse
 import re
@@ -101,9 +106,9 @@ can be customized using the 'Default' configuration variable in the configuratio
         ``-c file.yaml, --config-file file.yaml``   Specify a configuration file
         ``-n, --dry-run``                           Print the pipes this command would have run.
         ``--show-tree``                             Show a dependency tree for the simulation
-        ``--show-pipes``                           List all of the used pipes for the simulation
+        ``--show-pipes``                            List all of the used pipes for the simulation
         ``--dump-config``                           Write the current configuration to file
-        ``--list-pipes``                           Print the pipes that the command will execute, do not do anything
+        ``-p, --profile``                           Write a profile to an HTML file.
         =========================================== =====================
         
         Macros defined at this level are:
@@ -111,8 +116,8 @@ can be customized using the 'Default' configuration variable in the configuratio
         ========= ==================================================
         Macro     Result
         ========= ==================================================
-        ``*all``   Includes every pipe
-        ``*none``  Doesn't include any pipes (technically redundant)
+        ``+all``   Includes every pipe
+        ``+none``  Doesn't include any pipes (technically redundant)
         ========= ==================================================
         
         """
@@ -129,7 +134,7 @@ can be customized using the 'Default' configuration variable in the configuratio
         # Config Commands
         self.register_config({"System":{"DryRun":True}},'-n','--dry-run', help="run the simulation, but do not execute pipes.")
         self.register_config({"Actions":{"ShowTree":True}},'--show-tree', help="show a dependcy tree of all pipes run.")
-        self.register_config({"Actions":{"ListPipe":True}},'--list-pipes', help="show a list of all pipes.")
+        self.register_config({"Actions":{"ListPipe":True}},'--show-pipes', help="show a list of all pipes.")
         self.register_config({"Actions":{"Profile":True}},'-p','--profile', help="output a profile to a file 'profile.html'")
         
         # Default Macro
@@ -141,8 +146,8 @@ can be customized using the 'Default' configuration variable in the configuratio
     def register_pipe(self,action,**kwargs):
         """Register a pipe for operation with the pipeline. The pipe will then be available as a command line option, and will be operated with the pipeline. Pipes should be registered early in the operation of the pipeline (preferably in the initialization, after the pipeline class itself has initialized) so that the program is aware of the pipes for running. 
         
-        :keyword function pipe: The function to run for this pipe. Should not take any arguments
-        :keyword string name:  The command-line name of this pipe (no spaces, `+`, `-`, or `*`)
+        :keyword action pipe: The function to run for this pipe. Should not take any arguments
+        :keyword string name:  The command-line name of this pipe (no spaces, `+`, `-`)
         :keyword string description: A short description, which will be used by the logger when displaying information about the pipe
         :keyword tuple exceptions: A tuple of exceptions which are acceptable results for this pipe. These exceptions will be caught and logged, but will allow the pipeline to continue. These exceptions will still raise errors in Debug mode.
         :keyword bool include: A boolean, Whether to include this pipe in the `*all` macro or not.
@@ -152,14 +157,13 @@ can be customized using the 'Default' configuration variable in the configuratio
         :keyword bool optional: A boolean about wheather this pipe can be skipped. If so, warnings will not be raised when this pipe is explicitly skipped (like ``-pipe`` would do)
         
         
-    	Pipes are called with either a ``*``, ``+`` or ``-`` character at the beginning. Their resepctive actions are shown below.
+    	Pipes are called with either a ``+`` or ``-`` character at the beginning. Their resepctive actions are shown below.
 	
     	========= ============ ================================
     	Character  Action      Description
     	========= ============ ================================
-    	``*``     Include      To include a pipe, use ``*pipe``. This will also run the dependents for that pipe.
     	``-``     Exclude      To exclude a pipe, use ``-pipe``. This pipe (and it's dependents) will be skipped.
-    	``+``     Include-only To include a pipe, but not the dependents of that pipe, use ``+pipe``.
+    	``+``     Include-only To include a pipe and the dependents of that pipe, use ``+pipe``.
     	========= ============ ================================
         
         Pipes cannot be added dynamically. Once the pipeline starts running (i.e. processing pipes) the order and settings are fixed. Attempting to adjsut the pipes at this point will raise an error.
