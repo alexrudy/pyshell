@@ -68,7 +68,22 @@ from . import util
 
 __all__ = ['reformat','advanceddeepmerge','deepmerge','ConfigurationError','Configuration','DottedConfiguration','StructuredConfiguration']
 
+def force_yaml_unicode():
+    """This method forces the PyYAML library to construct unicode objects when reading YAML instead of producing regular strings.
+    
+    It is designed to imporove compatibility in Python2.x using unicode objects.
+    """
+    import yaml
+    from yaml import Loader, SafeLoader
 
+    def construct_yaml_str(self, node):
+        # Override the default string handling function 
+        # to always return unicode objects
+        return self.construct_scalar(node)
+    Loader.add_constructor(u'tag:yaml.org,2002:str', construct_yaml_str)
+    SafeLoader.add_constructor(u'tag:yaml.org,2002:str', construct_yaml_str)
+    
+    
 def reformat(d,nt):
     """Recursive extraction method for changing the type of nested dictionary objects.
     
@@ -626,3 +641,6 @@ class StructuredConfiguration(DottedConfiguration):
         loaded = super(StructuredConfiguration, self).load(filename, silent)
         if loaded and self._set_on_load:
             self._files["Loaded"].append(filename)
+
+
+force_yaml_unicode()
