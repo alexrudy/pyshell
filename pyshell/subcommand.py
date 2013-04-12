@@ -45,7 +45,7 @@ class SCEngine(CLIEngine):
         prefix_chars = kwargs.pop('prefix_chars',"-")
         super(SCEngine, self).__init__(prefix_chars=prefix_chars)
         self._hasinit = False
-        self.command = command if command is not None else self.command
+        self.command = command if command is not None else getattr(self,'command',"")
         self._kwargs = kwargs
         self._supercommand = False
         
@@ -77,7 +77,8 @@ class SCEngine(CLIEngine):
         
     def init(self):
         """Post-initialization functions. These will be run after the sub-parser is established."""
-        pass
+        super(SCEngine, self).init()
+        
         
     def parse(self):
         """Parse. By default, does nothing if this object is a subcommand."""
@@ -90,7 +91,7 @@ class SCEngine(CLIEngine):
         if not self._supercommand:
             super(SCEngine, self).configure()
         else:
-            self.config.configure(module=self.module,defaultcfg=self.defaultcfg,cfg=False,supercfg=self.supercfg)
+            self.config.configure(module=self.__module__,defaultcfg=self.defaultcfg,cfg=False,supercfg=self.supercfg)
         
     
 class _LimitedHelpAction(Action):
@@ -127,11 +128,11 @@ class SCController(CLIEngine):
         for subEngine in self._subEngines:
             # For specific cases, where the master engine sets the module name, pass that module name
             # on to subEngines before they are instantiated.
-            if not hasattr(subEngine,'module') or getattr(subEngine.module,'__isabstractmethod__',False):
+            if hasattr(self,'module') and (not hasattr(subEngine,'module') or getattr(subEngine.module,'__isabstractmethod__',False)):
                 subEngine.module = self.module
             # Since type-instatiation has already happened, we hook into the shenanigans below.
             # TODO: Degrade gracefully for python<2.7
-            if isinstance(getattr(subEngine,'__abstractmethods__',None),frozenset):
+            if isinstance(getattr(subEngine,'__abstractmethods__',None),frozenset) and 'module' in getattr(subEngine,'__abstractmethods__',set()):
                 abm = set(subEngine.__abstractmethods__)
                 if 'module' in abm:
                     abm.remove('module')
