@@ -432,15 +432,18 @@ class DottedConfiguration(Configuration):
     """
     def _isempty(self, item):
         """Test if the given item is empty"""
-        if isinstance(item,collections.Mapping):
-            return all([self._isempty(value) for value in item.itervalues()])
-        elif isinstance(item,collections.Sized):
-            return len(item) == 0
-        else:
-            try:
-                return not bool(item)
-            except:
-                return False
+        try:
+            if isinstance(item,collections.Mapping):
+                return all([self._isempty(value) for value in item.itervalues()])
+            elif isinstance(item,collections.Sized):
+                return len(item) == 0
+            else:
+                try:
+                    return not bool(item)
+                except:
+                    return False
+        except:
+            return False
         
     def _getitem(self, store, parts):
         """Recursive getitem calling function."""
