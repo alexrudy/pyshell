@@ -303,7 +303,7 @@ class Configuration(collections.MutableMapping):
         
         This method does not return anything.
         """
-        if isinstance(deep_nest_type, collections.Mapping):
+        if issubclass(deep_nest_type, collections.Mapping):
             self._dn = deep_nest_type #pylint: disable=C0103
         elif deep_nest_type is not None:
             TypeError("%r is not a mapping type." % deep_nest_type)
