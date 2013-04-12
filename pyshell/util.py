@@ -37,12 +37,16 @@ import warnings
 import functools
 
 def ipydb():
-    """Require the ipython debugger"""
-    _file = getattr(sys.modules['__main__'],'__file__')
-    from IPython.core import ultratb
-    sys.excepthook = ultratb.FormattedTB(mode='Verbose',
-    color_scheme='Linux', call_pdb=1)
-    setattr(sys.modules['__main__'],'__file__',_file)
+    """Try to use the iPython debugger on program failures."""
+    try:
+        from IPython.core import ultratb
+    except ImportError:
+        warnings.warn("Not enabling iPython debugger, because"
+            " 'ipython' isn't installed!")
+    else:
+        _file = getattr(sys.modules['__main__'], '__file__')
+        sys.excepthook = ultratb.ColorTB(color_scheme='Linux', call_pdb=1)
+        setattr(sys.modules['__main__'], '__file__', _file)
 
 def is_type_factory(ttype):
     """Return a function which checks if an object can be cast as a given type."""
