@@ -44,7 +44,7 @@ def ipydb():
         warnings.warn("Not enabling iPython debugger, because"
             " 'ipython' isn't installed!")
     else:
-        _file = getattr(sys.modules['__main__'], '__file__')
+        _file = getattr(sys.modules['__main__'], '__file__', '')
         sys.excepthook = ultratb.ColorTB(color_scheme='Linux', call_pdb=1)
         setattr(sys.modules['__main__'], '__file__', _file)
 

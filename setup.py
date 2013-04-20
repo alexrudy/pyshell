@@ -17,12 +17,14 @@ setup(
     name = 'pyshell',
     version = version,
     packages = find_packages(exclude=['tests']),
-    package_data = {'pyshell':['Defaults.yaml']},
+    package_data = {'pyshell':['Defaults.yaml','*.yml']},
     install_requires = ['distribute','PyYAML>=3.10','jinja2>2.0'],
     test_suite = 'tests',
-    tests_require = ['nosetests','pinnochio','nose-capturestderr'],
+    tests_require = ['nose','nose-capturestderr'],
     author = 'Alexander Rudy',
     author_email = 'dev@alexrudy.org',
+    url = "http://github.com/alexrudy/pyshell",
+    zip_safe = True,
     entry_points = {
         'console_scripts' : ["BackUp = pyshell.backup:BackupEngine.script",
                             "PyPackage = pyshell.package:PyPackageEngine.script"]
