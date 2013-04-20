@@ -5,8 +5,38 @@
 #  Created by Alexander Rudy on 2012-09-30.
 #  Copyright 2012 Alexander Rudy. All rights reserved.
 # 
+# Compiled files
+*.py[cod]
+*.a
+*.o
+*.so
+__pycache__
 
+# Ignore .c files by default to avoid including generated code. If you want to
+# add a non-generated .c extension, use `git add -f filename.c`.
+*.c
+
+# Other generated files
+MANIFEST
+
+# Sphinx
+_build
+_generated
+
+# Packages/installer info
+*.egg
 *.egg-info
-*.pyc
+dist
+build
+eggs
+parts
+bin
+var
+sdist
+develop-eggs
+.installed.cfg
+distribute-*.tar.gz
+
 tests/pkg
-docs/_build
+
+
