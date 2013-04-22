@@ -333,8 +333,12 @@ class CLIEngine(object):
         line tool. The user should overwrite this method in Engine subclasses
         for thier own use. The :exc:`KeyboardInterrupt` or :exc:`SystemExit` 
         errors will be caught by :meth:`kill`"""
-        self.start()
-        self.end()
+        try:
+            self.start()
+            self.end()
+        except NotImplementedError:
+            raise NotImplementedError("Command line tools must overwrite the method"
+            " do() with their desired actions.")
         
     @deprecatedmethod(version="0.3",replacement=".do()")
     @semiabstractmethod("Method .end() will be deprecated after version 0.3")
