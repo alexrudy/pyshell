@@ -68,6 +68,17 @@ class test_Configuration(object):
         cfg.load("Test.yaml")
         assert cfg == self.test_dict_C
         
+    def test_read_empty(self):
+        """.load() reads an empty yaml file."""
+        cfg = self.CLASS()
+        cfg.save("Test.yaml")
+        cfg = self.CLASS(a="a")
+        cfg.load("Test.yaml")
+        assert cfg.store == {'a':'a'}
+        from StringIO import StringIO
+        cfg.load(StringIO(""))
+        assert cfg.store == {'a':'a'}
+        
 class test_DottedConfiguration(test_Configuration):
     """pyshell.config.DottedConfiguration"""
         

@@ -119,7 +119,7 @@ def advanceddeepmerge(d,u,s,sequence=True):
     :param (bool) sequence: Control sequence merging
     
     """
-    if len(u)==0:
+    if (not hasattr(u,'__len__')) or len(u)==0:
         return d
     for k, v in u.iteritems():
         if isinstance(v, collections.Mapping):
@@ -139,7 +139,7 @@ def deepmerge(d,u,s):
     :param s: Default structure to use when a new deep structure is required.
     
     """
-    if len(u)==0:
+    if (not hasattr(u,'__len__')) or len(u)==0:
         return d
     for k, v in u.iteritems():
         if isinstance(v, collections.Mapping):
