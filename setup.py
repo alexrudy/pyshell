@@ -17,7 +17,7 @@ setup(
     name = 'pyshell',
     version = version,
     packages = find_packages(exclude=['tests']),
-    package_data = {'pyshell':['Defaults.yaml','*.yml']},
+    package_data = {'pyshell':['*.yml','templates/*']},
     install_requires = ['distribute','PyYAML>=3.10','jinja2>2.0'],
     test_suite = 'tests',
     tests_require = ['nose','nose-capturestderr'],
