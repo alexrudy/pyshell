@@ -128,21 +128,21 @@ class SCController(CLIEngine):
         for subEngine in self._subEngines:
             # For specific cases, where the master engine sets the module name, pass that module name
             # on to subEngines before they are instantiated.
-            if hasattr(self,'module') and (not hasattr(subEngine,'module') or getattr(subEngine.module,'__isabstractmethod__',False)):
+            if hasattr(self,'module') and (not hasattr(subEngine,'module') or
+                getattr(subEngine.module,'__isabstractmethod__',False)):
                 subEngine.module = self.module
             # Since type-instatiation has already happened, we hook into the shenanigans below.
             # TODO: Degrade gracefully for python<2.7
             if isinstance(getattr(subEngine,'__abstractmethods__',None),frozenset) and 'module' in getattr(subEngine,'__abstractmethods__',set()):
-                abm = set(subEngine.__abstractmethods__)
-                if 'module' in abm:
-                    abm.remove('module')
-                    subEngine.__abstractmethods__ = frozenset(abm)
+                subEngine.__abstractmethods__ = frozenset(set(subEngine.__abstractmethods__).remove('module'))
             subCommand = subEngine()
             subCommand._supercommand = self
             self._subcommand[subCommand.command] = subCommand
             self.supercfg += subCommand.supercfg
         if self._subEngines:
             self._subparsers = self._parser.add_subparsers(dest='mode',help=self._subparsers_help)
+        else:
+            raise AttributeError("%r No SubEngines attached." % self)
         for subEngine in self._subcommand:
             self._subcommand[subEngine].__parser__(self._subparsers)
             self._subcommand[subEngine].init()
