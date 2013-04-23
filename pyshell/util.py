@@ -36,6 +36,10 @@ import sys
 import warnings
 import functools
 
+with warnings.catch_warnings():
+    warnings.simplefilter('ignore')
+    import pkg_resources
+
 def ipydb():
     """Try to use the iPython debugger on program failures."""
     try:
