@@ -142,7 +142,25 @@ from .config import StructuredConfiguration as Config, Configuration as BConfig
 from .util import semiabstractmethod, deprecatedmethod
 import logging, logging.config
 
-__all__ = ['CLIEngine']
+__all__ = ['CLIEngine','PYSHELL_LOGGING','PYSHELL_LOGGING_STREAM','PYSHELL_LOGGING_STREAM_ALL']
+
+PYSHELL_LOGGING = [('pyshell','logging.yml')]
+"""This constant item can be added to the superconfiguration 
+:attr:`supercfg` to enable a default logging configuration setup. It should
+probably be added first, so that your own code will override it."""
+
+PYSHELL_LOGGING_STREAM = [('pyshell','logging-stream-only.yml')]
+"""This constant item can be added to the superconfiguration 
+:attr:`supercfg` to enable a default logging configuration setup. It 
+should probably be added first, so that your own code will override it. 
+It only provides stream loggers, not file handlers."""
+
+PYSHELL_LOGGING_STREAM_ALL = [('pyshell','logging-stream-all.yml')]
+"""This constant item can be added to the superconfiguration
+:attr:`supercfg` to enable a default logging configuration setup. It 
+should probably be added first, so that your own code will override it. 
+It only provides stream loggers, not file handlers. Its logger is just a 
+root logger at the lowest level!"""
 
 class CLIEngine(object):
     """A base class for Command Line Inteface facing tools. :class:`CLIEnigne` 
@@ -160,10 +178,12 @@ class CLIEngine(object):
     
     __metaclass__ = abc.ABCMeta
     
-    description = "A command line interface."
-    """The textual description of the command line interface, 
-    set as the description of the parser from :mod:`argparse`."""
-    
+    @property
+    def description(self):
+        """The textual description of the command line interface, 
+        set as the description of the parser from :mod:`argparse`."""
+        return self.__doc__
+        
     epilog = ""
     """The text that comes at the end of the :mod:`argparse` 
     help text."""
@@ -178,24 +198,6 @@ class CLIEngine(object):
     module name and filename pair that should be passed to 
     :func:`~pkg_resources.resource_filename`. To specify a super-configuration 
     in the current direction, use ``__main__`` as the module name."""
-    
-    PYSHELL_LOGGING = [('pyshell','logging.yml')]
-    """This constant item can be added to the superconfiguration 
-    :attr:`supercfg` to enable a default logging configuration setup. It should
-    probably be added first, so that your own code will override it."""
-    
-    PYSHELL_LOGGING_STREAM = [('pyshell','logging-stream-only.yml')]
-    """This constant item can be added to the superconfiguration 
-    :attr:`supercfg` to enable a default logging configuration setup. It 
-    should probably be added first, so that your own code will override it. 
-    It only provides stream loggers, not file handlers."""
-    
-    PYSHELL_LOGGING_STREAM_ALL = [('pyshell','logging-stream-all.yml')]
-    """This constant item can be added to the superconfiguration
-    :attr:`supercfg` to enable a default logging configuration setup. It 
-    should probably be added first, so that your own code will override it. 
-    It only provides stream loggers, not file handlers. Its logger is just a 
-    root logger at the lowest level!"""
     
     def __init__(self, prefix_chars="-".encode('utf-8'), 
         conflict_handler='error'):
@@ -416,3 +418,4 @@ class CLIEngine(object):
             logging.config.dictConfig(self.config["logging"])
             if "py.warnings" in self.config["logging.loggers"]:
                 logging.captureWarnings(True)
+        
