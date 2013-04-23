@@ -57,7 +57,7 @@ def is_type_factory(ttype):
     type. Basic usage allows for checking string-casting to a specific type.
     
     :param ttype: Usually a ``type`` but really, any function which takes one
-        argument and which will raise an error if that one argument can't be 
+        argument and which will raise a :exc:`ValueError` if that one argument can't be 
         cast correctly.
         
     """
