@@ -277,6 +277,13 @@ class CLIEngine(object):
         self._opts, self._rargs = self.parser.parse_known_args(*args)        
         self._hasargs = True
     
+    def before_configure(self):
+        """Actions to be run before configuration. This method can be 
+        overwritten to provide custom actions to be taken before the
+        engine gets configured.
+        """
+        pass
+    
     def configure(self):
         """Configure the command line engine from a series of YAML files.
         
@@ -300,17 +307,26 @@ class CLIEngine(object):
             defaultcfg=self.defaultcfg, cfg=cfg,supercfg=self.supercfg)
         self.config.parse_literals(*getattr(self.opts, 'configure', []))
         
+    def after_configure(self):
+        """Actions to be run after configuration. This method can be 
+        overwritten to provide custom actions to be taken before the
+        engine gets configured."""
+        pass
+        
     def parse(self):
         """Parse the command line arguments.
         
-        This function uses the arguments passed in through :meth:`arguments`, adds the `-h` option,
-        and calls the parser to understand and act on the arguments. Arguments are then stored in the
-        :attr:`opts` attribute.
+        This function uses the arguments passed in through :meth:`arguments`,
+        adds the `-h` option, and calls the parser to understand and act on 
+        the arguments. Arguments are then stored in the :attr:`opts` attribute.
         
-        This method also calls :meth:`configure_logging` to set up the logger if it is ready to go.
+        This method also calls :meth:`configure_logging` to set up the logger
+        if it is ready to go.
         
         .. note:: 
-            Calling :meth:`configure_logging` allows :meth:`configure` to change the logging configuration values before the logger is configured.
+            Calling :meth:`configure_logging` allows :meth:`configure` to 
+            change the logging configuration values before the logger is 
+            configured.
         
         """
         self._add_help()
@@ -369,7 +385,9 @@ class CLIEngine(object):
         if not self._hasargs:
             warn("Implied Command-line mode", UserWarning)
             self.arguments()
+        self.before_configure()
         self.configure()
+        self.after_configure()
         self.parse()
         try:
             self.do()
@@ -378,6 +396,7 @@ class CLIEngine(object):
                 self.kill()
             if __debug__:
                 raise
+            self.exitcode = getattr(exc, 'code', self.exitcode)
         except KeyboardInterrupt as exc:
             self.kill()
             if __debug__:
