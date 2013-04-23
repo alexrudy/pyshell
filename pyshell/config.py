@@ -337,9 +337,23 @@ class Configuration(collections.MutableMapping):
         return self.store
         
     def parse_literals(self,*literals,**kwargs):
-        """docstring for parse_literals"""
+        """Turn a list of literals into configuration items.
+        
+        :param literals: Any literals which are separated by the separator.
+        :keyword sep: The separator to use, defaults to ``"="``.
+        
+        Keywords are parsed where ``foo=bar`` becomes ``self["foo"] = "bar"``.
+        If ``bar`` can be parsed as a python literal (float, int, dict, list 
+        etc..), the literal value will be used in place of the string. 
+        For which literals will be parsed, see :func:`ast.literal_eval` from
+        the Abstract-Syntax Tree features in python. There is great power in
+        using this method with dotted configurations, as ``foo.bat=bar`` will
+        get parsed to  ``self["foo.bat"] = "bar"``.  This is useful for 
+        parsing configuration command line options.
+        
+        """
         for item in literals:    
-            parts = item.split(kwargs.get('sep',"="))
+            parts = item.split(kwargs.pop('sep',"="),1)
             if len(parts) != 2:
                 raise ValueError("Invalid literal: %s" % item)
             else:
