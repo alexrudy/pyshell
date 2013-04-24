@@ -287,7 +287,7 @@ class Configuration(collections.MutableMapping):
         
         :param string filename: The filename to load from.
         :param bool silent: Silence IOErrors which might arise due to a non-existant configuration file. If this is the case, the failure to find a configuration file will be logged, will not raise an error.
-        :raises IOError: if the file can't be found.
+        :raises: :exc:`IOError` if the file can't be found.
         :returns: boolean, whether the file was loaded.
         """
         loaded = False
@@ -324,7 +324,7 @@ class Configuration(collections.MutableMapping):
         if issubclass(deep_nest_type, collections.Mapping):
             self._dn = deep_nest_type #pylint: disable=C0103
         elif deep_nest_type is not None:
-            TypeError("%r is not a mapping type." % deep_nest_type)
+            raise TypeError("%r is not a mapping type." % deep_nest_type)
         self._store = reformat(self._store,self.dn)
         
     def extract(self):
