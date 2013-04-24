@@ -208,7 +208,7 @@ class Configuration(collections.MutableMapping):
         
     def __str__(self):
         """String for this object"""
-        return "<%s %s >" % (self.name,repr(self))
+        return "<%s %s>" % (self.name,repr(self))
         
     def __getitem__(self, key):
         """Dictionary getter"""
