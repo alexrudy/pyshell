@@ -142,7 +142,8 @@ from .config import StructuredConfiguration as Config, Configuration as BConfig
 from .util import semiabstractmethod, deprecatedmethod
 import logging, logging.config
 
-__all__ = ['CLIEngine','PYSHELL_LOGGING','PYSHELL_LOGGING_STREAM','PYSHELL_LOGGING_STREAM_ALL']
+__all__ = [ 'CLIEngine',
+    'PYSHELL_LOGGING','PYSHELL_LOGGING_STREAM','PYSHELL_LOGGING_STREAM_ALL']
 
 PYSHELL_LOGGING = [('pyshell','logging.yml')]
 """This constant item can be added to the superconfiguration 
@@ -355,8 +356,8 @@ class CLIEngine(object):
             self.start()
             self.end()
         except NotImplementedError:
-            raise NotImplementedError("Command line tools must overwrite the method"
-            " do() with their desired actions.")
+            raise NotImplementedError("Command line tools must overwrite the"
+            " method do() with their desired actions.")
         
     @deprecatedmethod(version="0.3",replacement=".do()")
     @semiabstractmethod("Method .end() will be deprecated after version 0.3")
