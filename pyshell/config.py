@@ -694,6 +694,7 @@ class StructuredConfiguration(DottedConfiguration):
         self._files["Loaded"] = []
         self._files["Configurations"] = self.dn()
         self.__set_on_load = False
+        self._lock = dict()
         
     @property
     def files(self):
@@ -707,6 +708,46 @@ class StructuredConfiguration(DottedConfiguration):
             self.__set_on_load = True
         return self.__set_on_load
     
+    def __getitem__(self, key):
+        """Dictionary getter"""
+        self._getitem_hook(key)
+        return super(StructuredConfiguration, self).__getitem__(key)
+        
+    def __setitem__(self, key, value):
+        """Dictonary setter"""
+        self._setitem_hook(key, value)
+        return super(StructuredConfiguration, self).__setitem__(key, value)
+        
+    
+    def __delitem__(self, key):
+        """Dictionary delete"""
+        self._delitem_hook(key)
+        return super(StructuredConfiguration, self).__delitem__(key)
+        
+    
+    def __contains__(self, key):
+        """Dictionary in"""
+        self._contains_hook(key)
+        return super(StructuredConfiguration, self).__contains__(key)
+        
+    
+    def _contains_hook(self, key):
+        """docstring for _contains_hook"""
+        pass
+        
+    def _delitem_hook(self, key):
+        """docstring for _delitem_hook"""
+        pass
+        
+    def _setitem_hook(self, key, value):
+        """docstring for _setitem_hook"""
+        pass
+        
+    def _getitem_hook(self, key):
+        """docstring for _getitem_hook"""
+        pass
+    
+    @util.deprecatedmethod(version="0.3",replacement="set_file()")
     def setFile(self, filename=None, name=None): #pylint: disable=C0103
         """Depricated Method"""
         return self.set_file(filename, name)
