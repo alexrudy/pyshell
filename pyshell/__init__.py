@@ -16,6 +16,7 @@ Use this for quick access to commonly used classes!
 
 version = "0.2.0"
 
-from .base import CLIEngine
+from .base import *
+import base
 from .subcommand import SCEngine, SCController
-__all__ = ['CLIEngine', 'SCEngine', 'SCController']
+__all__ = ['SCEngine', 'SCController'] + base.__all__
