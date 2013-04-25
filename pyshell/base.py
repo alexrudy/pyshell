@@ -110,6 +110,7 @@ Reference for :class:`CLIEngine`, the Command Line Interface Engine
 .. autoclass::
     CLIEngine
     :members:
+    :private-members:
     
 
 Call structure of :meth:`run`
@@ -249,14 +250,8 @@ class CLIEngine(object):
         """Initialization after the parser has been created."""
         self._hasinit = True
         if self.defaultcfg:
-            self.parser.add_argument('--config',
-                action='store', metavar='file.yml', default=self.defaultcfg,
-                help="Set configuration file. By default, load %(file)s and"
-                " ~/%(file)s if it exists." % dict(file=self.defaultcfg))
-            self.parser.add_argument('--configure',
-                action='append', metavar='Item.Key=value',default=[],
-                help="Set configuration value. The value is parsed as a"
-                " python literal.")
+            self._add_configfile_args()
+            self._add_configure_args()
         
     
     def arguments(self, *args):
@@ -429,6 +424,34 @@ class CLIEngine(object):
         """Add the ``-h, --help`` argument."""
         self.__help_action = self.parser.add_argument('-h', '--help',
             action='help', help="Display this help text")
+            
+    def _add_configfile_args(self,*args):
+        """Add a parser command line argument for changing configuration files.
+        
+        :arguments: The set of arguments to be passed to :meth:`~argparse.ArgumentParser.add_argument`.
+        
+        """
+        if len(args) == 0:
+            args = ("--config",)
+        self.parser.add_argument(*args, dest='config',
+            action='store', metavar='file.yml', default=self.defaultcfg,
+            help="Set configuration file. By default, load %(file)s and"
+            " ~/%(file)s if it exists." % dict(file=self.defaultcfg))
+            
+    def _add_configure_args(self,*args):
+        """Add a parser command line argument for literal configuration items.
+        
+        See :meth:`~pyshell.config.DottedConfiguration.parse_literals`.
+        
+        :arguments: The set of arguments to be passed to :meth:`~argparse.ArgumentParser.add_argument`.
+        
+        """
+        if len(args) == 0:
+            args = ("--configure",)
+        self.parser.add_argument(*args, dest='configure',
+            action='append', metavar='Item.Key=value',default=[],
+            help="Set configuration value. The value is parsed as a"
+            " python literal.")
     
     def configure_logging(self):
         """Configure the logging system using the configuration underneath 
