@@ -60,8 +60,8 @@ from __future__ import (absolute_import, unicode_literals, division,
 
 # Standard Python Modules
 import os
-import sys
 import collections
+import abc
 import re
 import yaml
 import logging
@@ -168,55 +168,28 @@ def deepmerge(d, u, s):
 
 class ConfigurationError(Exception):
     """Configuration error"""
-    def __init__(self, expected, config={}):
+    def __init__(self, expected, config=None):
         self.expected = expected
         self.config = config
-        self.message = "Expected {key!r} in {config!r}!".format(key=self.expected,config=self.config)
+        self.message = "Expected {key!r} in {config!r}!".format(
+            key=self.expected, config=self.config)
         super(ConfigurationError, self).__init__(self.message)
         
 class DeepNestDict(dict):
     """Class for deep nestinging emptiness"""
     pass
         
-        
 
-
-class Configuration(collections.MutableMapping):
-    """Adds extra methods to dictionary for configuration"""
-    
-    _dn = DeepNestDict
-    """Deep nesting dictionary setting. This class will be used to create deep nesting structures for this dictionary.""" #pylint: disable=W0105
-    
-    dt = dict
-    """Exctraction nesting dictionary setting. This class will be used to create deep nesting structures when this object is extracted.""" #pylint: disable=W0105
-    
-    @property
-    def dn(self):
-        """Deep nesting attribute reader"""
-        return self._dn
-    
-    @dn.setter
-    def dn(self,new_type):
-        """Deep nesting type setter."""
-        if new_type != self._dn:
-            self.renest(new_type)
-    
+class MutableMappingBase(collections.MutableMapping):
+    """Base class for mutable mappings which store things in an internal dictionary"""
     def __init__(self, *args, **kwargs):
-        super(Configuration, self).__init__()
-        self.log = logging.getLogger(__name__)
+        super(MutableMappingBase, self).__init__()
+        self.log = logging.getLogger(self.__module__)
         if not len(self.log.handlers):
             self.log.addHandler(logging.NullHandler())
         self._store = dict(*args, **kwargs)
-        self._filename = None
-        self._strict = False
-    
-    name = "Configuration"
-    """The name/type of this configuration."""
         
-    @property
-    def filename(self):
-        """The filename which has been used to save/load this configuration most recently"""
-        return self._filename
+    __metaclass__ = abc.ABCMeta
         
     def __repr__(self):
         """String representation of this object"""
@@ -249,12 +222,60 @@ class Configuration(collections.MutableMapping):
     def __len__(self):
         """Length"""
         return self._store.__len__()
+        
+    @property
+    def store(self):
+        """Return a copy of the internal storage object."""
+        import copy
+        return copy.deepcopy(self._store)
+
+
+class Configuration(MutableMappingBase):
+    """Adds extra methods to dictionary for configuration"""
+    def __init__(self, *args, **kwargs):
+        super(Configuration, self).__init__(*args, **kwargs)
+        self._filename = None
+        self._strict = False
+    
+    _dn = DeepNestDict
+    """Deep nesting dictionary setting. This class will be used to create 
+    deep nesting structures for this dictionary.""" #pylint: disable=W0105
+    
+    dt = dict
+    """Exctraction nesting dictionary setting. This class will be used to 
+    create deep nesting structures when this object is 
+    extracted.""" #pylint: disable=W0105
+    
+    @property
+    def dn(self):
+        """Deep nesting attribute reader""" #pylint: disable=C0103
+        return self._dn
+    
+    @dn.setter
+    def dn(self, new_type):
+        """Deep nesting type setter.""" #pylint: disable=C0103
+        if new_type != self._dn:
+            self.renest(new_type)
+    
+    name = "Configuration"
+    """The name/type of this configuration."""
+        
+    @property
+    def filename(self):
+        """The filename which has been used to save/load this configuration 
+        most recently"""
+        return self._filename
+    
+    def __str__(self):
+        """String for this object"""
+        return "<%s %s>" % (self.name, repr(self))
     
     def update(self, other, deep=True): #pylint: disable=W0221
         """Update the dictionary using :meth:`merge`.
         
         :param dict-like other: The other dictionary to be merged.
-        :param bool deep: Whether to use deep merge (:meth:`merge`) or shallow update.
+        :param bool deep: Whether to use deep merge (:meth:`merge`) or 
+            shallow update.
         
         """
         if deep:
