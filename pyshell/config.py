@@ -119,6 +119,32 @@ def reformat(d, nt):
             e[k] = v
     return e
     
+def flatten(d, stump="", sequence=False, separator="."):
+    """Flatten a given nested dictionary.
+    
+    :param d: Dictionary to flatten.
+    :param stump: The base stump for flattened keys.
+    :param sequence: Whether to expand sequences.
+    :param separator: The string separator to use in flat keys.
+    
+    """
+    o = {}
+    if ( isinstance(d, collections.Sequence)
+        and not isinstance(d, basestring) and
+        sequence):
+        for i,iv in enumerate(v):
+            o.update(flatten(iv, nk+str(i), sequence, separator))
+    elif isinstance(d, collections.Mapping):    
+        for k,v in d.iteritems():
+            nk = separator.join((stump,k))
+            o.update(flatten(v, nk, sequence, separator))
+    else:
+        o[stump] = d
+    return o
+            
+    
+    
+    
 def advanceddeepmerge(d, u, s, sequence=True):
     """Merge deep collection-like structures.
     
@@ -504,6 +530,12 @@ class DottedConfiguration(Configuration):
         10
         
     """
+    
+    def flatten(self,sequence=False):
+        """docstring for flat"""
+        return flatten(self.store,sequence=sequence,separator=".")
+    
+    
     def _isempty(self, item):
         """Test if the given item is empty"""
         #pylint: disable=W0703
