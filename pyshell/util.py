@@ -38,7 +38,7 @@ import functools
 
 with warnings.catch_warnings():
     warnings.simplefilter('ignore')
-    import pkg_resources
+    import pkg_resources # pylint: disable = unused-import
 
 def ipydb():
     """Try to use the iPython debugger on program failures."""
@@ -142,9 +142,9 @@ def semiabstractmethod(txt):
         NotImplementedError
     
     """
-    def decorator(func): # pylint: disable = missing-docstring
-        @functools.wraps(func)
-        def raiser(*args, **kwargs): # pylint: disable = missing-docstring,
+    def decorator(func): # pylint: disable= missing-docstring
+        @functools.wraps(func) # pylint: disable = unused-argument
+        def raiser(*args, **kwargs): # pylint: disable= missing-docstring
             name = func.__name__
             if hasattr(func, 'im_class'):
                 name = ".".join([func.im_class.__name__, name])

@@ -86,7 +86,7 @@ class _BackupDestination(object):
         """Launch this process with the sequence of arguments."""
         if not isinstance(self.origin,basestring) or not isinstance(self.destination,basestring) \
             or not isinstance(self.delete,bool):
-            raise ValueError("Mode {mode} is incomplete.".format(mode=mode))
+            raise ValueError("Mode {mode} is incomplete.".format(mode=self.name))
         
         self.reverse = reverse
         
