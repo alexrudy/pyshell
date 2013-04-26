@@ -18,5 +18,7 @@ version = "0.2.0"
 
 from .base import *
 import base
+import loggers
+loggers.buffer_root()
 from .subcommand import SCEngine, SCController
 __all__ = ['SCEngine', 'SCController'] + base.__all__

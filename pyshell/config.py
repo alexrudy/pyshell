@@ -64,7 +64,6 @@ import collections
 import abc
 import re
 import yaml
-import logging
 import warnings
 from warnings import warn
 import ast
@@ -185,9 +184,7 @@ class MutableMappingBase(collections.MutableMapping):
     """Base class for mutable mappings which store things in an internal dictionary"""
     def __init__(self, *args, **kwargs):
         super(MutableMappingBase, self).__init__()
-        self.log = logging.getLogger(self.__module__)
-        if not len(self.log.handlers):
-            self.log.addHandler(loggers.BufferHandler(capacity=1e7))
+        self.log = loggers.getLogger(self.__module__)
         self._store = dict(*args, **kwargs)
         
     __metaclass__ = abc.ABCMeta

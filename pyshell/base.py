@@ -219,8 +219,7 @@ import abc
 from warnings import warn
 from .config import StructuredConfiguration as Config, Configuration as BConfig
 from .util import semiabstractmethod, deprecatedmethod
-from .loggers import configure_logging, BufferHandler
-import logging, logging.config
+from .loggers import configure_logging, getLogger
 
 __all__ = [ 'CLIEngine',
     'PYSHELL_LOGGING','PYSHELL_LOGGING_STREAM','PYSHELL_LOGGING_STREAM_ALL']
@@ -283,8 +282,7 @@ class CLIEngine(object):
     def __init__(self, prefix_chars="-".encode('utf-8'), 
         conflict_handler='error'):
         super(CLIEngine, self).__init__()
-        self._log = logging.getLogger(self.__module__)
-        self._log.addHandler(BufferHandler(1e7))
+        self._log = getLogger(self.__module__)
         self._parser = ArgumentParser(
             prefix_chars = prefix_chars, add_help = False,
             formatter_class = RawDescriptionHelpFormatter,

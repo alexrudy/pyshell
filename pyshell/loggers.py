@@ -9,7 +9,7 @@
 from __future__ import (absolute_import, unicode_literals, division,
                         print_function)
 
-import logging
+import logging, logging.config
 import logging.handlers as handlers
 
 import math
@@ -22,7 +22,8 @@ import collections
 
 from .console import get_color
 
-__all__ = ['configure_logging','debuffer_logger','GrowlHandler','ManyTargetHandler','BufferHandler']
+__all__ = ['configure_logging','debuffer_logger','GrowlHandler',
+    'ManyTargetHandler','BufferHandler','getLogger','buffer_root','status']
 
 def configure_logging(configuration):
     """Setup logging from a configuration object."""
@@ -38,9 +39,9 @@ def configure_logging(configuration):
     
     if "logging" in config:
         for logger in config["logging.loggers"]:
-            prepare_config(logger)
+            _prepare_config(logger)
         if "root" in config["logging"]:
-            prepare_config()
+            _prepare_config()
         logging.config.dictConfig(config["logging"])
         if "py.warnings" in config["logging.loggers"]:
             logging.captureWarnings(True)
@@ -48,10 +49,22 @@ def configure_logging(configuration):
             debuffer_logger(logger)
         if "root" in config["logging"]:
             debuffer_logger()
-            
-            
+    
+
+def status(log,*args,**kwargs):
+    """Log status!"""
+    log.log(25,*args,**kwargs)
+    
+def getLogger(name=None):
+    """Return a logger with the buffered handler attached."""
+    logger = logging.getLogger(name)
+    if not len(logger.handlers):
+        logger.addHandler(BufferHandler(1e7))
+        logger.status = status
+    return logger
+
 _buffers = {}
-def prepare_config(name=None):
+def _prepare_config(name=None):
     """docstring for prepare_config"""
     if name is not None:
         logger = logging.getLogger(name)
@@ -213,8 +226,12 @@ class BufferHandler(ManyTargetHandler):
     
     level = 1
     
+def buffer_root():
+    """Buffer Root Loggers"""
+    root_log = logging.getLogger()
+    root_log.setLevel(1)
+    root_log.addHandler(BufferHandler(1e7))
     
-root_log = logging.getLogger()
-root_log.setLevel(1)
-root_log.addHandler(BufferHandler(1e7))
+logging.addLevelName(25,'STATUS')
+    
         
