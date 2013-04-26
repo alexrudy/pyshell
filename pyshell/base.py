@@ -219,6 +219,7 @@ import abc
 from warnings import warn
 from .config import StructuredConfiguration as Config, Configuration as BConfig
 from .util import semiabstractmethod, deprecatedmethod
+from .loggers import configure_logging, BufferHandler
 import logging, logging.config
 
 __all__ = [ 'CLIEngine',
@@ -283,6 +284,7 @@ class CLIEngine(object):
         conflict_handler='error'):
         super(CLIEngine, self).__init__()
         self._log = logging.getLogger(self.__module__)
+        self._log.addHandler(BufferHandler(1e7))
         self._parser = ArgumentParser(
             prefix_chars = prefix_chars, add_help = False,
             formatter_class = RawDescriptionHelpFormatter,
@@ -535,8 +537,5 @@ class CLIEngine(object):
         """Configure the logging system using the configuration underneath 
         ``config["logging"]`` as a dictionary configuration for the :mod:`logging` 
         module."""
-        if "logging" in self.config:
-            logging.config.dictConfig(self.config["logging"])
-            if "py.warnings" in self.config["logging.loggers"]:
-                logging.captureWarnings(True)
+        configure_logging(self.config)
         

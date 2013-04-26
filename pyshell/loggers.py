@@ -22,6 +22,74 @@ import collections
 
 from .console import get_color
 
+__all__ = ['configure_logging','debuffer_logger','GrowlHandler','ManyTargetHandler','BufferHandler']
+
+def configure_logging(configuration):
+    """Setup logging from a configuration object."""
+    from .config import DottedConfiguration
+    if isinstance(configuration,DottedConfiguration):
+        config = configuration
+    elif isinstance(configuration,collections.Mapping):
+        config = DottedConfiguration(configuration)
+    elif isinstance(configuration,tuple):
+        config = DottedConfiguration.fromresource(*configuration)
+    elif isinstance(configuration,basestring):
+        config = DottedConfiguration.fromfile(configuration)
+    
+    if "logging" in config:
+        for logger in config["logging.loggers"]:
+            prepare_config(logger)
+        if "root" in config["logging"]:
+            prepare_config()
+        logging.config.dictConfig(config["logging"])
+        if "py.warnings" in config["logging.loggers"]:
+            logging.captureWarnings(True)
+        for logger in config["logging.loggers"]:
+            debuffer_logger(logger)
+        if "root" in config["logging"]:
+            debuffer_logger()
+            
+            
+_buffers = {}
+def prepare_config(name=None):
+    """docstring for prepare_config"""
+    if name is not None:
+        logger = logging.getLogger(name)
+    else:
+        logger = logging.getLogger()
+        name = "__root__"
+    debuffer = False
+    for handler in logger.handlers:
+        if isinstance(handler,BufferHandler):
+            debuffer = handler
+            break
+    _buffers[name] = debuffer
+    
+    
+def debuffer_logger(name=None):
+    """Debuffer a given logger"""
+    if name is not None:
+        logger = logging.getLogger(name)
+    else:
+        name = "__root__"
+        logger = logging.getLogger()
+    debuffer = _buffers.get(name,False)
+    if not debuffer:
+        for handler in logger.handlers:
+            if isinstance(handler,BufferHandler):
+                debuffer = handler
+                break
+    if not debuffer:
+        return
+    
+    for handler in logger.handlers:
+        if not isinstance(handler,BufferHandler):
+            debuffer.setTarget(handler)
+    debuffer.close()
+    logger.removeHandler(debuffer)
+    
+    
+
 class GrowlHandler(logging.Handler):
     """Handler that emits growl notifications using the gntp module.
     
@@ -108,6 +176,45 @@ class ColorStreamFormatter(logging.Formatter):
         return super(ColorStreamFormatter, self).format(record)
         
         
+class ManyTargetHandler(handlers.MemoryHandler):
+    """A new default handler (similar to a NULL handler) which holds onto targets for later."""
+    def __init__(self, capacity, flushLevel=logging.ERROR, target=None, targets=None):
+        super(ManyTargetHandler, self).__init__(capacity, flushLevel, target)
+        if isinstance(self.target,logging.Handler):
+            self.targets = set([self.target])
+        else:
+            self.targets = set()
+        if isinstance(targets,collections.Sequence):
+            self.targets += set(targets)
+
+    def setTarget(self,target):
+        """Add another target to the handler"""
+        if isinstance(target,logging.Handler):
+            self.targets.add(target)
+                
+    def flush(self):
+        """Flush out this handler"""
+        if len(self.targets) > 0:
+            for record in self.buffer:
+                for target in self.targets:
+                    if (record.levelno >= target.level and
+                        logging.getLogger(record.name).isEnabledFor(record.levelno)):
+                        target.handle(record)
+            self.buffer = []
+    
+    def close(self):
+        """Close the handler"""
+        super(ManyTargetHandler, self).close()
+        self.targets = set()
         
         
+class BufferHandler(ManyTargetHandler):
+    """A special case of ManyTargetHandler for use with :func:`debuffer_logger`."""
+    
+    level = 1
+    
+    
+root_log = logging.getLogger()
+root_log.setLevel(1)
+root_log.addHandler(BufferHandler(1e7))
         

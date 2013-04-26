@@ -71,6 +71,7 @@ import ast
 
 # Submodules from this system
 from . import util
+from . import loggers
 
 #pylint: disable=R0904
 
@@ -186,7 +187,7 @@ class MutableMappingBase(collections.MutableMapping):
         super(MutableMappingBase, self).__init__()
         self.log = logging.getLogger(self.__module__)
         if not len(self.log.handlers):
-            self.log.addHandler(logging.NullHandler())
+            self.log.addHandler(loggers.BufferHandler(capacity=1e7))
         self._store = dict(*args, **kwargs)
         
     __metaclass__ = abc.ABCMeta
