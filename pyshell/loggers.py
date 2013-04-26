@@ -23,7 +23,8 @@ import collections
 from .console import get_color
 
 __all__ = ['configure_logging','debuffer_logger','GrowlHandler',
-    'ManyTargetHandler','BufferHandler','getLogger','buffer_root','status']
+    'ManyTargetHandler','BufferHandler','getLogger','buffer_root','status',
+    'getSimpleLogger']
 
 def configure_logging(configuration):
     """Setup logging from a configuration object."""
@@ -31,9 +32,13 @@ def configure_logging(configuration):
     if isinstance(configuration,DottedConfiguration):
         config = configuration
     elif isinstance(configuration,collections.Mapping):
-        config = DottedConfiguration(configuration)
+        config = DottedConfiguration(configuration)        
     elif isinstance(configuration,tuple):
         config = DottedConfiguration.fromresource(*configuration)
+    elif isinstance(configuration,collections.Sequence):
+        config = DottedConfiguration()
+        for item in configuration:
+            config.load_resource(*item)
     elif isinstance(configuration,basestring):
         config = DottedConfiguration.fromfile(configuration)
     
@@ -61,6 +66,23 @@ def getLogger(name=None):
     if not len(logger.handlers):
         logger.addHandler(BufferHandler(1e7))
         logger.status = status
+    return logger
+    
+def buffer_root():
+    """Buffer Root Loggers"""
+    root_log = logging.getLogger()
+    root_log.setLevel(1)
+    root_log.addHandler(BufferHandler(1e7))
+    
+def getSimpleLogger(name=None,level=None):
+    """docstring for simplesetup"""
+    from .config import DottedConfiguration
+    logger = getLogger(name)
+    config = DottedConfiguration.fromresource('pyshell','logging-stream-all.yml')
+    configure_logging(config)
+    if level is not None:
+        logger.setLevel(level)
+        logger.addHandler(ColorStreamFormatter(format=config["logging.formatters.stdout.format"]))
     return logger
 
 _buffers = {}
@@ -225,12 +247,6 @@ class BufferHandler(ManyTargetHandler):
     """A special case of ManyTargetHandler for use with :func:`debuffer_logger`."""
     
     level = 1
-    
-def buffer_root():
-    """Buffer Root Loggers"""
-    root_log = logging.getLogger()
-    root_log.setLevel(1)
-    root_log.addHandler(BufferHandler(1e7))
     
 logging.addLevelName(25,'STATUS')
     
