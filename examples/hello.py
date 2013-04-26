@@ -11,7 +11,7 @@
 This is a basic usage example for CLIEngine.
 """
 from __future__ import print_function, unicode_literals
-from pyshell import CLIEngine
+from pyshell import CLIEngine, PYSHELL_LOGGING_STREAM_ALL
 from pyshell.util import ipydb
 import os
 
@@ -20,7 +20,7 @@ ipydb()
 class Hello(CLIEngine):
     """Say hello in English, French, or another language."""
     
-    supercfg = CLIEngine.PYSHELL_LOGGING_STREAM_ALL
+    supercfg = PYSHELL_LOGGING_STREAM_ALL
     
     defaultcfg = "hello.yml"
     
@@ -51,6 +51,7 @@ class Hello(CLIEngine):
         self.parser.add_argument("-t","--title",action='store',default=self.config["Address"],type=str,
             help=u"Change from the default title '{:s}'".format(self.config["Address"]),metavar="MR")
         # We add this argument here because it uses information from the configuration.
+        
         
     def parse(self):
         """Do any parsing"""
