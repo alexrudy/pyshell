@@ -323,7 +323,7 @@ class Configuration(MutableMappingBase):
                         "(.dat,.yaml,.yml): %s" % filename)
                 self._filename = filename
         
-    def load(self, filename, silent=True):
+    def load(self, filename, silent=True, fname=None):
         """Loads a configuration from a yaml file, and merges it into 
         the master configuration.
         
@@ -336,9 +336,11 @@ class Configuration(MutableMappingBase):
         :returns: boolean, whether the file was loaded.
         """
         loaded = False
+        isstream = False
         try:
             if hasattr(filename, 'read') and hasattr(filename, 'readlines'):
                 new = yaml.load(filename)
+                isstream = True
             else:
                 with open(filename, "r") as stream:
                     new = yaml.load(stream)
@@ -350,7 +352,12 @@ class Configuration(MutableMappingBase):
                 raise
         else:
             self.merge(new)
-            self._filename = filename
+            if isstream and fname is not None:
+                self._filename = fname
+            elif isstream and hasattr(filename,'name'):
+                self._filename = filename.name
+            elif not isstream:
+                self._filename = filename
             loaded = True
         return loaded
     
@@ -413,6 +420,21 @@ class Configuration(MutableMappingBase):
             except ValueError:
                 self[key] = value
         
+    def load_resource(self, module, filename, silent=True):
+        """Load from a resource filename"""
+        from pkg_resources import resource_stream
+        try:
+            with resource_stream(module, filename) as stream:
+                self.load(stream, fname=filename, silent=silent)
+        except IOError:
+            if silent:
+                warn("Resource ({},{}) does not exist.".format(
+                    module, filename
+                ))
+            else:
+                raise
+        
+        
     def configure(self, module=__name__, defaultcfg=False,
         cfg=False, supercfg=None):
         """The configuration loads (starting with a blank configuration):
@@ -439,7 +461,6 @@ class Configuration(MutableMappingBase):
             list should contian pairs of ``(module,name)`` as tuples.
         
         """
-        from pkg_resources import resource_filename
         if not defaultcfg:
             return
         if supercfg is None:
@@ -448,8 +469,8 @@ class Configuration(MutableMappingBase):
             if supermodule == '__main__':
                 self.load(superfilename)
             else:
-                self.load(resource_filename(supermodule, superfilename))
-        self.load(resource_filename(module, defaultcfg))
+                self.load_resource(supermodule,superfilename)
+        self.load_resource(module, defaultcfg)
         if cfg and util.check_exists("~/%s" % cfg):
             self.load(os.path.expanduser("~/%s" % cfg))
         if cfg and os.path.exists(cfg):
@@ -477,6 +498,13 @@ class Configuration(MutableMappingBase):
         """Create a configuration from a single YAML file."""
         config = cls()
         config.load(filename, silent=False)
+        return config
+        
+    @classmethod
+    def fromresource(cls, module, filename):
+        """docstring for fromresource"""
+        config = cls()
+        config.load_resource(module, filename)
         return config
 
 
@@ -714,7 +742,7 @@ class StructuredConfiguration(DottedConfiguration):
         return super(StructuredConfiguration, self).save(filename)
     
         
-    def load(self, filename=None, silent=True):
+    def load(self, filename=None, silent=True, fname=None):
         """Load the configuration to a YAML file. If ``filename`` is 
         not provided, the configuration will use the file set by 
         :meth:`setFile`.
@@ -725,7 +753,7 @@ class StructuredConfiguration(DottedConfiguration):
         Uses :meth:`Configuration.load`."""
         if filename == None:
             filename = self._files["This"]
-        loaded = super(StructuredConfiguration, self).load(filename, silent)
+        loaded = super(StructuredConfiguration, self).load(filename, silent, fname=fname)
         if loaded and self._set_on_load:
             self._files["Loaded"].append(filename)
 
