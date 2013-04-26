@@ -79,10 +79,15 @@ def getSimpleLogger(name=None,level=None):
     from .config import DottedConfiguration
     logger = getLogger(name)
     config = DottedConfiguration.fromresource('pyshell','logging-stream-all.yml')
+    if name is not None and name not in config["logging.loggers"]:
+        import copy
+        config["logging.loggers"][name] = copy.deepcopy(config["logging.root"])
+        del config["logging.root"]
+    if level is not None and name is not None:
+        config["logging.loggers"][name]["level"] = level
+    elif level is not None:
+        config["logging.root.level"] = level
     configure_logging(config)
-    if level is not None:
-        logger.setLevel(level)
-        logger.addHandler(ColorStreamFormatter(format=config["logging.formatters.stdout.format"]))
     return logger
 
 _buffers = {}
@@ -249,5 +254,10 @@ class BufferHandler(ManyTargetHandler):
     level = 1
     
 logging.addLevelName(25,'STATUS')
+
+this = sys.modules[__name__]
+for l,n in logging._levelNames.items():
+    if isinstance(l,int):
+        setattr(this,n,l)
     
         
