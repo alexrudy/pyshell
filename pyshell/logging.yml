@@ -8,7 +8,8 @@ logging:
   disable_existing_loggers: false
   formatters:
     stdout:
-      format: "%(levelname)-8s --> %(message)s"
+      (): pyshell.loggers.ColorStreamFormatter
+      format: "%(color)s%(levelname)-8s%(nocolor)s --> %(message)s"
     file:
       format: "%(asctime)s : %(levelname)s : %(processName)s %(message)s"
   handlers:
