@@ -13,7 +13,9 @@ This is a basic usage example for CLIEngine.
 from __future__ import print_function, unicode_literals
 from pyshell import CLIEngine, PYSHELL_LOGGING_STREAM
 from pyshell.util import ipydb
-import os
+import os, warnings, logging
+
+logging.captureWarnings(True)
 
 ipydb()
 
@@ -41,6 +43,7 @@ class LoggerExample(CLIEngine):
         """Do any parsing"""
         super(LoggerExample, self).parse()
         self.log.critical(".parse CRITICAL")
+        warnings.warn("This is a warnings.warn!")
         
     def do(self):
         """Take the actual action"""
@@ -48,7 +51,7 @@ class LoggerExample(CLIEngine):
         self.log.info(".do INFO")
         self.log.warn(".do WARN")
         self.log.critical(".do CRITICAL")
-        self.log.log(25,".do STATUS")
+        self.log.status(".do STATUS")
         
         
 if __name__ == '__main__':

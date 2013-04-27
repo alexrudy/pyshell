@@ -47,17 +47,11 @@ def configure_logging(configuration):
         if "root" in config["logging"]:
             debuffer_logger()
     
-
-def status(log,*args,**kwargs):
-    """Log status!"""
-    log.log(25,*args,**kwargs)
-    
 def getLogger(name=None):
     """Return a logger with the buffered handler attached."""
     logger = logging.getLogger(name)
     if not len(logger.handlers):
         logger.addHandler(BufferHandler(1e7))
-        logger.status = status
     return logger
     
 def buffer_root():
@@ -120,7 +114,18 @@ def debuffer_logger(name=None):
     debuffer.close()
     logger.removeHandler(debuffer)
     
+class PyshellLogger(logging.getLoggerClass()):
     
+    def __getattr__(self,name):
+        """Return special level functions."""
+        if name.upper() not in logging._levelNames:
+            raise AttributeError("{0} has no attribute {1}".format(self,name))
+        def log(msg, *args,**kwargs):
+            """docstring for log"""
+            self._log(logging._levelNames[name.upper()],msg,args,**kwargs)
+        return log
+
+logging.setLoggerClass(PyshellLogger)
 
 class GrowlHandler(logging.Handler):
     """Handler that emits growl notifications using the gntp module.
