@@ -29,25 +29,17 @@ __all__ = ['configure_logging','debuffer_logger','GrowlHandler',
 def configure_logging(configuration):
     """Setup logging from a configuration object."""
     from .config import DottedConfiguration
-    if isinstance(configuration,DottedConfiguration):
-        config = configuration
-    elif isinstance(configuration,collections.Mapping):
-        config = DottedConfiguration(configuration)        
-    elif isinstance(configuration,tuple):
-        config = DottedConfiguration.fromresource(*configuration)
-    elif isinstance(configuration,collections.Sequence):
-        config = DottedConfiguration()
-        for item in configuration:
-            config.load_resource(*item)
-    elif isinstance(configuration,basestring):
-        config = DottedConfiguration.fromfile(configuration)
+    config = DottedConfiguration.make(configuration)
     
     if "logging" in config:
+        
         for logger in config["logging.loggers"]:
             _prepare_config(logger)
         if "root" in config["logging"]:
             _prepare_config()
+        
         logging.config.dictConfig(config["logging"])
+        
         if "py.warnings" in config["logging.loggers"]:
             logging.captureWarnings(True)
         for logger in config["logging.loggers"]:

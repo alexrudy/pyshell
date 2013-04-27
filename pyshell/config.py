@@ -464,7 +464,7 @@ class Configuration(MutableMappingBase):
         if supercfg is None:
             supercfg = []
         for supermodule, superfilename in supercfg:
-            if supermodule == '__main__':
+            if supermodule is None:
                 self.load(superfilename)
             else:
                 self.load_resource(supermodule,superfilename)
@@ -504,6 +504,28 @@ class Configuration(MutableMappingBase):
         config = cls()
         config.load_resource(module, filename)
         return config
+        
+    @classmethod
+    def make(cls,base):
+        """docstring for make"""
+        if isinstance(base,cls):
+            return base
+        elif isinstance(base,collections.Mapping):
+            return cls(base)        
+        elif isinstance(base,tuple) and len(base) == 2:
+            return cls.fromresource(*base)
+        elif isinstance(configuration,basestring):
+            config = cls.fromfile(base)
+        elif isinstance(base,collections.Sequence):
+            config = cls()
+            for item in base:
+                config.update(cls.make(base))
+            return config
+        else:
+            raise TypeError("{0} doesn't know how to make from {1}".format(
+                cls.__name__, type(base)
+            ))
+
 
 
 class DottedConfiguration(Configuration):
