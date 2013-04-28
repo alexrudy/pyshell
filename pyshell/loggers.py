@@ -20,6 +20,9 @@ import os
 import yaml
 import collections
 
+
+import warnings
+
 from .console import get_color
 
 __all__ = ['configure_logging','debuffer_logger','GrowlHandler',
@@ -41,7 +44,7 @@ def configure_logging(configuration):
         logging.config.dictConfig(config["logging"])
         
         if "py.warnings" in config["logging.loggers"]:
-            logging.captureWarnings(True)
+            warnings.showwarning = _showwarning
         for logger in config["logging.loggers"]:
             debuffer_logger(logger)
         if "root" in config["logging"]:
@@ -160,7 +163,13 @@ class GrowlHandler(logging.Handler):
             }
         
     
-    mapping = {logging.DEBUG:"Debug Message",logging.INFO:"Info Message",logging.WARNING:"Warning Message",logging.CRITICAL:"Critical Message",logging.ERROR:"Error Message"}
+    mapping = {
+        logging.DEBUG:"Debug Message",
+        logging.INFO:"Info Message",
+        logging.WARNING:"Warning Message",
+        logging.CRITICAL:"Critical Message",
+        logging.ERROR:"Error Message",
+        }
 
     
     
@@ -249,6 +258,36 @@ class BufferHandler(ManyTargetHandler):
     """A special case of ManyTargetHandler for use with :func:`debuffer_logger`."""
     
     level = 1
+    
+def _showwarning(message, category, filename, lineno, file=None, line=None):
+    """docstring for showwarning"""
+    if category != UserWarning:
+        s = "{0}: {1}".format(category, message)
+    else:
+        s = "{0}".format(message)
+    logger = getLogger("py.warnings")
+    logger._log(30,s,tuple())
+
+_warnings_showwarning = None
+
+def captureWarnings(capture):
+    """
+    If capture is true, redirect all warnings to the logging package.
+    If capture is False, ensure that warnings are not redirected to logging
+    but to their original destinations.
+    """
+    global _warnings_showwarning
+    if capture:
+        if _warnings_showwarning is None:
+            _warnings_showwarning = warnings.showwarning
+            warnings.showwarning = _showwarning
+    else:
+        if _warnings_showwarning is not None:
+            warnings.showwarning = _warnings_showwarning
+            _warnings_showwarning = None
+            
+logging.captureWarnings = captureWarnings
+        
     
 logging.addLevelName(25,'STATUS')
 
