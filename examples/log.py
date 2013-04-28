@@ -11,11 +11,13 @@
 This is a basic usage example for CLIEngine.
 """
 from __future__ import print_function, unicode_literals
-from pyshell import CLIEngine, PYSHELL_LOGGING_STREAM
+from pyshell import CLIEngine, PYSHELL_LOGGING_STREAM, PYSHELL_LOGGING_STREAM_ALL
 from pyshell.util import ipydb
 import os, warnings, logging
 
 logging.captureWarnings(True)
+log = logging.getLogger()
+mlog = logging.getLogger(__name__)
 
 ipydb()
 
@@ -52,7 +54,10 @@ class LoggerExample(CLIEngine):
         self.log.warn(".do WARN")
         self.log.critical(".do CRITICAL")
         self.log.status(".do STATUS")
-        
+        log.info(".do root INFO")
+        mlog.info(".do __main__ INFO")
+        mlog.status(".do __main__ STATUS")
+                
         
 if __name__ == '__main__':
     LoggerExample.script()

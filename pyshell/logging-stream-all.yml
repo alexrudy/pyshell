@@ -9,7 +9,7 @@ logging:
   formatters:
     stdout:
       (): pyshell.loggers.ColorStreamFormatter
-      format: "%(color)s%(levelname)-8s%(nocolor)s --> %(message)s"
+      format: "%(color)s%(levelname)-8s%(nocolor)s --> %(message)s [%(module)s]"
   handlers:
     console:
       class: logging.StreamHandler
