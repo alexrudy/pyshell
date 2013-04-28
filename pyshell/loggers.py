@@ -82,11 +82,8 @@ def getSimpleLogger(name=None,level=None):
 _buffers = {}
 def _prepare_config(name=None):
     """docstring for prepare_config"""
-    if name is not None:
-        logger = logging.getLogger(name)
-    else:
-        logger = logging.getLogger()
-        name = "__root__"
+    logger = logging.getLogger(name)
+    name = "__root__" if name is None
     debuffer = False
     for handler in logger.handlers:
         if isinstance(handler,BufferHandler):
@@ -97,11 +94,8 @@ def _prepare_config(name=None):
     
 def debuffer_logger(name=None):
     """Debuffer a given logger"""
-    if name is not None:
-        logger = logging.getLogger(name)
-    else:
-        name = "__root__"
-        logger = logging.getLogger()
+    logger = logging.getLogger(name)
+    name = "__root__" if name is None
     debuffer = _buffers.get(name,False)
     if not debuffer:
         for handler in logger.handlers:
