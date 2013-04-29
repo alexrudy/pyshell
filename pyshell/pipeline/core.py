@@ -27,8 +27,6 @@ from ..util import func_lineno, ipydb
 ipydb()
 
 
-logging.addLevelName(25,'STATUS')
-
 class PipelineException(Exception):
     """Exceptions in Pipelines"""
         

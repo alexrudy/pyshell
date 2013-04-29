@@ -655,8 +655,8 @@ class DottedConfiguration(Configuration):
                 raise KeyError
             return self._store[key]
         except KeyError:
-            # raise KeyError('%s' % key)
-            raise
+            raise KeyError('%s' % key)
+            # raise
         
     def __setitem__(self, key, value):
         """Dictonary setter"""
