@@ -5,7 +5,45 @@
 #  
 #  Created by Alexander Rudy on 2013-04-26.
 #  Copyright 2013 Alexander Rudy. All rights reserved.
-# 
+#
+"""
+:mod:`loggers` - Logging made Easy
+==================================
+
+This module complements the python :mod:`logging` module. It is designed to seamlessly integrate with other logging libraries. Behind the scenes, :mod:`loggers` adds buffering handlers to each new logger it creates, to allow for logging before the logging interface is configured. For simple logging scripts, try :func:`getSimpleLogger`.
+
+Logger Functions
+----------------
+
+.. autofunction::
+    configure_logging
+    
+.. autofunction::
+    getLogger
+
+.. autofunction::
+    getSimpleLogger
+        
+.. autofunction::
+    debuffer_logger
+    
+.. autofunction::
+    buffer_root
+    
+
+.. autoclass::
+    ManyTargetHandler
+    :members:
+
+.. autoclass::
+    BufferHandler
+    :members:
+    
+.. autoclass::
+    ColorStreamFormatter
+    :members:
+
+"""
 from __future__ import (absolute_import, unicode_literals, division,
                         print_function)
 
@@ -30,7 +68,15 @@ __all__ = ['configure_logging','debuffer_logger','GrowlHandler',
     'getSimpleLogger']
 
 def configure_logging(configuration):
-    """Setup logging from a configuration object."""
+    """Setup logging from a configuration object. Configuration should meet Python's :mod:`logging.config` configuration
+    requirements. This method uses :func:`logging.config.dictConfig` to process configurations.
+    
+    :param configuration: Any object which can be interpreted by :meth:`pyshell.config.DottedConfiguration.make`.
+    
+    The loggers will be configured. If any loggers to be configured have a :class:`~loggers.BufferHandler`, that buffer
+    will be emptied into the newly configured handlers.
+    
+    """ 
     from .config import DottedConfiguration
     config = DottedConfiguration.make(configuration)
     
@@ -51,39 +97,55 @@ def configure_logging(configuration):
             debuffer_logger()
     
 def getLogger(name=None):
-    """Return a logger with the buffered handler attached."""
+    """Return a logger for a specified name.
+    
+    This differs from the built-in :func:`logging.getLogger` function
+    as it ensures that returned loggers will have a :class:`BufferHandler`
+    attached if no other handlers are found. It can be otherwise used in place
+    of :func:`logging.getLogger`."""
     logger = logging.getLogger(name)
     if not len(logger.handlers):
         logger.addHandler(BufferHandler(1e7))
     return logger
     
-def buffer_root():
+def buffer_logger(name=None):
     """Buffer Root Loggers"""
-    root_log = logging.getLogger()
-    root_log.setLevel(1)
-    root_log.addHandler(BufferHandler(1e7))
+    _log = logging.getLogger(name)
+    _log.setLevel(1)
+    _log.addHandler(BufferHandler(1e7))
     
+_simpleConfig = None
 def getSimpleLogger(name=None,level=None):
-    """docstring for simplesetup"""
+    """Retrieves a lgoger with a simple logging configuration setup,
+    which writes colorful logging output to the console using the configuration
+    provided by ``logging-stream-all.yml``. Only the root logger is configured with
+    the console handler, all others have only a level set.
+    
+    :param name: The logger name to be returned (like in :func:`getLogger`).
+    :param level: The level of the configured logger.
+    
+    Configurations are cumulative, so :func:`getSimpleLogger` can be called multiple times."""
     from .config import DottedConfiguration
+    global _simpleConfig
+    if _simpleConfig is None:
+        _simpleConfig = DottedConfiguration.fromresource('pyshell','logging-stream-all.yml')
     logger = getLogger(name)
-    config = DottedConfiguration.fromresource('pyshell','logging-stream-all.yml')
-    if name is not None and name not in config["logging.loggers"]:
-        import copy
-        config["logging.loggers"][name] = copy.deepcopy(config["logging.root"])
-        del config["logging.root"]
     if level is not None and name is not None:
-        config["logging.loggers"][name]["level"] = level
+        _simpleConfig["logging.loggers"][name]["level"] = level
     elif level is not None:
-        config["logging.root.level"] = level
-    configure_logging(config)
+        _simpleConfig["logging.root.level"] = level
+    configure_logging(_simpleConfig)
     return logger
 
 _buffers = {}
 def _prepare_config(name=None):
-    """docstring for prepare_config"""
+    """Prepare for configuration by saving the buffers for this logger.
+    
+    :param name: Name of the logger to prep for configuration.
+    
+    """
     logger = logging.getLogger(name)
-    name = "__root__" if name is None
+    name = "__root__" if name is None else name
     debuffer = False
     for handler in logger.handlers:
         if isinstance(handler,BufferHandler):
@@ -93,9 +155,15 @@ def _prepare_config(name=None):
     
     
 def debuffer_logger(name=None):
-    """Debuffer a given logger"""
+    """Debuffer a given logger.
+    
+    :param name: The name of the logger to debuffer.
+    
+    This method will atempt to dump all of the messages from a logger's
+    :class:`BufferHandler` into its other handlers. Then it will remove the
+    buffer from the logger."""
     logger = logging.getLogger(name)
-    name = "__root__" if name is None
+    name = "__root__" if name is None else name
     debuffer = _buffers.get(name,False)
     if not debuffer:
         for handler in logger.handlers:
@@ -105,13 +173,18 @@ def debuffer_logger(name=None):
     if not debuffer:
         return
     
-    for handler in logger.handlers:
-        if not isinstance(handler,BufferHandler):
-            debuffer.setTarget(handler)
-    debuffer.close()
+    # Since loggers have a .handle() method, they can be
+    # set as targets for the debuffer command.
+    debuffer.setTarget(logger)
+    
     logger.removeHandler(debuffer)
+    debuffer.close()
     
 class PyshellLogger(logging.getLoggerClass()):
+    """
+    This is a logger object which can act as the 
+    """
+    
     
     def __getattr__(self,name):
         """Return special level functions."""
@@ -255,12 +328,13 @@ class BufferHandler(ManyTargetHandler):
     
 def _showwarning(message, category, filename, lineno, file=None, line=None):
     """docstring for showwarning"""
-    if category != UserWarning:
-        s = "{0}: {1}".format(category, message)
-    else:
-        s = "{0}".format(message)
     logger = getLogger("py.warnings")
-    logger._log(30,s,tuple())
+    if logger.isEnabledFor(logging.WARN):
+        if category != UserWarning:
+            s = "{0}: {1}".format(category, message)
+        else:
+            s = "{0}".format(message)
+        logger._log(30,s,tuple())
 
 _warnings_showwarning = None
 
