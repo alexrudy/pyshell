@@ -1,0 +1,535 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pyshell.base &mdash; PyShell 0.2.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PyShell 0.2.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">PyShell 0.2.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pyshell.base</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="c"># </span>
+<span class="c">#  base.py</span>
+<span class="c">#  jaberwocky</span>
+<span class="c">#  </span>
+<span class="c">#  Created by Jaberwocky on 2012-10-16.</span>
+<span class="c">#  Copyright 2012 Jaberwocky. All rights reserved.</span>
+<span class="c"># </span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. currentmodule: pyshell.base</span>
+
+<span class="sd">Using :class:`CLIEngine` for Command Line Interfaces</span>
+<span class="sd">====================================================</span>
+
+<span class="sd">The :class:`CLIEngine` is designed with &quot;Convention over Configuration&quot;</span>
+<span class="sd">in mind. That is, it aims to set everything up so that it will work out</span>
+<span class="sd">-of-the-box, and the user is responsbile for adjusting undesireable</span>
+<span class="sd">behavior. Basically, all you have to do is write a subclass of</span>
+<span class="sd">:class:`CLIEngine` with only a :meth:`~CLIEngine.do` method (no need for</span>
+<span class="sd">:meth:`__init__`!). See :ref:`cliengine_examples` for examples.</span>
+
+<span class="sd">Writing your own Subclass</span>
+<span class="sd">-------------------------</span>
+<span class="sd">    </span>
+<span class="sd">This class should be subclassed by the user, who should re-implement </span>
+<span class="sd">the following methods:</span>
+<span class="sd">    </span>
+<span class="sd">- :meth:`~CLIEngine.do`  - Does the &#39;real work&#39;.</span>
+<span class="sd">- :meth:`~CLIEngine.kill` - Called if the engine tries to exit abnormally.</span>
+<span class="sd">    </span>
+<span class="sd">These funcitons are used in the normal operation of the command line engine.</span>
+<span class="sd">    </span>
+<span class="sd">The user should also override the desired instance variables on the class.</span>
+<span class="sd">Useful instance variables to consider overriding are </span>
+<span class="sd">:attr:`~CLIEngine.defaultcfg` and :attr:`~CLIEngine.description`</span>
+
+<span class="sd">Other methods are used to control the engine during normal operation. These </span>
+<span class="sd">methods should in general not be overwritten, but can be modified in </span>
+<span class="sd">subclasses, so long as they are called using the </span>
+<span class="sd">``super(ClassName, self).method()`` construct.</span>
+<span class="sd">    </span>
+<span class="sd">Running your subclass</span>
+<span class="sd">---------------------</span>
+
+<span class="sd">To run the engine, use :meth:`~CLIEngine.run`. To run the engine without </span>
+<span class="sd">instantiating the class, use :meth:`~CLIEngine.script`, a class method </span>
+<span class="sd">that instantiates a new object, and runs the tool. Both methods </span>
+<span class="sd">accomplish the same thing at the end of the day.</span>
+
+<span class="sd">You can use :meth:`~CLIEngine.script` to start the engine with the &quot;if main&quot; </span>
+<span class="sd">python convention ::</span>
+
+<span class="sd">    if __name__ == &#39;__main__&#39;:</span>
+<span class="sd">        Engine.script()</span>
+
+<span class="sd">Using :meth:`~CLIEngine.script` allows the developer to set this as</span>
+<span class="sd">an entry point in their ``setup.py`` file, and so provide the command</span>
+<span class="sd">line enegine as a command line tool in a distutils supported python package.</span>
+<span class="sd">A basic entry point for this tool would appear like ::</span>
+<span class="sd">    </span>
+<span class="sd">    [&quot;PyScript = mymodule.cli:Engine.script&quot;]</span>
+<span class="sd">    </span>
+
+<span class="sd">How :class:`CLIEngine` works</span>
+<span class="sd">----------------------------</span>
+
+<span class="sd">The engine is set up to use a configuration file system, </span>
+<span class="sd">provide basic parsing attributes, and an interruptable </span>
+<span class="sd">command line interaction flow. The configuration is designed </span>
+<span class="sd">to provide dynamic output and to configure the system </span>
+<span class="sd">before it completes the parsing process.</span>
+
+<span class="sd">1.  Initialization loads the object, and sets up the argument parser. </span>
+<span class="sd">    At this point, parser should only understand arguments that are neeeded </span>
+<span class="sd">    to print the best `--help` message.</span>
+
+<span class="sd">2.  Preliminary Arguments are parsed by :meth:`arguments`.</span>
+
+<span class="sd">3.  Configuration is handled by the :meth:`configure` function. This </span>
+<span class="sd">    function loads the following configuration files in order (such that the </span>
+<span class="sd">    last one loaded is the one that takes precedence):</span>
+
+<span class="sd">    *   The ``defaultcfg`` file from ``engine.__module__``. This allows the </span>
+<span class="sd">        developer to provide a base configuration for the engine.</span>
+
+<span class="sd">    *   The requested configuration file from the user&#39;s home directory.</span>
+
+<span class="sd">    *   The requested configuration file form the current directory.</span>
+
+<span class="sd">    *   If no configuration file is requested, the filename for `defaultcfg` </span>
+<span class="sd">        will be used. As well, if the engine cannot find the requested </span>
+<span class="sd">        configureation file in the current directory (i.e. the user asks for </span>
+<span class="sd">        a file, and it isn&#39;t there) a warning will be issued.</span>
+
+<span class="sd">4.  Help message is inserted into parsing, and remining arguments</span>
+<span class="sd">    parsed by :meth:`parse`. At this point, the entire configuration process</span>
+<span class="sd">    is complete.</span>
+
+<span class="sd">5.  The function :meth:`do` is called, This should do the bulk of the engine&#39;s</span>
+<span class="sd">    work.</span>
+
+<span class="sd">6.  If the user interrupts the operation of the program, :meth:`kill` will</span>
+<span class="sd">    be called. If python is in ``__debug__`` mode, this will raise a full</span>
+<span class="sd">    traceback. If not, the traceback will be suppressed.</span>
+
+
+<span class="sd">Reference for :class:`CLIEngine`, the Command Line Interface Engine</span>
+<span class="sd">-------------------------------------------------------------------</span>
+
+<span class="sd">.. autoclass::</span>
+<span class="sd">    CLIEngine</span>
+<span class="sd">    :members:</span>
+<span class="sd">    </span>
+
+<span class="sd">Call structure of :meth:`run`</span>
+<span class="sd">-----------------------------</span>
+<span class="sd">The call structure of the method :meth:`~CLIEngine.run`, the main script driver.</span>
+<span class="sd">This is provided as a reference. Note that the :meth:`~CLIEngine.init` is called</span>
+<span class="sd">during :meth:`~CLIEngine.arguments` when :meth:`~CLIEngine.arguments` is called</span>
+<span class="sd">outside of :meth:`~CLIEngine.run`, allowing you to use the following sequence to</span>
+<span class="sd">run a subclass of :class:`CLIEngine`::</span>
+<span class="sd">    </span>
+<span class="sd">    CLIInstance = CLIEngine()</span>
+<span class="sd">    CLIInstance.arguments(&quot;--faked CLI --arguments&quot;.split())</span>
+<span class="sd">    CLIInstance.run()</span>
+<span class="sd">    </span>
+
+<span class="sd">.. literalinclude:: ../pyshell/base.py</span>
+<span class="sd">    :linenos:</span>
+<span class="sd">    :pyobject: CLIEngine.run</span>
+
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">unicode_literals</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">argparse</span> <span class="kn">import</span> <span class="n">ArgumentParser</span><span class="p">,</span> <span class="n">RawDescriptionHelpFormatter</span>
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">os.path</span>
+<span class="kn">import</span> <span class="nn">abc</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+<span class="kn">from</span> <span class="nn">.config</span> <span class="kn">import</span> <span class="n">StructuredConfiguration</span> <span class="k">as</span> <span class="n">Config</span><span class="p">,</span> <span class="n">Configuration</span> <span class="k">as</span> <span class="n">BConfig</span>
+<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">semiabstractmethod</span><span class="p">,</span> <span class="n">deprecatedmethod</span>
+<span class="kn">import</span> <span class="nn">logging</span><span class="o">,</span> <span class="nn">logging.config</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;CLIEngine&#39;</span><span class="p">,</span><span class="s">&#39;PYSHELL_LOGGING&#39;</span><span class="p">,</span><span class="s">&#39;PYSHELL_LOGGING_STREAM&#39;</span><span class="p">,</span><span class="s">&#39;PYSHELL_LOGGING_STREAM_ALL&#39;</span><span class="p">]</span>
+
+<span class="n">PYSHELL_LOGGING</span> <span class="o">=</span> <span class="p">[(</span><span class="s">&#39;pyshell&#39;</span><span class="p">,</span><span class="s">&#39;logging.yml&#39;</span><span class="p">)]</span>
+<span class="sd">&quot;&quot;&quot;This constant item can be added to the superconfiguration </span>
+<span class="sd">:attr:`supercfg` to enable a default logging configuration setup. It should</span>
+<span class="sd">probably be added first, so that your own code will override it.&quot;&quot;&quot;</span>
+
+<span class="n">PYSHELL_LOGGING_STREAM</span> <span class="o">=</span> <span class="p">[(</span><span class="s">&#39;pyshell&#39;</span><span class="p">,</span><span class="s">&#39;logging-stream-only.yml&#39;</span><span class="p">)]</span>
+<span class="sd">&quot;&quot;&quot;This constant item can be added to the superconfiguration </span>
+<span class="sd">:attr:`supercfg` to enable a default logging configuration setup. It </span>
+<span class="sd">should probably be added first, so that your own code will override it. </span>
+<span class="sd">It only provides stream loggers, not file handlers.&quot;&quot;&quot;</span>
+
+<span class="n">PYSHELL_LOGGING_STREAM_ALL</span> <span class="o">=</span> <span class="p">[(</span><span class="s">&#39;pyshell&#39;</span><span class="p">,</span><span class="s">&#39;logging-stream-all.yml&#39;</span><span class="p">)]</span>
+<span class="sd">&quot;&quot;&quot;This constant item can be added to the superconfiguration</span>
+<span class="sd">:attr:`supercfg` to enable a default logging configuration setup. It </span>
+<span class="sd">should probably be added first, so that your own code will override it. </span>
+<span class="sd">It only provides stream loggers, not file handlers. Its logger is just a </span>
+<span class="sd">root logger at the lowest level!&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="CLIEngine"><a class="viewcode-back" href="../../base.html#pyshell.base.CLIEngine">[docs]</a><span class="k">class</span> <span class="nc">CLIEngine</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A base class for Command Line Inteface facing tools. :class:`CLIEnigne` </span>
+<span class="sd">    provides the basic structure to set up a simple command-line interface,</span>
+<span class="sd">    based on the :mod:`argparse` framework.</span>
+<span class="sd">    </span>
+<span class="sd">    :param str prefix_chars: Sets the prefix characters to command line arguments. </span>
+<span class="sd">        by default this is set to &quot;-&quot;, reqiuring that all command line argumetns begin </span>
+<span class="sd">        with &quot;-&quot;.</span>
+<span class="sd">    </span>
+<span class="sd">    At the end of initialization, the configuration (:attr:`config`) and </span>
+<span class="sd">    :attr:`parser` will be availabe for use.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># pylint: disable= too-many-instance-attributes</span>
+    
+    <span class="n">__metaclass__</span> <span class="o">=</span> <span class="n">abc</span><span class="o">.</span><span class="n">ABCMeta</span>
+    
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="CLIEngine.description"><a class="viewcode-back" href="../../base.html#pyshell.base.CLIEngine.description">[docs]</a>    <span class="k">def</span> <span class="nf">description</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The textual description of the command line interface, </span>
+<span class="sd">        set as the description of the parser from :mod:`argparse`.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__doc__</span>
+        </div>
+    <span class="n">epilog</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;The text that comes at the end of the :mod:`argparse` </span>
+<span class="sd">    help text.&quot;&quot;&quot;</span>
+    
+    <span class="n">defaultcfg</span> <span class="o">=</span> <span class="s">&quot;Config.yml&quot;</span>
+    <span class="sd">&quot;&quot;&quot;The name of the default configuration file to be loaded. If set to </span>
+<span class="sd">    ``False``, no configuration will occur.&quot;&quot;&quot;</span>
+    
+    <span class="n">supercfg</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="sd">&quot;&quot;&quot;This is a list of tuples which represent configurations that should be </span>
+<span class="sd">    loaded before the default configuration is loaded. Each tuple contains the </span>
+<span class="sd">    module name and filename pair that should be passed to </span>
+<span class="sd">    :func:`~pkg_resources.resource_filename`. To specify a super-configuration </span>
+<span class="sd">    in the current direction, use ``__main__`` as the module name.&quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix_chars</span><span class="o">=</span><span class="s">&quot;-&quot;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">),</span> 
+        <span class="n">conflict_handler</span><span class="o">=</span><span class="s">&#39;error&#39;</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">CLIEngine</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__module__</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">(</span>
+            <span class="n">prefix_chars</span> <span class="o">=</span> <span class="n">prefix_chars</span><span class="p">,</span> <span class="n">add_help</span> <span class="o">=</span> <span class="bp">False</span><span class="p">,</span>
+            <span class="n">formatter_class</span> <span class="o">=</span> <span class="n">RawDescriptionHelpFormatter</span><span class="p">,</span>
+            <span class="n">description</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+            <span class="n">epilog</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">epilog</span><span class="p">,</span>
+            <span class="n">conflict_handler</span> <span class="o">=</span> <span class="n">conflict_handler</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_home</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s">&quot;HOME&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config</span> <span class="o">=</span> <span class="n">Config</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">dn</span> <span class="o">=</span> <span class="n">BConfig</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_opts</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rargs</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__help_action</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exitcode</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hasinit</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hasargs</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hasvars</span> <span class="o">=</span> <span class="bp">True</span>
+        
+        
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="CLIEngine.parser"><a class="viewcode-back" href="../../base.html#pyshell.base.CLIEngine.parser">[docs]</a>    <span class="k">def</span> <span class="nf">parser</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;:class:`argparse.ArgumentParser` instance for this engine.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;_hasvars&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parser</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s">&quot;Parser has not yet been initialized!&quot;</span><span class="p">)</span>
+        </div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="CLIEngine.config"><a class="viewcode-back" href="../../base.html#pyshell.base.CLIEngine.config">[docs]</a>    <span class="k">def</span> <span class="nf">config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;:class:`pyshell.config.Configuration` object for this engine.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span>
+        </div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="CLIEngine.opts"><a class="viewcode-back" href="../../base.html#pyshell.base.CLIEngine.opts">[docs]</a>    <span class="k">def</span> <span class="nf">opts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Command Line Options, as paresed, for this engine&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_opts</span>
+        </div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="CLIEngine.log"><a class="viewcode-back" href="../../base.html#pyshell.base.CLIEngine.log">[docs]</a>    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;This engine&#39;s logger&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_log</span>
+        </div>
+<div class="viewcode-block" id="CLIEngine.init"><a class="viewcode-back" href="../../base.html#pyshell.base.CLIEngine.init">[docs]</a>    <span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialization after the parser has been created.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hasinit</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">defaultcfg</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--config&#39;</span><span class="p">,</span>
+                <span class="n">action</span><span class="o">=</span><span class="s">&#39;store&#39;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s">&#39;file.yml&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">defaultcfg</span><span class="p">,</span>
+                <span class="n">help</span><span class="o">=</span><span class="s">&quot;Set configuration file. By default, load </span><span class="si">%(file)s</span><span class="s"> and&quot;</span>
+                <span class="s">&quot; ~/</span><span class="si">%(file)s</span><span class="s"> if it exists.&quot;</span> <span class="o">%</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">defaultcfg</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--configure&#39;</span><span class="p">,</span>
+                <span class="n">action</span><span class="o">=</span><span class="s">&#39;append&#39;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s">&#39;Item.Key=value&#39;</span><span class="p">,</span><span class="n">default</span><span class="o">=</span><span class="p">[],</span>
+                <span class="n">help</span><span class="o">=</span><span class="s">&quot;Set configuration value. The value is parsed as a&quot;</span>
+                <span class="s">&quot; python literal.&quot;</span><span class="p">)</span>
+        
+    </div>
+<div class="viewcode-block" id="CLIEngine.arguments"><a class="viewcode-back" href="../../base.html#pyshell.base.CLIEngine.arguments">[docs]</a>    <span class="k">def</span> <span class="nf">arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot;Parse the given arguments. If no arguments are given, parses </span>
+<span class="sd">        the known arguments on the command line. Generally this should </span>
+<span class="sd">        parse all arguments except ``-h`` for help, which should be </span>
+<span class="sd">        parsed last after the help text has been fully assembled. The full </span>
+<span class="sd">        help text can be set to the ``self.parser.epilog`` attribute.</span>
+<span class="sd">        </span>
+<span class="sd">        :param \*args: The arguments to be parsed.</span>
+<span class="sd">        </span>
+<span class="sd">        Similar to taking the command line components and doing </span>
+<span class="sd">        ``&quot; -h --config test.yml&quot;.split()``. Same signature as would be used </span>
+<span class="sd">        for :meth:`argparse.ArgumentParser.parse_args()`</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hasinit</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">init</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_opts</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse_known_args</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hasargs</span> <span class="o">=</span> <span class="bp">True</span>
+    </div>
+<div class="viewcode-block" id="CLIEngine.before_configure"><a class="viewcode-back" href="../../base.html#pyshell.base.CLIEngine.before_configure">[docs]</a>    <span class="k">def</span> <span class="nf">before_configure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Actions to be run before configuration. This method can be </span>
+<span class="sd">        overwritten to provide custom actions to be taken before the</span>
+<span class="sd">        engine gets configured.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+    </div>
+<div class="viewcode-block" id="CLIEngine.configure"><a class="viewcode-back" href="../../base.html#pyshell.base.CLIEngine.configure">[docs]</a>    <span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Configure the command line engine from a series of YAML files.</span>
+<span class="sd">        </span>
+<span class="sd">        The configuration loads (starting with a blank configuration):</span>
+<span class="sd">        </span>
+<span class="sd">            1. The :attr:`module` configuration file named for </span>
+<span class="sd">            :attr:`defaultcfg`</span>
+<span class="sd">            2. The command line specified file from the user&#39;s home folder </span>
+<span class="sd">            ``~/config.yml``</span>
+<span class="sd">            3. The command line specified file from the working directory.</span>
+<span class="sd">        </span>
+<span class="sd">        If the third file is not found, and the user specified a new name for </span>
+<span class="sd">        the configuration file, then the user is warned that no configuration </span>
+<span class="sd">        file could be found. This way the usre is only warned about a missing </span>
+<span class="sd">        configuration file if they requested a file specifically (and so </span>
+<span class="sd">        intended to use a customized file).</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="p">,</span> <span class="s">&#39;config&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">defaultcfg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">module</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__module__</span><span class="p">,</span>
+            <span class="n">defaultcfg</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">defaultcfg</span><span class="p">,</span> <span class="n">cfg</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span><span class="n">supercfg</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">supercfg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">parse_literals</span><span class="p">(</span><span class="o">*</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="p">,</span> <span class="s">&#39;configure&#39;</span><span class="p">,</span> <span class="p">[]))</span>
+        </div>
+<div class="viewcode-block" id="CLIEngine.after_configure"><a class="viewcode-back" href="../../base.html#pyshell.base.CLIEngine.after_configure">[docs]</a>    <span class="k">def</span> <span class="nf">after_configure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Actions to be run after configuration. This method can be </span>
+<span class="sd">        overwritten to provide custom actions to be taken before the</span>
+<span class="sd">        engine gets configured.&quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+        </div>
+<div class="viewcode-block" id="CLIEngine.parse"><a class="viewcode-back" href="../../base.html#pyshell.base.CLIEngine.parse">[docs]</a>    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse the command line arguments.</span>
+<span class="sd">        </span>
+<span class="sd">        This function uses the arguments passed in through :meth:`arguments`,</span>
+<span class="sd">        adds the `-h` option, and calls the parser to understand and act on </span>
+<span class="sd">        the arguments. Arguments are then stored in the :attr:`opts` attribute.</span>
+<span class="sd">        </span>
+<span class="sd">        This method also calls :meth:`configure_logging` to set up the logger</span>
+<span class="sd">        if it is ready to go.</span>
+<span class="sd">        </span>
+<span class="sd">        .. note:: </span>
+<span class="sd">            Calling :meth:`configure_logging` allows :meth:`configure` to </span>
+<span class="sd">            change the logging configuration values before the logger is </span>
+<span class="sd">            configured.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_help</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_opts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rargs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_opts</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">configure_logging</span><span class="p">()</span>
+        </div>
+    <span class="nd">@deprecatedmethod</span><span class="p">(</span><span class="n">version</span><span class="o">=</span><span class="s">&quot;0.3&quot;</span><span class="p">,</span><span class="n">replacement</span><span class="o">=</span><span class="s">&quot;.do()&quot;</span><span class="p">)</span>
+    <span class="nd">@semiabstractmethod</span><span class="p">(</span><span class="s">&quot;Method .start() will be deprecated after version 0.3&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="CLIEngine.start"><a class="viewcode-back" href="../../base.html#pyshell.base.CLIEngine.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;This function is called at the start of the :class:`CLIEngine` </span>
+<span class="sd">        operation. It should contain any process spawning that needs to </span>
+<span class="sd">        occur.</span>
+<span class="sd">        </span>
+<span class="sd">        .. deprecated:: 0.2</span>
+<span class="sd">            Use :meth:`do` instead.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+        
+    </div>
+<div class="viewcode-block" id="CLIEngine.do"><a class="viewcode-back" href="../../base.html#pyshell.base.CLIEngine.do">[docs]</a>    <span class="k">def</span> <span class="nf">do</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="c"># pylint: disable= invalid-name</span>
+        <span class="sd">&quot;&quot;&quot;This method should handle the main operations for the command </span>
+<span class="sd">        line tool. The user should overwrite this method in Engine subclasses</span>
+<span class="sd">        for thier own use. The :exc:`KeyboardInterrupt` or :exc:`SystemExit` </span>
+<span class="sd">        errors will be caught by :meth:`kill`&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Command line tools must overwrite the method&quot;</span>
+            <span class="s">&quot; do() with their desired actions.&quot;</span><span class="p">)</span>
+        </div>
+    <span class="nd">@deprecatedmethod</span><span class="p">(</span><span class="n">version</span><span class="o">=</span><span class="s">&quot;0.3&quot;</span><span class="p">,</span><span class="n">replacement</span><span class="o">=</span><span class="s">&quot;.do()&quot;</span><span class="p">)</span>
+    <span class="nd">@semiabstractmethod</span><span class="p">(</span><span class="s">&quot;Method .end() will be deprecated after version 0.3&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="CLIEngine.end"><a class="viewcode-back" href="../../base.html#pyshell.base.CLIEngine.end">[docs]</a>    <span class="k">def</span> <span class="nf">end</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;This function is called at the end of the :class:`CLIEngine` </span>
+<span class="sd">        operation and should ensure that all subprocesses have ended.</span>
+<span class="sd">        </span>
+<span class="sd">        .. deprecated:: 0.2</span>
+<span class="sd">            Use :meth:`do` instead.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+        </div>
+<div class="viewcode-block" id="CLIEngine.kill"><a class="viewcode-back" href="../../base.html#pyshell.base.CLIEngine.kill">[docs]</a>    <span class="k">def</span> <span class="nf">kill</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;This function should forcibly kill any subprocesses. It is called </span>
+<span class="sd">        when :meth:`do` raises a :exc:`KeyboardInterrupt` or :exc:`SystemExit`</span>
+<span class="sd">        to ensure that any tasks can be finalized before the system exits.</span>
+<span class="sd">        Errors raised here are not caught.&quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+            </div>
+<div class="viewcode-block" id="CLIEngine.run"><a class="viewcode-back" href="../../base.html#pyshell.base.CLIEngine.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;This method is used to run the command line engine in the expected </span>
+<span class="sd">        order. This method should be called to run the engine from another </span>
+<span class="sd">        program.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hasinit</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">init</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hasargs</span><span class="p">:</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s">&quot;Implied Command-line mode&quot;</span><span class="p">,</span> <span class="ne">UserWarning</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">before_configure</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">configure</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">after_configure</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parse</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">do</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">SystemExit</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">exc</span><span class="p">,</span> <span class="s">&#39;code&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">kill</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">__debug__</span><span class="p">:</span>
+                <span class="k">raise</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">exitcode</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">exc</span><span class="p">,</span> <span class="s">&#39;code&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exitcode</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyboardInterrupt</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kill</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">__debug__</span><span class="p">:</span>
+                <span class="k">raise</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">exitcode</span>
+    </div>
+    <span class="nd">@classmethod</span>        
+<div class="viewcode-block" id="CLIEngine.script"><a class="viewcode-back" href="../../base.html#pyshell.base.CLIEngine.script">[docs]</a>    <span class="k">def</span> <span class="nf">script</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The class method for using this module as a script entry </span>
+<span class="sd">        point. This method ensures that the engine runs correctly on </span>
+<span class="sd">        the command line, and is cleaned up at the end.&quot;&quot;&quot;</span>
+        <span class="n">engine</span> <span class="o">=</span> <span class="n">cls</span><span class="p">()</span>
+        <span class="n">engine</span><span class="o">.</span><span class="n">arguments</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">engine</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+        </div>
+<div class="viewcode-block" id="CLIEngine._remove_help"><a class="viewcode-back" href="../../base.html#pyshell.base.CLIEngine._remove_help">[docs]</a>    <span class="k">def</span> <span class="nf">_remove_help</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remove the ``-h, --help`` argument from the parser.</span>
+<span class="sd">        </span>
+<span class="sd">        .. Warning::</span>
+<span class="sd">            This method uses a swizzle to access protected parser attributes</span>
+<span class="sd">            and remove the argument as best as possible. It may break!</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># pylint: disable= protected-access</span>
+        <span class="k">for</span> <span class="n">option_string</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__help_action</span><span class="o">.</span><span class="n">option_strings</span><span class="p">:</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parser</span><span class="o">.</span><span class="n">_option_string_actions</span><span class="p">[</span><span class="n">option_string</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parser</span><span class="o">.</span><span class="n">_remove_action</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__help_action</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="CLIEngine._add_help"><a class="viewcode-back" href="../../base.html#pyshell.base.CLIEngine._add_help">[docs]</a>    <span class="k">def</span> <span class="nf">_add_help</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add the ``-h, --help`` argument.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__help_action</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-h&#39;</span><span class="p">,</span> <span class="s">&#39;--help&#39;</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="s">&#39;help&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;Display this help text&quot;</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="CLIEngine.configure_logging"><a class="viewcode-back" href="../../base.html#pyshell.base.CLIEngine.configure_logging">[docs]</a>    <span class="k">def</span> <span class="nf">configure_logging</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Configure the logging system using the configuration underneath </span>
+<span class="sd">        ``config[&quot;logging&quot;]`` as a dictionary configuration for the :mod:`logging` </span>
+<span class="sd">        module.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s">&quot;logging&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">dictConfig</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&quot;logging&quot;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="s">&quot;py.warnings&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&quot;logging.loggers&quot;</span><span class="p">]:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">captureWarnings</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+        </div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">PyShell 0.2.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Alexander Rudy.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

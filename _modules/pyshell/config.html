@@ -1,0 +1,761 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pyshell.config &mdash; PyShell 0.2.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PyShell 0.2.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">PyShell 0.2.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pyshell.config</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="c"># </span>
+<span class="c">#  config.py</span>
+<span class="c">#  AstroObject</span>
+<span class="c">#  </span>
+<span class="c">#  Created by Alexander Rudy on 2012-02-08.</span>
+<span class="c">#  Copyright 2012 Alexander Rudy. All rights reserved.</span>
+<span class="c">#  Version 0.6.0</span>
+<span class="c"># </span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">:mod:`config` — YAML-based Configuration Dictionaries</span>
+<span class="sd">==========================================================</span>
+
+<span class="sd">.. testsetup ::</span>
+<span class="sd">    </span>
+<span class="sd">    from pyshell.config import *</span>
+
+<span class="sd">This module provides structured, YAML based, deep dictionary configuration objects. The objects have a built-in deep-update function and use deep-update behavior by default. They act otherwise like dictionaries, and handle thier internal operation using a storage dictionary. The objects also provide a YAML configuration file reading and writing interface.</span>
+<span class="sd"> </span>
+<span class="sd">.. inheritance-diagram::</span>
+<span class="sd">    pyshell.config.Configuration</span>
+<span class="sd">    pyshell.config.StructuredConfiguration</span>
+<span class="sd">    :parts: 1</span>
+<span class="sd">    </span>
+<span class="sd">.. autofunction::</span>
+<span class="sd">    pyshell.config.reformat</span>
+
+<span class="sd">Basic Configurations: :class:`Configuration`</span>
+<span class="sd">--------------------------------------------</span>
+
+<span class="sd">.. autoclass::</span>
+<span class="sd">    pyshell.config.Configuration</span>
+<span class="sd">    :members:</span>
+
+<span class="sd">Dotted Configurations: :class:`Configuration`</span>
+<span class="sd">---------------------------------------------</span>
+
+<span class="sd">.. autoclass::</span>
+<span class="sd">    pyshell.config.DottedConfiguration</span>
+<span class="sd">    :members:</span>
+<span class="sd">    :inherited-members:</span>
+
+
+<span class="sd">Structured Configurations: :class:`StructuredConfiguration`</span>
+<span class="sd">-----------------------------------------------------------</span>
+
+<span class="sd">.. autoclass::</span>
+<span class="sd">    pyshell.config.StructuredConfiguration</span>
+<span class="sd">    :members:</span>
+<span class="sd">    :inherited-members:</span>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="p">(</span><span class="n">absolute_import</span><span class="p">,</span> <span class="n">unicode_literals</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span>
+                        <span class="n">print_function</span><span class="p">)</span>
+
+<span class="c"># Standard Python Modules</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">yaml</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+<span class="kn">import</span> <span class="nn">ast</span>
+
+
+<span class="c"># Submodules from this system</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">util</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;reformat&#39;</span><span class="p">,</span><span class="s">&#39;advanceddeepmerge&#39;</span><span class="p">,</span><span class="s">&#39;deepmerge&#39;</span><span class="p">,</span><span class="s">&#39;ConfigurationError&#39;</span><span class="p">,</span><span class="s">&#39;Configuration&#39;</span><span class="p">,</span><span class="s">&#39;DottedConfiguration&#39;</span><span class="p">,</span><span class="s">&#39;StructuredConfiguration&#39;</span><span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">force_yaml_unicode</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;This method forces the PyYAML library to construct unicode objects when reading YAML instead of producing regular strings.</span>
+<span class="sd">    </span>
+<span class="sd">    It is designed to imporove compatibility in Python2.x using unicode objects.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">yaml</span>
+    <span class="kn">from</span> <span class="nn">yaml</span> <span class="kn">import</span> <span class="n">Loader</span><span class="p">,</span> <span class="n">SafeLoader</span>
+
+    <span class="k">def</span> <span class="nf">construct_yaml_str</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="c"># Override the default string handling function </span>
+        <span class="c"># to always return unicode objects</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">construct_scalar</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+    <span class="n">Loader</span><span class="o">.</span><span class="n">add_constructor</span><span class="p">(</span><span class="s">u&#39;tag:yaml.org,2002:str&#39;</span><span class="p">,</span> <span class="n">construct_yaml_str</span><span class="p">)</span>
+    <span class="n">SafeLoader</span><span class="o">.</span><span class="n">add_constructor</span><span class="p">(</span><span class="s">u&#39;tag:yaml.org,2002:str&#39;</span><span class="p">,</span> <span class="n">construct_yaml_str</span><span class="p">)</span>
+    
+    
+<div class="viewcode-block" id="reformat"><a class="viewcode-back" href="../../config.html#pyshell.config.reformat">[docs]</a><span class="k">def</span> <span class="nf">reformat</span><span class="p">(</span><span class="n">d</span><span class="p">,</span><span class="n">nt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Recursive extraction method for changing the type of nested dictionary objects.</span>
+<span class="sd">    </span>
+<span class="sd">    :param mapping d: The dictionary to re-type.</span>
+<span class="sd">    :param mapping-type nt: The new mapping type to use.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c">#pylint: disable=C0103</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">Mapping</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">d</span>
+    <span class="n">e</span> <span class="o">=</span> <span class="n">nt</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">Mapping</span><span class="p">):</span>
+            <span class="n">e</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">reformat</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">nt</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">Sequence</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">unicode</span><span class="p">)):</span>
+            <span class="n">e</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span> <span class="n">reformat</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">nt</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">v</span> <span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">e</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+    <span class="k">return</span> <span class="n">e</span>
+    </div>
+<span class="k">def</span> <span class="nf">advanceddeepmerge</span><span class="p">(</span><span class="n">d</span><span class="p">,</span><span class="n">u</span><span class="p">,</span><span class="n">s</span><span class="p">,</span><span class="n">sequence</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Merge deep collection-like structures.</span>
+<span class="sd">    </span>
+<span class="sd">    This version will merge sequence structures when they are found.</span>
+<span class="sd">    </span>
+<span class="sd">    :param d: Deep Structure</span>
+<span class="sd">    :param u: Updated Structure</span>
+<span class="sd">    :param s: Default structure to use when a new deep structure is required.</span>
+<span class="sd">    :param (bool) sequence: Control sequence merging</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="s">&#39;__len__&#39;</span><span class="p">))</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">u</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">d</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">u</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">Mapping</span><span class="p">):</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">deepmerge</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">s</span><span class="p">()),</span> <span class="n">v</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+            <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">r</span>
+        <span class="k">elif</span> <span class="n">sequence</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">Sequence</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="bp">None</span><span class="p">),</span> <span class="n">collections</span><span class="o">.</span><span class="n">Sequence</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,(</span><span class="nb">str</span><span class="p">,</span><span class="nb">unicode</span><span class="p">))</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="bp">None</span><span class="p">),(</span><span class="nb">str</span><span class="p">,</span><span class="nb">unicode</span><span class="p">))):</span>
+            <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">v</span> <span class="p">]</span> <span class="o">+</span> <span class="p">[</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">u</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">d</span>
+
+<span class="k">def</span> <span class="nf">deepmerge</span><span class="p">(</span><span class="n">d</span><span class="p">,</span><span class="n">u</span><span class="p">,</span><span class="n">s</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Merge deep collection-like structures.</span>
+<span class="sd">    </span>
+<span class="sd">    :param d: Deep Structure</span>
+<span class="sd">    :param u: Updated Structure</span>
+<span class="sd">    :param s: Default structure to use when a new deep structure is required.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="s">&#39;__len__&#39;</span><span class="p">))</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">u</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">d</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">u</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">Mapping</span><span class="p">):</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">deepmerge</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">s</span><span class="p">()),</span> <span class="n">v</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+            <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">r</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">u</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">d</span>
+    
+
+<span class="k">class</span> <span class="nc">ConfigurationError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Configuration error&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expected</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">expected</span> <span class="o">=</span> <span class="n">expected</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="s">&quot;Expected {key!r} in {config!r}!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">expected</span><span class="p">,</span><span class="n">config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ConfigurationError</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+        
+<span class="k">class</span> <span class="nc">DeepNestDict</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class for deep nestinging emptiness&quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+        
+        
+
+
+<div class="viewcode-block" id="Configuration"><a class="viewcode-back" href="../../config.html#pyshell.config.Configuration">[docs]</a><span class="k">class</span> <span class="nc">Configuration</span><span class="p">(</span><span class="n">collections</span><span class="o">.</span><span class="n">MutableMapping</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds extra methods to dictionary for configuration&quot;&quot;&quot;</span>
+    
+    <span class="n">_dn</span> <span class="o">=</span> <span class="n">DeepNestDict</span>
+    <span class="sd">&quot;&quot;&quot;Deep nesting dictionary setting. This class will be used to create deep nesting structures for this dictionary.&quot;&quot;&quot;</span> <span class="c">#pylint: disable=W0105</span>
+    
+    <span class="n">dt</span> <span class="o">=</span> <span class="nb">dict</span>
+    <span class="sd">&quot;&quot;&quot;Exctraction nesting dictionary setting. This class will be used to create deep nesting structures when this object is extracted.&quot;&quot;&quot;</span> <span class="c">#pylint: disable=W0105</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dn</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Deep nesting attribute reader&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dn</span>
+    
+    <span class="nd">@dn.setter</span>
+<div class="viewcode-block" id="Configuration.dn"><a class="viewcode-back" href="../../config.html#pyshell.config.Configuration.dn">[docs]</a>    <span class="k">def</span> <span class="nf">dn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">new_type</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Deep nesting type setter.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">new_type</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dn</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">renest</span><span class="p">(</span><span class="n">new_type</span><span class="p">)</span>
+    </div>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Configuration</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">handlers</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">NullHandler</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_store</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filename</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_strict</span> <span class="o">=</span> <span class="bp">False</span>
+    
+    <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;Configuration&quot;</span>
+    <span class="sd">&quot;&quot;&quot;The name/type of this configuration.&quot;&quot;&quot;</span>
+        
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Configuration.filename"><a class="viewcode-back" href="../../config.html#pyshell.config.Configuration.filename">[docs]</a>    <span class="k">def</span> <span class="nf">filename</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The filename which has been used to save/load this configuration most recently&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filename</span>
+        </div>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;String representation of this object&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;String for this object&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s">&quot;&lt;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s"> &gt;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+        
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Dictionary getter&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_store</span><span class="o">.</span><span class="n">__getitem__</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Dictonary setter&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_store</span><span class="o">.</span><span class="n">__setitem__</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Dictionary delete&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_store</span><span class="o">.</span><span class="n">__delitem__</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return an iterator for this dictionary&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_store</span><span class="o">.</span><span class="n">__iter__</span><span class="p">()</span>
+        
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the contains boolean&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_store</span><span class="o">.</span><span class="n">__contains__</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Length&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_store</span><span class="o">.</span><span class="n">__len__</span><span class="p">()</span>
+    
+<div class="viewcode-block" id="Configuration.update"><a class="viewcode-back" href="../../config.html#pyshell.config.Configuration.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">deep</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span> <span class="c">#pylint: disable=W0221</span>
+        <span class="sd">&quot;&quot;&quot;Update the dictionary using :meth:`merge`.</span>
+<span class="sd">        </span>
+<span class="sd">        :param dict-like other: The other dictionary to be merged.</span>
+<span class="sd">        :param bool deep: Whether to use deep merge (:meth:`merge`) or shallow update.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">deep</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_store</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="Configuration.merge"><a class="viewcode-back" href="../../config.html#pyshell.config.Configuration.merge">[docs]</a>    <span class="k">def</span> <span class="nf">merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Merge another configuration into this one (the master).</span>
+<span class="sd">        </span>
+<span class="sd">        :param dict-like other: The other dictionary to be merged.</span>
+<span class="sd">        </span>
+<span class="sd">        .. doctest::</span>
+<span class="sd">            </span>
+<span class="sd">            &gt;&gt;&gt; a = Configuration(**{&#39;a&#39;:&#39;b&#39;})</span>
+<span class="sd">            &gt;&gt;&gt; a.merge({&#39;c&#39;:&#39;d&#39;})</span>
+<span class="sd">            &gt;&gt;&gt; a</span>
+<span class="sd">            {&#39;a&#39;: &#39;b&#39;, &#39;c&#39;: &#39;d&#39;}</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">deepmerge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dn</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="Configuration.save"><a class="viewcode-back" href="../../config.html#pyshell.config.Configuration.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Save this configuration as a YAML file. YAML files generally have the ``.yaml`` or ``.yml`` extension. If the filename ends in ``.dat``, the configuration will be saved as a raw dictionary literal.</span>
+<span class="sd">        </span>
+<span class="sd">        :param string filename: The filename on which to save the configuration.</span>
+<span class="sd">        :param bool silent: Unused.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s">&#39;read&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s">&#39;readlines&#39;</span><span class="p">):</span>
+            <span class="n">stream</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;# </span><span class="si">%s</span><span class="s">: stream&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">,</span> <span class="n">stream</span><span class="p">,</span> <span class="n">default_flow_style</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">stream</span><span class="p">:</span>
+                <span class="n">stream</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;# </span><span class="si">%s</span><span class="s">: </span><span class="si">%s</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="n">filename</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">r&quot;(\.yaml|\.yml)$&quot;</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+                    <span class="n">yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">,</span> <span class="n">stream</span><span class="p">,</span> <span class="n">default_flow_style</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">r&quot;\.dat$&quot;</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+                    <span class="n">stream</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">))</span>
+                <span class="k">elif</span> <span class="ow">not</span> <span class="n">silent</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Filename Error, not (.dat,.yaml,.yml): </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">filename</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_filename</span> <span class="o">=</span> <span class="n">filename</span>
+        </div>
+<div class="viewcode-block" id="Configuration.load"><a class="viewcode-back" href="../../config.html#pyshell.config.Configuration.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Loads a configuration from a yaml file, and merges it into the master configuration.</span>
+<span class="sd">        </span>
+<span class="sd">        :param string filename: The filename to load from.</span>
+<span class="sd">        :param bool silent: Silence IOErrors which might arise due to a non-existant configuration file. If this is the case, the failure to find a configuration file will be logged, will not raise an error.</span>
+<span class="sd">        :raises: :exc:`IOError` if the file can&#39;t be found.</span>
+<span class="sd">        :returns: boolean, whether the file was loaded.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">loaded</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s">&#39;read&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s">&#39;readlines&#39;</span><span class="p">):</span>
+                <span class="n">new</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">stream</span><span class="p">:</span>
+                    <span class="n">new</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">silent</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;Could not load configuration from file: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">filename</span><span class="p">,</span><span class="ne">UserWarning</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">new</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_filename</span> <span class="o">=</span> <span class="n">filename</span>
+            <span class="n">loaded</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">return</span> <span class="n">loaded</span>
+    </div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Configuration.store"><a class="viewcode-back" href="../../config.html#pyshell.config.Configuration.store">[docs]</a>    <span class="k">def</span> <span class="nf">store</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Dictionary representing this configuration. This property should be used if you wish to have a &#39;true&#39; dictionary object. It is used internally to write this configuration to a YAML file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">reformat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_store</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="Configuration.renest"><a class="viewcode-back" href="../../config.html#pyshell.config.Configuration.renest">[docs]</a>    <span class="k">def</span> <span class="nf">renest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">deep_nest_type</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Re-nest this object. This method applies the :attr:`dn` deep-nesting attribute to each nesting level in the configuration object.</span>
+<span class="sd">        </span>
+<span class="sd">        :param deep_nest_type: mapping nesting type, will set :attr:`dn`.</span>
+<span class="sd">        </span>
+<span class="sd">        This method does not return anything.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">deep_nest_type</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">Mapping</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_dn</span> <span class="o">=</span> <span class="n">deep_nest_type</span> <span class="c">#pylint: disable=C0103</span>
+        <span class="k">elif</span> <span class="n">deep_nest_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%r</span><span class="s"> is not a mapping type.&quot;</span> <span class="o">%</span> <span class="n">deep_nest_type</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_store</span> <span class="o">=</span> <span class="n">reformat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_store</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">dn</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="Configuration.extract"><a class="viewcode-back" href="../../config.html#pyshell.config.Configuration.extract">[docs]</a>    <span class="k">def</span> <span class="nf">extract</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Extract the dictionary from this object.</span>
+<span class="sd">        </span>
+<span class="sd">        .. deprecated:: 0.4</span>
+<span class="sd">            use :attr:`store`</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span>
+        </div>
+<div class="viewcode-block" id="Configuration.parse_literals"><a class="viewcode-back" href="../../config.html#pyshell.config.Configuration.parse_literals">[docs]</a>    <span class="k">def</span> <span class="nf">parse_literals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">*</span><span class="n">literals</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Turn a list of literals into configuration items.</span>
+<span class="sd">        </span>
+<span class="sd">        :param literals: Any literals which are separated by the separator.</span>
+<span class="sd">        :keyword sep: The separator to use, defaults to ``&quot;=&quot;``.</span>
+<span class="sd">        </span>
+<span class="sd">        Keywords are parsed where ``foo=bar`` becomes ``self[&quot;foo&quot;] = &quot;bar&quot;``.</span>
+<span class="sd">        If ``bar`` can be parsed as a python literal (float, int, dict, list </span>
+<span class="sd">        etc..), the literal value will be used in place of the string. </span>
+<span class="sd">        For which literals will be parsed, see :func:`ast.literal_eval` from</span>
+<span class="sd">        the Abstract-Syntax Tree features in python. There is great power in</span>
+<span class="sd">        using this method with dotted configurations, as ``foo.bat=bar`` will</span>
+<span class="sd">        get parsed to  ``self[&quot;foo.bat&quot;] = &quot;bar&quot;``.  This is useful for </span>
+<span class="sd">        parsing configuration command line options.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">literals</span><span class="p">:</span>    
+            <span class="n">parts</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;sep&#39;</span><span class="p">,</span><span class="s">&quot;=&quot;</span><span class="p">),</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Invalid literal: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">item</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">parts</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">literal_eval</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        </div>
+<div class="viewcode-block" id="Configuration.configure"><a class="viewcode-back" href="../../config.html#pyshell.config.Configuration.configure">[docs]</a>    <span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">module</span><span class="o">=</span><span class="n">__name__</span><span class="p">,</span><span class="n">defaultcfg</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">cfg</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">supercfg</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The configuration loads (starting with a blank configuration):</span>
+<span class="sd">        </span>
+<span class="sd">            1. The list of ``supercfg`` &#39;s. This list should contain tuples of ``(module,name)`` pairs.</span>
+<span class="sd">            2. The ``module`` configuration file named for ``defaultcfg``</span>
+<span class="sd">            3. The ``cfg`` file from the user&#39;s home folder ``~/config.yml``</span>
+<span class="sd">            4. The ``cfg`` file from the working directory.</span>
+<span class="sd">        </span>
+<span class="sd">        If the fourth file is not found, and the user specified a new name for \</span>
+<span class="sd">        the configuration file (i.e. ``cfg != defaultcfg``), then the user is warned that no configuration \</span>
+<span class="sd">        file could be found. This way the user is only warned about a missing \</span>
+<span class="sd">        configuration file if they requested a file specifically (and so \</span>
+<span class="sd">        intended to use a customized file).</span>
+<span class="sd">        </span>
+<span class="sd">        :param module: The name of the module for searching for the default config.</span>
+<span class="sd">        :param cfg: The name of the requested configuration file.</span>
+<span class="sd">        :param defaultcfg: The name of the default configuration file which might \</span>
+<span class="sd">        exist in the module&#39;s file.</span>
+<span class="sd">        :param: supercfg: A list of configuration files to preload. The list should \</span>
+<span class="sd">        contian pairs of (module,name) as tuples.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">pkg_resources</span> <span class="kn">import</span> <span class="n">resource_filename</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">defaultcfg</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="n">supercfg</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">supercfg</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">supermodule</span><span class="p">,</span><span class="n">superfilename</span> <span class="ow">in</span> <span class="n">supercfg</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">supermodule</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">superfilename</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">resource_filename</span><span class="p">(</span><span class="n">supermodule</span><span class="p">,</span><span class="n">superfilename</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">resource_filename</span><span class="p">(</span><span class="n">module</span><span class="p">,</span><span class="n">defaultcfg</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">cfg</span> <span class="ow">and</span> <span class="n">util</span><span class="o">.</span><span class="n">check_exists</span><span class="p">(</span><span class="s">&quot;~/</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">cfg</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&quot;~/</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">cfg</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">cfg</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">cfg</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">cfg</span> <span class="ow">and</span> <span class="n">cfg</span> <span class="o">!=</span> <span class="n">defaultcfg</span><span class="p">:</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s">&quot;Configuration File &#39;{}&#39; not found!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cfg</span><span class="p">),</span> <span class="ne">RuntimeWarning</span><span class="p">)</span>
+        
+        
+        </div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Configuration.create"><a class="viewcode-back" href="../../config.html#pyshell.config.Configuration.create">[docs]</a>    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span><span class="n">module</span><span class="o">=</span><span class="n">__name__</span><span class="p">,</span><span class="n">defaultcfg</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">cfg</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">supercfg</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a configuration from a series of YAML files.</span>
+<span class="sd">        </span>
+<span class="sd">        See :meth:`configure` for a detailed description of the resolution order of configuration files for this method.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">cls</span><span class="p">()</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">module</span><span class="p">,</span><span class="n">defaultcfg</span><span class="p">,</span><span class="n">cfg</span><span class="p">,</span><span class="n">supercfg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">config</span>
+        </div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Configuration.fromfile"><a class="viewcode-back" href="../../config.html#pyshell.config.Configuration.fromfile">[docs]</a>    <span class="k">def</span> <span class="nf">fromfile</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span><span class="n">filename</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a configuration from a single YAML file.&quot;&quot;&quot;</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">cls</span><span class="p">()</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="n">silent</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">config</span>
+
+</div></div>
+<div class="viewcode-block" id="DottedConfiguration"><a class="viewcode-back" href="../../config.html#pyshell.config.DottedConfiguration">[docs]</a><span class="k">class</span> <span class="nc">DottedConfiguration</span><span class="p">(</span><span class="n">Configuration</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A configuration which can use dotted accessor methods.</span>
+<span class="sd">    </span>
+<span class="sd">    Configuration variables can be accessed and set with dot-qualified names. E.g.::</span>
+<span class="sd">        </span>
+<span class="sd">        &gt;&gt;&gt; Config = DottedConfiguration( { &quot;Data&quot;: { &quot;Value&quot;: { &quot;ResultA&quot; : 10 }, }, })</span>
+<span class="sd">        &gt;&gt;&gt; Config[&quot;Data&quot;][&quot;Value&quot;][&quot;ResultA&quot;]</span>
+<span class="sd">        10</span>
+<span class="sd">        &gt;&gt;&gt; Config[&quot;Data.Value.ResultA&quot;]</span>
+<span class="sd">        10</span>
+<span class="sd">        </span>
+<span class="sd">    By default, this will not work for doubly nested values::</span>
+<span class="sd">    </span>
+<span class="sd">        &gt;&gt;&gt; Config[&quot;Data&quot;][&quot;Value.ResultA&quot;]</span>
+<span class="sd">        KeyError</span>
+<span class="sd">        </span>
+<span class="sd">    However, this behavior can be changed by specifying a new default nesting structure::</span>
+<span class="sd">        </span>
+<span class="sd">        &gt;&gt;&gt; Config.dn = DottedConfiguration</span>
+<span class="sd">        &gt;&gt;&gt; Config.merge(Config)</span>
+<span class="sd">        &gt;&gt;&gt; Config[&quot;Data&quot;][&quot;Value.ResultA&quot;]</span>
+<span class="sd">        10</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_isempty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Test if the given item is empty&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span><span class="n">collections</span><span class="o">.</span><span class="n">Mapping</span><span class="p">):</span>
+                <span class="k">return</span> <span class="nb">all</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_isempty</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">itervalues</span><span class="p">()])</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span><span class="n">collections</span><span class="o">.</span><span class="n">Sized</span><span class="p">):</span>
+                <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="ow">not</span> <span class="nb">bool</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        
+    <span class="k">def</span> <span class="nf">_getitem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">store</span><span class="p">,</span> <span class="n">parts</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Recursive getitem calling function.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">store</span>
+        <span class="c"># elif len(parts) == 1:</span>
+        <span class="c">#     return store[parts[0]]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">store</span><span class="p">,</span><span class="n">collections</span><span class="o">.</span><span class="n">Mapping</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)):</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="s">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">[:</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">store</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_isempty</span><span class="p">(</span><span class="n">store</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strict</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">KeyError</span>
+                <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_isempty</span><span class="p">(</span><span class="n">store</span><span class="p">[</span><span class="n">key</span><span class="p">]):</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getitem</span><span class="p">(</span><span class="n">store</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">parts</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">parts</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strict</span><span class="p">:</span>
+            <span class="n">store</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dn</span><span class="p">())</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getitem</span><span class="p">(</span><span class="n">store</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">parts</span><span class="p">)</span>
+            
+    <span class="k">def</span> <span class="nf">_setitem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">store</span><span class="p">,</span> <span class="n">parts</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Recursive setitem calling function</span>
+<span class="sd">        </span>
+<span class="sd">        This function handles a few things:</span>
+<span class="sd">        - Store is passed in as a variable to make the recursive mode work.</span>
+<span class="sd">        - If there are no more parts left, then we call the store&#39;s setitem.</span>
+<span class="sd">        - If there are parts left, then we get the value of the next key in line. When we do this, if that key has not been set, we use a default nester, the ``self.dn`` attribute, which should construct a mapping object.</span>
+<span class="sd">        - Recurses into the system.&quot;&quot;&quot;</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">parts</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">store</span><span class="o">.</span><span class="n">__setitem__</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strict</span><span class="p">:</span>
+            <span class="n">store</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dn</span><span class="p">())</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_setitem</span><span class="p">(</span><span class="n">store</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">parts</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+            
+    <span class="k">def</span> <span class="nf">_delitem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">store</span><span class="p">,</span> <span class="n">parts</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Recursive delitem calling function&quot;&quot;&quot;</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">parts</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">store</span><span class="o">.</span><span class="n">__delitem__</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strict</span><span class="p">:</span>
+            <span class="n">store</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dn</span><span class="p">())</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_delitem</span><span class="p">(</span><span class="n">store</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">parts</span><span class="p">)</span>
+            
+    <span class="k">def</span> <span class="nf">_contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">store</span><span class="p">,</span> <span class="n">parts</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Recursive containment algorithm&quot;&quot;&quot;</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">parts</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">((</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">store</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">),</span><span class="bp">self</span><span class="o">.</span><span class="n">dn</span><span class="p">)</span> 
+                <span class="ow">and</span> <span class="ow">not</span> <span class="nb">bool</span><span class="p">(</span><span class="n">store</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)))</span> 
+                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strict</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">False</span>
+            <span class="k">return</span> <span class="n">store</span><span class="o">.</span><span class="n">__contains__</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">store</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_contains</span><span class="p">(</span><span class="n">store</span><span class="p">[</span><span class="n">key</span><span class="p">],</span><span class="n">parts</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        
+        
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Dictionary getter&quot;&quot;&quot;</span>
+        <span class="n">keyparts</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;.&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">keyparts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getitem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keyparts</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="p">((</span><span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_store</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">),</span><span class="bp">self</span><span class="o">.</span><span class="n">dn</span><span class="p">)</span> 
+                    <span class="ow">and</span> <span class="ow">not</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_store</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)))</span>
+                    <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strict</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">KeyError</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_store</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="c"># raise KeyError(&#39;%s&#39; % key)</span>
+            <span class="k">raise</span>
+        
+    <span class="k">def</span> <span class="nf">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Dictonary setter&quot;&quot;&quot;</span>
+        <span class="n">keyparts</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">keyparts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_setitem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keyparts</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_store</span><span class="o">.</span><span class="n">__setitem__</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Dictionary delete&quot;&quot;&quot;</span>
+        <span class="n">keyparts</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">keyparts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_delitem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keyparts</span><span class="p">)</span>        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_store</span><span class="o">.</span><span class="n">__delitem__</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Dictionary in&quot;&quot;&quot;</span>
+        <span class="n">keyparts</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">keyparts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keyparts</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="p">((</span><span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_store</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">),</span><span class="bp">self</span><span class="o">.</span><span class="n">dn</span><span class="p">)</span> 
+                <span class="ow">and</span> <span class="ow">not</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_store</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)))</span>
+                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strict</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_store</span><span class="o">.</span><span class="n">__contains__</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    
+
+</div>
+<div class="viewcode-block" id="StructuredConfiguration"><a class="viewcode-back" href="../../config.html#pyshell.config.StructuredConfiguration">[docs]</a><span class="k">class</span> <span class="nc">StructuredConfiguration</span><span class="p">(</span><span class="n">DottedConfiguration</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A structured configuration with some basic defaults for AstroObject-type classes.</span>
+<span class="sd">    </span>
+<span class="sd">    This class does two things differently for configurations:</span>
+<span class="sd">    </span>
+<span class="sd">    1. Configurations are stored in a &quot;Configurations&quot; variable set. They can then be loaded by configuration key instead of filename, using the :meth:`setFile` method to set the filename, and then calling :meth:`load` or meth:`save` with no arguments.</span>
+<span class="sd">    2. Configuration variables can be accessed and set with dot-qualified names. E.g.::</span>
+<span class="sd">        </span>
+<span class="sd">        &gt;&gt;&gt; Config = StructuredConfigruation( { &quot;Data&quot;: { &quot;Value&quot;: { &quot;ResultA&quot; : 10 }, }, })</span>
+<span class="sd">        &gt;&gt;&gt; Config[&quot;Data&quot;][&quot;Value&quot;][&quot;ResultA&quot;]</span>
+<span class="sd">        10</span>
+<span class="sd">        &gt;&gt;&gt; Config[&quot;Data.Value.ResultA&quot;]</span>
+<span class="sd">        10</span>
+<span class="sd">        </span>
+<span class="sd">    </span>
+<span class="sd">    By default, this will not work for doubly nested values::</span>
+<span class="sd">        </span>
+<span class="sd">        &gt;&gt;&gt; Config[&quot;Data&quot;][&quot;Value.ResultA&quot;]</span>
+<span class="sd">        KeyError</span>
+<span class="sd">        </span>
+<span class="sd">    However, this behavior can be changed by specifying a new default nesting structure::</span>
+<span class="sd">        </span>
+<span class="sd">        &gt;&gt;&gt; Config.dn = DottedConfiguration</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">DEFAULT_FILENAME</span> <span class="o">=</span> <span class="s">&quot;--NOFILE--&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>  <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">StructuredConfiguration</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dn</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="p">[</span><span class="s">&quot;This&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_FILENAME</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="p">[</span><span class="s">&quot;Loaded&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="p">[</span><span class="s">&quot;Configurations&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dn</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__set_on_load</span> <span class="o">=</span> <span class="bp">False</span>
+        
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="StructuredConfiguration.files"><a class="viewcode-back" href="../../config.html#pyshell.config.StructuredConfiguration.files">[docs]</a>    <span class="k">def</span> <span class="nf">files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The set of loaded filenames&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="p">[</span><span class="s">&quot;Loaded&quot;</span><span class="p">])</span>
+        </div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_set_on_load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;True for default filenames&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="p">[</span><span class="s">&quot;This&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_FILENAME</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__set_on_load</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__set_on_load</span>
+    
+<div class="viewcode-block" id="StructuredConfiguration.setFile"><a class="viewcode-back" href="../../config.html#pyshell.config.StructuredConfiguration.setFile">[docs]</a>    <span class="k">def</span> <span class="nf">setFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span> <span class="c">#pylint: disable=C0103</span>
+        <span class="sd">&quot;&quot;&quot;Depricated Method&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_file</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="StructuredConfiguration.set_file"><a class="viewcode-back" href="../../config.html#pyshell.config.StructuredConfiguration.set_file">[docs]</a>    <span class="k">def</span> <span class="nf">set_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the default/current configuration file for this configuration.</span>
+<span class="sd">        </span>
+<span class="sd">        The configuration file set by this method will be used next time :meth:`load` or :meth:`save` is called with no filename.</span>
+<span class="sd">        </span>
+<span class="sd">        :param string filename: The filename to load from.</span>
+<span class="sd">        :param string name: The name key for the file.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">filename</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Must provide name or filename&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span>  <span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="p">[</span><span class="s">&quot;Configurations&quot;</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s">&quot;Key </span><span class="si">%s</span><span class="s"> does not represent a configuration file.&quot;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="p">:</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="p">[</span><span class="s">&quot;Configurations&quot;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="p">[</span><span class="s">&quot;Configurations&quot;</span><span class="p">][</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">filename</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="p">[</span><span class="s">&quot;This&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="p">[</span><span class="s">&quot;Configurations&quot;</span><span class="p">][</span><span class="n">name</span><span class="p">]</span>
+    </div>
+<div class="viewcode-block" id="StructuredConfiguration.save"><a class="viewcode-back" href="../../config.html#pyshell.config.StructuredConfiguration.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Save the configuration to a YAML file. If ``filename`` is not provided, the configuration will use the file set by :meth:`setFile`.</span>
+<span class="sd">        </span>
+<span class="sd">        :param string filename: Destination filename.</span>
+<span class="sd">        </span>
+<span class="sd">        Uses :meth:`Configuration.save`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">filename</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="p">[</span><span class="s">&quot;This&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">StructuredConfiguration</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    
+        </div>
+<div class="viewcode-block" id="StructuredConfiguration.load"><a class="viewcode-back" href="../../config.html#pyshell.config.StructuredConfiguration.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Load the configuration to a YAML file. If ``filename`` is not provided, the configuration will use the file set by :meth:`setFile`.</span>
+<span class="sd">        </span>
+<span class="sd">        :param string filename: Target filename.</span>
+<span class="sd">        :param bool silent: Whether to raise an error if the target file cannot be found.</span>
+<span class="sd">        </span>
+<span class="sd">        Uses :meth:`Configuration.load`.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">filename</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="p">[</span><span class="s">&quot;This&quot;</span><span class="p">]</span>
+        <span class="n">loaded</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">StructuredConfiguration</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">silent</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">loaded</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_on_load</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="p">[</span><span class="s">&quot;Loaded&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+
+</div></div>
+<span class="n">force_yaml_unicode</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">PyShell 0.2.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Alexander Rudy.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

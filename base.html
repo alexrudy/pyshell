@@ -1,0 +1,608 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>CLIEngine – a base for Command Line Interfaces &mdash; PyShell 0.2.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PyShell 0.2.0 documentation" href="index.html" />
+    <link rel="next" title="subcommand – Creating commands with Subcommands" href="subcommand.html" />
+    <link rel="prev" title="PyShell - Command Line Classes for Python" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="subcommand.html" title="subcommand – Creating commands with Subcommands"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="PyShell - Command Line Classes for Python"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">PyShell 0.2.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <span class="target" id="module-pyshell.base"></span><div class="section" id="cliengine-a-base-for-command-line-interfaces">
+<h1><a class="reference internal" href="#pyshell.base.CLIEngine" title="pyshell.base.CLIEngine"><tt class="xref py py-class docutils literal"><span class="pre">CLIEngine</span></tt></a> – a base for Command Line Interfaces<a class="headerlink" href="#cliengine-a-base-for-command-line-interfaces" title="Permalink to this headline">¶</a></h1>
+<p>The <a class="reference internal" href="#pyshell.base.CLIEngine" title="pyshell.base.CLIEngine"><tt class="xref py py-class docutils literal"><span class="pre">CLIEngine</span></tt></a> is designed with &#8220;Convention over Configuration&#8221;
+in mind. That is, it aims to set everything up so that it will work out
+-of-the-box, and the user is responsbile for adjusting undesireable
+behavior. Basically, all you have to do is write a subclass of
+<a class="reference internal" href="#pyshell.base.CLIEngine" title="pyshell.base.CLIEngine"><tt class="xref py py-class docutils literal"><span class="pre">CLIEngine</span></tt></a> with only a <a class="reference internal" href="#pyshell.base.CLIEngine.do" title="pyshell.base.CLIEngine.do"><tt class="xref py py-meth docutils literal"><span class="pre">do()</span></tt></a> method (no need for
+<tt class="xref py py-meth docutils literal"><span class="pre">__init__()</span></tt>!). See <a class="reference internal" href="examples/cliengine.html#cliengine-examples"><em>CLIEngine Examples</em></a> for examples.</p>
+<div class="section" id="writing-your-own-subclass">
+<h2>Writing your own Subclass<a class="headerlink" href="#writing-your-own-subclass" title="Permalink to this headline">¶</a></h2>
+<p>This class should be subclassed by the user, who should re-implement 
+the following methods:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#pyshell.base.CLIEngine.do" title="pyshell.base.CLIEngine.do"><tt class="xref py py-meth docutils literal"><span class="pre">do()</span></tt></a>  - Does the &#8216;real work&#8217;.</li>
+<li><a class="reference internal" href="#pyshell.base.CLIEngine.kill" title="pyshell.base.CLIEngine.kill"><tt class="xref py py-meth docutils literal"><span class="pre">kill()</span></tt></a> - Called if the engine tries to exit abnormally.</li>
+</ul>
+<p>These funcitons are used in the normal operation of the command line engine.</p>
+<p>The user should also override the desired instance variables on the class.
+Useful instance variables to consider overriding are 
+<a class="reference internal" href="#pyshell.base.CLIEngine.defaultcfg" title="pyshell.base.CLIEngine.defaultcfg"><tt class="xref py py-attr docutils literal"><span class="pre">defaultcfg</span></tt></a> and <a class="reference internal" href="#pyshell.base.CLIEngine.description" title="pyshell.base.CLIEngine.description"><tt class="xref py py-attr docutils literal"><span class="pre">description</span></tt></a></p>
+<p>There are some methods that the user can optionally override to alter the
+behavior of the <a class="reference internal" href="#pyshell.base.CLIEngine" title="pyshell.base.CLIEngine"><tt class="xref py py-class docutils literal"><span class="pre">CLIEngine</span></tt></a> on startup. These are:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#pyshell.base.CLIEngine.init" title="pyshell.base.CLIEngine.init"><tt class="xref py py-meth docutils literal"><span class="pre">init()</span></tt></a> should add arguments to the <tt class="xref py py-attr docutils literal"><span class="pre">parser</span></tt>
+which are fully formed <strong>before</strong> configuration.</li>
+<li><a class="reference internal" href="#pyshell.base.CLIEngine.before_configure" title="pyshell.base.CLIEngine.before_configure"><tt class="xref py py-meth docutils literal"><span class="pre">before_configure()</span></tt></a> should perform actions on the 
+configuration which will be <strong>overwritten</strong> by any configuration file 
+values.</li>
+<li><a class="reference internal" href="#pyshell.base.CLIEngine.after_configure" title="pyshell.base.CLIEngine.after_configure"><tt class="xref py py-meth docutils literal"><span class="pre">after_configure()</span></tt></a> should perform actions on the 
+configuration which must occur before command line arguments are parsed
+by <a class="reference internal" href="#pyshell.base.CLIEngine.parse" title="pyshell.base.CLIEngine.parse"><tt class="xref py py-meth docutils literal"><span class="pre">parse()</span></tt></a></li>
+</ul>
+<p>Other methods are used to control the engine during normal operation. These 
+methods should in general not be overwritten, but can be modified in 
+subclasses, so long as they are called using the 
+<tt class="docutils literal"><span class="pre">super(ClassName,</span> <span class="pre">self).method()</span></tt> construct.</p>
+</div>
+<div class="section" id="running-your-subclass">
+<h2>Running your subclass<a class="headerlink" href="#running-your-subclass" title="Permalink to this headline">¶</a></h2>
+<p>To run the engine, use <a class="reference internal" href="#pyshell.base.CLIEngine.run" title="pyshell.base.CLIEngine.run"><tt class="xref py py-meth docutils literal"><span class="pre">run()</span></tt></a>. To run the engine without 
+instantiating the class, use <a class="reference internal" href="#pyshell.base.CLIEngine.script" title="pyshell.base.CLIEngine.script"><tt class="xref py py-meth docutils literal"><span class="pre">script()</span></tt></a>, a class method 
+that instantiates a new object, and runs the tool. Both methods 
+accomplish the same thing at the end of the day.</p>
+<div class="section" id="using-main-or-just-running-the-file">
+<h3>Using <tt class="docutils literal"><span class="pre">__main__</span></tt> or just running the file<a class="headerlink" href="#using-main-or-just-running-the-file" title="Permalink to this headline">¶</a></h3>
+<p>To run your command as a simple python file, write your command class, then 
+call <a class="reference internal" href="#pyshell.base.CLIEngine.script" title="pyshell.base.CLIEngine.script"><tt class="xref py py-meth docutils literal"><span class="pre">script()</span></tt></a>. You can use <a class="reference internal" href="#pyshell.base.CLIEngine.script" title="pyshell.base.CLIEngine.script"><tt class="xref py py-meth docutils literal"><span class="pre">script()</span></tt></a> to 
+start the engine with the &#8220;if main&#8221; python convention:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">Engine</span><span class="o">.</span><span class="n">script</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>You can also call <a class="reference internal" href="#pyshell.base.CLIEngine.script" title="pyshell.base.CLIEngine.script"><tt class="xref py py-meth docutils literal"><span class="pre">script()</span></tt></a> outside of an &#8220;if main&#8221; block.
+Be aware, however, that <a class="reference internal" href="#pyshell.base.CLIEngine.script" title="pyshell.base.CLIEngine.script"><tt class="xref py py-meth docutils literal"><span class="pre">script()</span></tt></a> will use the command line
+arguments passed to the python interpreter as a whole!</p>
+</div>
+<div class="section" id="using-distutils">
+<h3>Using <a class="reference external" href="http://docs.python.org/2/library/distutils.html#distutils" title="(in Python v2.7)"><tt class="xref py py-mod docutils literal"><span class="pre">distutils</span></tt></a><a class="headerlink" href="#using-distutils" title="Permalink to this headline">¶</a></h3>
+<p>Using <a class="reference internal" href="#pyshell.base.CLIEngine.script" title="pyshell.base.CLIEngine.script"><tt class="xref py py-meth docutils literal"><span class="pre">script()</span></tt></a> allows the developer to set this as
+an entry point in their <tt class="docutils literal"><span class="pre">setup.py</span></tt> file, and so provide the command
+line enegine as a command line tool in a distutils supported python package.
+A basic entry point for this tool would appear in the <tt class="docutils literal"><span class="pre">console_scripts</span></tt> key 
+like</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="s">&quot;PyScript = mymodule.cli:Engine.script&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>These console scripts can be installed using <tt class="docutils literal"><span class="pre">python</span> <span class="pre">setup.py</span> <span class="pre">install</span></tt>. A 
+helper will be placed in your python script path (watch the <tt class="docutils literal"><span class="pre">setup.py</span></tt> output
+to see where that is!). The helper script manages the call to your class.</p>
+</div>
+<div class="section" id="running-without-a-command-line">
+<h3>Running without a command-line<a class="headerlink" href="#running-without-a-command-line" title="Permalink to this headline">¶</a></h3>
+<p>If you want run the <a class="reference internal" href="#pyshell.base.CLIEngine" title="pyshell.base.CLIEngine"><tt class="xref py py-class docutils literal"><span class="pre">CLIEngine</span></tt></a> without gobbling the command line arguments
+passed to python, you&#8217;ll have to instantiate the <a class="reference internal" href="#pyshell.base.CLIEngine" title="pyshell.base.CLIEngine"><tt class="xref py py-class docutils literal"><span class="pre">CLIEngine</span></tt></a> object yourself.
+By default, the <a class="reference internal" href="#pyshell.base.CLIEngine" title="pyshell.base.CLIEngine"><tt class="xref py py-class docutils literal"><span class="pre">CLIEngine</span></tt></a> constructor takes no arguments. You should pass
+any pseudo-command-line-arguments to <a class="reference internal" href="#pyshell.base.CLIEngine.arguments" title="pyshell.base.CLIEngine.arguments"><tt class="xref py py-meth docutils literal"><span class="pre">arguments()</span></tt></a>. Each arguemnt item
+should be a separate iterable member, so <tt class="docutils literal"><span class="pre">&quot;--config</span> <span class="pre">somefile.yml&quot;</span></tt> should be passed 
+in as <tt class="docutils literal"><span class="pre">[&quot;--config&quot;,&quot;somefile.yml&quot;]</span></tt>. A minimal <a class="reference internal" href="#pyshell.base.CLIEngine" title="pyshell.base.CLIEngine"><tt class="xref py py-class docutils literal"><span class="pre">CLIEngine</span></tt></a> call would look like:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">ENG</span> <span class="o">=</span> <span class="n">CLIEngine</span><span class="p">()</span>
+<span class="n">ENG</span><span class="o">.</span><span class="n">arguments</span><span class="p">(</span><span class="s">&#39;-foo&#39;</span><span class="p">,</span><span class="s">&#39;bar&#39;</span><span class="p">)</span>
+<span class="n">ENG</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">To parse no command line arguments, pass something in like <tt class="docutils literal"><span class="pre">tuple()</span></tt></p>
+</div>
+</div>
+</div>
+<div class="section" id="how-cliengine-works">
+<h2>How <a class="reference internal" href="#pyshell.base.CLIEngine" title="pyshell.base.CLIEngine"><tt class="xref py py-class docutils literal"><span class="pre">CLIEngine</span></tt></a> works<a class="headerlink" href="#how-cliengine-works" title="Permalink to this headline">¶</a></h2>
+<p>The engine is set up to use a configuration file system, 
+provide basic parsing attributes, and an interruptable 
+command line interaction flow. The configuration is designed 
+to provide dynamic output and to configure the system 
+before it completes the parsing process.</p>
+<ol class="arabic simple">
+<li>Initialization sets up the object, and sets up the argument parser.
+Method <a class="reference internal" href="#pyshell.base.CLIEngine.init" title="pyshell.base.CLIEngine.init"><tt class="xref py py-meth docutils literal"><span class="pre">init()</span></tt></a> is called at this point.
+The parser should only understand arguments that will not
+be impacted by any configuration values. At this stage, by default, the
+parser is aware of the <tt class="docutils literal"><span class="pre">--config</span></tt> argument. This allows the
+<a class="reference internal" href="#pyshell.base.CLIEngine" title="pyshell.base.CLIEngine"><tt class="xref py py-class docutils literal"><span class="pre">CLIEngine</span></tt></a> to load a user-specified configuration file, and to
+use that configuration file to affect the command line arguments presented
+and parsed.</li>
+<li>Preliminary Arguments are parsed by <a class="reference internal" href="#pyshell.base.CLIEngine.arguments" title="pyshell.base.CLIEngine.arguments"><tt class="xref py py-meth docutils literal"><span class="pre">arguments()</span></tt></a>.</li>
+<li>Configuration is handled by the <a class="reference internal" href="#pyshell.base.CLIEngine.configure" title="pyshell.base.CLIEngine.configure"><tt class="xref py py-meth docutils literal"><span class="pre">configure()</span></tt></a> function. This 
+function loads the following configuration files in order (such that the 
+last one loaded is the one that takes precedence):<ul>
+<li>The <tt class="docutils literal"><span class="pre">defaultcfg</span></tt> file from <tt class="docutils literal"><span class="pre">engine.__module__</span></tt>. This allows the 
+developer to provide a base configuration for the engine.</li>
+<li>The requested configuration file from the user&#8217;s home directory.</li>
+<li>The requested configuration file form the current directory.</li>
+<li>If no configuration file is requested, the filename for <cite>defaultcfg</cite> 
+will be used. As well, if the engine cannot find the requested 
+configureation file in the current directory (i.e. the user asks for 
+a file, and it isn&#8217;t there) a warning will be issued.</li>
+</ul>
+</li>
+<li>Help message is inserted into parsing, and remaining arguments
+parsed by <a class="reference internal" href="#pyshell.base.CLIEngine.parse" title="pyshell.base.CLIEngine.parse"><tt class="xref py py-meth docutils literal"><span class="pre">parse()</span></tt></a>. At this point, the entire configuration process
+is complete.</li>
+<li>The function <a class="reference internal" href="#pyshell.base.CLIEngine.do" title="pyshell.base.CLIEngine.do"><tt class="xref py py-meth docutils literal"><span class="pre">do()</span></tt></a> is called, This should do the bulk of the engine&#8217;s
+work.</li>
+<li>If the user interrupts the operation of the program, <a class="reference internal" href="#pyshell.base.CLIEngine.kill" title="pyshell.base.CLIEngine.kill"><tt class="xref py py-meth docutils literal"><span class="pre">kill()</span></tt></a> will
+be called. If python is in <tt class="docutils literal"><span class="pre">__debug__</span></tt> mode, this will raise a full
+traceback. If not, the traceback will be suppressed.</li>
+</ol>
+</div>
+<div class="section" id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="#pyshell.base.CLIEngine" title="pyshell.base.CLIEngine"><tt class="xref py py-class docutils literal"><span class="pre">CLIEngine</span></tt></a> uses <a class="reference internal" href="config.html#pyshell.config.StructuredConfiguration" title="pyshell.config.StructuredConfiguration"><tt class="xref py py-class docutils literal"><span class="pre">StructuredConfiguration</span></tt></a> 
+objects. These objects represent rich nested mapping types with fast 
+accessors and quick access to configuration file services using <tt class="xref py py-mod docutils literal"><span class="pre">PyYAML</span></tt>.</p>
+<p>To entirely disable configuration, and remove the configuration object, set 
+<a class="reference internal" href="#pyshell.base.CLIEngine.defaultcfg" title="pyshell.base.CLIEngine.defaultcfg"><tt class="xref py py-attr docutils literal"><span class="pre">CLIEngine.defaultcfg</span></tt></a> to <tt class="docutils literal"><span class="pre">False</span></tt>. This will prevent the 
+<a class="reference internal" href="#pyshell.base.CLIEngine" title="pyshell.base.CLIEngine"><tt class="xref py py-class docutils literal"><span class="pre">CLIEngine</span></tt></a> from adding the <tt class="docutils literal"><span class="pre">--config</span></tt> and <tt class="docutils literal"><span class="pre">--configure</span></tt> command 
+line options, and will not load any data from YAML files.</p>
+<p>Configuration is a powerful, heirarchical system. To understand the load 
+order, see <a class="reference internal" href="config.html#pyshell.config.StructuredConfiguration.configure" title="pyshell.config.StructuredConfiguration.configure"><tt class="xref py py-meth docutils literal"><span class="pre">pyshell.config.StructuredConfiguration.configure()</span></tt></a>. 
+However, there are several levels where you can customize the order of 
+loaded configurations. Configurations loaded earlier in the system will 
+be overwritten by those loaded later.</p>
+<ul class="simple">
+<li><a class="reference internal" href="#pyshell.base.CLIEngine.supercfg" title="pyshell.base.CLIEngine.supercfg"><tt class="xref py py-attr docutils literal"><span class="pre">CLIEngine.supercfg</span></tt></a> allows the developer to set confguration 
+files which should be loaded before all others.</li>
+<li><a class="reference internal" href="#pyshell.base.CLIEngine.defaultcfg" title="pyshell.base.CLIEngine.defaultcfg"><tt class="xref py py-attr docutils literal"><span class="pre">CLIEngine.defaultcfg</span></tt></a> allows the developer to set <strong>both</strong> the 
+configuration file name which should be loaded from the 
+<tt class="docutils literal"><span class="pre">CLIEngine</span></tt>-subclass&#8217;s directory (think <tt class="docutils literal"><span class="pre">os.path.dirname(__file__)</span></tt>),
+and the configuration file which will be searched for in the current 
+directory.</li>
+<li><tt class="docutils literal"><span class="pre">--config</span></tt> can change the name of the configuration file to look
+for in the current directory.</li>
+<li><tt class="docutils literal"><span class="pre">--configure</span></tt> can write new configuration values into the configuration
+at the end of the configuration loading process.</li>
+</ul>
+</div>
+<div class="section" id="command-line-help">
+<h2>Command Line Help<a class="headerlink" href="#command-line-help" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="reference-for-cliengine-the-command-line-interface-engine">
+<h2>Reference for <a class="reference internal" href="#pyshell.base.CLIEngine" title="pyshell.base.CLIEngine"><tt class="xref py py-class docutils literal"><span class="pre">CLIEngine</span></tt></a>, the Command Line Interface Engine<a class="headerlink" href="#reference-for-cliengine-the-command-line-interface-engine" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pyshell.base.CLIEngine">
+<em class="property">class </em><tt class="descclassname">pyshell.base.</tt><tt class="descname">CLIEngine</tt><big>(</big><em>prefix_chars='-'</em>, <em>conflict_handler=u'error'</em><big>)</big><a class="reference internal" href="_modules/pyshell/base.html#CLIEngine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.base.CLIEngine" title="Permalink to this definition">¶</a></dt>
+<dd><p>A base class for Command Line Inteface facing tools. <tt class="xref py py-class docutils literal"><span class="pre">CLIEnigne</span></tt> 
+provides the basic structure to set up a simple command-line interface,
+based on the <a class="reference external" href="http://docs.python.org/2/library/argparse.html#argparse" title="(in Python v2.7)"><tt class="xref py py-mod docutils literal"><span class="pre">argparse</span></tt></a> framework.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>prefix_chars</strong> (<a class="reference external" href="http://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Sets the prefix characters to command line arguments. 
+by default this is set to &#8220;-&#8221;, reqiuring that all command line argumetns begin 
+with &#8220;-&#8221;.</td>
+</tr>
+</tbody>
+</table>
+<p>At the end of initialization, the configuration (<a class="reference internal" href="#pyshell.base.CLIEngine.config" title="pyshell.base.CLIEngine.config"><tt class="xref py py-attr docutils literal"><span class="pre">config</span></tt></a>) and 
+<a class="reference internal" href="#pyshell.base.CLIEngine.parser" title="pyshell.base.CLIEngine.parser"><tt class="xref py py-attr docutils literal"><span class="pre">parser</span></tt></a> will be availabe for use.</p>
+<dl class="attribute">
+<dt id="pyshell.base.CLIEngine.description">
+<tt class="descname">description</tt><a class="reference internal" href="_modules/pyshell/base.html#CLIEngine.description"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.base.CLIEngine.description" title="Permalink to this definition">¶</a></dt>
+<dd><p>The textual description of the command line interface, 
+set as the description of the parser from <a class="reference external" href="http://docs.python.org/2/library/argparse.html#argparse" title="(in Python v2.7)"><tt class="xref py py-mod docutils literal"><span class="pre">argparse</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyshell.base.CLIEngine.epilog">
+<tt class="descname">epilog</tt><em class="property"> = u''</em><a class="headerlink" href="#pyshell.base.CLIEngine.epilog" title="Permalink to this definition">¶</a></dt>
+<dd><p>The text that comes at the end of the <a class="reference external" href="http://docs.python.org/2/library/argparse.html#argparse" title="(in Python v2.7)"><tt class="xref py py-mod docutils literal"><span class="pre">argparse</span></tt></a>
+help text.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyshell.base.CLIEngine.defaultcfg">
+<tt class="descname">defaultcfg</tt><em class="property"> = u'Config.yml'</em><a class="headerlink" href="#pyshell.base.CLIEngine.defaultcfg" title="Permalink to this definition">¶</a></dt>
+<dd><p>The name of the default configuration file to be loaded. If set to
+<tt class="docutils literal"><span class="pre">False</span></tt>, no configuration will occur.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyshell.base.CLIEngine.supercfg">
+<tt class="descname">supercfg</tt><em class="property"> = []</em><a class="headerlink" href="#pyshell.base.CLIEngine.supercfg" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a list of tuples which represent configurations that should be
+loaded before the default configuration is loaded. Each tuple contains the
+module name and filename pair that should be passed to
+<tt class="xref py py-func docutils literal"><span class="pre">resource_filename()</span></tt>. To specify a super-configuration
+in the current direction, use <tt class="docutils literal"><span class="pre">__main__</span></tt> as the module name.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyshell.base.CLIEngine.parser">
+<tt class="descname">parser</tt><a class="reference internal" href="_modules/pyshell/base.html#CLIEngine.parser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.base.CLIEngine.parser" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference external" href="http://docs.python.org/2/library/argparse.html#argparse.ArgumentParser" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">argparse.ArgumentParser</span></tt></a> instance for this engine.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyshell.base.CLIEngine.config">
+<tt class="descname">config</tt><a class="reference internal" href="_modules/pyshell/base.html#CLIEngine.config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.base.CLIEngine.config" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="config.html#pyshell.config.Configuration" title="pyshell.config.Configuration"><tt class="xref py py-class docutils literal"><span class="pre">pyshell.config.Configuration</span></tt></a> object for this engine.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyshell.base.CLIEngine.opts">
+<tt class="descname">opts</tt><a class="reference internal" href="_modules/pyshell/base.html#CLIEngine.opts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.base.CLIEngine.opts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Command Line Options, as paresed, for this engine</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyshell.base.CLIEngine.log">
+<tt class="descname">log</tt><a class="reference internal" href="_modules/pyshell/base.html#CLIEngine.log"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.base.CLIEngine.log" title="Permalink to this definition">¶</a></dt>
+<dd><p>This engine&#8217;s logger</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.base.CLIEngine.init">
+<tt class="descname">init</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pyshell/base.html#CLIEngine.init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.base.CLIEngine.init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialization after the parser has been created.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.base.CLIEngine.arguments">
+<tt class="descname">arguments</tt><big>(</big><em>*args</em><big>)</big><a class="reference internal" href="_modules/pyshell/base.html#CLIEngine.arguments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.base.CLIEngine.arguments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse the given arguments. If no arguments are given, parses 
+the known arguments on the command line. Generally this should 
+parse all arguments except <tt class="docutils literal"><span class="pre">-h</span></tt> for help, which should be 
+parsed last after the help text has been fully assembled. The full 
+help text can be set to the <tt class="docutils literal"><span class="pre">self.parser.epilog</span></tt> attribute.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>*args</strong> &#8211; The arguments to be parsed.</td>
+</tr>
+</tbody>
+</table>
+<p>Similar to taking the command line components and doing 
+<tt class="docutils literal"><span class="pre">&quot;</span> <span class="pre">-h</span> <span class="pre">--config</span> <span class="pre">test.yml&quot;.split()</span></tt>. Same signature as would be used 
+for <a class="reference external" href="http://docs.python.org/2/library/argparse.html#argparse.ArgumentParser.parse_args" title="(in Python v2.7)"><tt class="xref py py-meth docutils literal"><span class="pre">argparse.ArgumentParser.parse_args()</span></tt></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.base.CLIEngine.before_configure">
+<tt class="descname">before_configure</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pyshell/base.html#CLIEngine.before_configure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.base.CLIEngine.before_configure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Actions to be run before configuration. This method can be 
+overwritten to provide custom actions to be taken before the
+engine gets configured.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.base.CLIEngine.configure">
+<tt class="descname">configure</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pyshell/base.html#CLIEngine.configure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.base.CLIEngine.configure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configure the command line engine from a series of YAML files.</p>
+<p>The configuration loads (starting with a blank configuration):</p>
+<blockquote>
+<div>1. The <tt class="xref py py-attr docutils literal"><span class="pre">module</span></tt> configuration file named for 
+<a class="reference internal" href="#pyshell.base.CLIEngine.defaultcfg" title="pyshell.base.CLIEngine.defaultcfg"><tt class="xref py py-attr docutils literal"><span class="pre">defaultcfg</span></tt></a>
+2. The command line specified file from the user&#8217;s home folder 
+<tt class="docutils literal"><span class="pre">~/config.yml</span></tt>
+3. The command line specified file from the working directory.</div></blockquote>
+<p>If the third file is not found, and the user specified a new name for 
+the configuration file, then the user is warned that no configuration 
+file could be found. This way the usre is only warned about a missing 
+configuration file if they requested a file specifically (and so 
+intended to use a customized file).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.base.CLIEngine.after_configure">
+<tt class="descname">after_configure</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pyshell/base.html#CLIEngine.after_configure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.base.CLIEngine.after_configure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Actions to be run after configuration. This method can be 
+overwritten to provide custom actions to be taken before the
+engine gets configured.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.base.CLIEngine.parse">
+<tt class="descname">parse</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pyshell/base.html#CLIEngine.parse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.base.CLIEngine.parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse the command line arguments.</p>
+<p>This function uses the arguments passed in through <a class="reference internal" href="#pyshell.base.CLIEngine.arguments" title="pyshell.base.CLIEngine.arguments"><tt class="xref py py-meth docutils literal"><span class="pre">arguments()</span></tt></a>,
+adds the <cite>-h</cite> option, and calls the parser to understand and act on 
+the arguments. Arguments are then stored in the <a class="reference internal" href="#pyshell.base.CLIEngine.opts" title="pyshell.base.CLIEngine.opts"><tt class="xref py py-attr docutils literal"><span class="pre">opts</span></tt></a> attribute.</p>
+<p>This method also calls <a class="reference internal" href="#pyshell.base.CLIEngine.configure_logging" title="pyshell.base.CLIEngine.configure_logging"><tt class="xref py py-meth docutils literal"><span class="pre">configure_logging()</span></tt></a> to set up the logger
+if it is ready to go.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Calling <a class="reference internal" href="#pyshell.base.CLIEngine.configure_logging" title="pyshell.base.CLIEngine.configure_logging"><tt class="xref py py-meth docutils literal"><span class="pre">configure_logging()</span></tt></a> allows <a class="reference internal" href="#pyshell.base.CLIEngine.configure" title="pyshell.base.CLIEngine.configure"><tt class="xref py py-meth docutils literal"><span class="pre">configure()</span></tt></a> to 
+change the logging configuration values before the logger is 
+configured.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.base.CLIEngine.do">
+<tt class="descname">do</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pyshell/base.html#CLIEngine.do"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.base.CLIEngine.do" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method should handle the main operations for the command 
+line tool. The user should overwrite this method in Engine subclasses
+for thier own use. The <tt class="xref py py-exc docutils literal"><span class="pre">KeyboardInterrupt</span></tt> or <tt class="xref py py-exc docutils literal"><span class="pre">SystemExit</span></tt> 
+errors will be caught by <a class="reference internal" href="#pyshell.base.CLIEngine.kill" title="pyshell.base.CLIEngine.kill"><tt class="xref py py-meth docutils literal"><span class="pre">kill()</span></tt></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.base.CLIEngine.kill">
+<tt class="descname">kill</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pyshell/base.html#CLIEngine.kill"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.base.CLIEngine.kill" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function should forcibly kill any subprocesses. It is called 
+when <a class="reference internal" href="#pyshell.base.CLIEngine.do" title="pyshell.base.CLIEngine.do"><tt class="xref py py-meth docutils literal"><span class="pre">do()</span></tt></a> raises a <tt class="xref py py-exc docutils literal"><span class="pre">KeyboardInterrupt</span></tt> or <tt class="xref py py-exc docutils literal"><span class="pre">SystemExit</span></tt>
+to ensure that any tasks can be finalized before the system exits.
+Errors raised here are not caught.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.base.CLIEngine.run">
+<tt class="descname">run</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pyshell/base.html#CLIEngine.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.base.CLIEngine.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method is used to run the command line engine in the expected 
+order. This method should be called to run the engine from another 
+program.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="pyshell.base.CLIEngine.script">
+<em class="property">classmethod </em><tt class="descname">script</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pyshell/base.html#CLIEngine.script"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.base.CLIEngine.script" title="Permalink to this definition">¶</a></dt>
+<dd><p>The class method for using this module as a script entry 
+point. This method ensures that the engine runs correctly on 
+the command line, and is cleaned up at the end.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.base.CLIEngine._remove_help">
+<tt class="descname">_remove_help</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pyshell/base.html#CLIEngine._remove_help"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.base.CLIEngine._remove_help" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove the <tt class="docutils literal"><span class="pre">-h,</span> <span class="pre">--help</span></tt> argument from the parser.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">This method uses a swizzle to access protected parser attributes
+and remove the argument as best as possible. It may break!</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.base.CLIEngine._add_help">
+<tt class="descname">_add_help</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pyshell/base.html#CLIEngine._add_help"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.base.CLIEngine._add_help" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add the <tt class="docutils literal"><span class="pre">-h,</span> <span class="pre">--help</span></tt> argument.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.base.CLIEngine._add_configfile_args">
+<tt class="descname">_add_configfile_args</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#pyshell.base.CLIEngine._add_configfile_args" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a parser command line argument for changing configuration files.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body">The set of arguments to be passed to <a class="reference external" href="http://docs.python.org/2/library/argparse.html#argparse.ArgumentParser.add_argument" title="(in Python v2.7)"><tt class="xref py py-meth docutils literal"><span class="pre">add_argument()</span></tt></a>.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.base.CLIEngine._add_configure_args">
+<tt class="descname">_add_configure_args</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#pyshell.base.CLIEngine._add_configure_args" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a parser command line argument for literal configuration items.</p>
+<p>See <a class="reference internal" href="config.html#pyshell.config.DottedConfiguration.parse_literals" title="pyshell.config.DottedConfiguration.parse_literals"><tt class="xref py py-meth docutils literal"><span class="pre">parse_literals()</span></tt></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body">The set of arguments to be passed to <a class="reference external" href="http://docs.python.org/2/library/argparse.html#argparse.ArgumentParser.add_argument" title="(in Python v2.7)"><tt class="xref py py-meth docutils literal"><span class="pre">add_argument()</span></tt></a>.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.base.CLIEngine.configure_logging">
+<tt class="descname">configure_logging</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pyshell/base.html#CLIEngine.configure_logging"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.base.CLIEngine.configure_logging" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configure the logging system using the configuration underneath 
+<tt class="docutils literal"><span class="pre">config[&quot;logging&quot;]</span></tt> as a dictionary configuration for the <a class="reference external" href="http://docs.python.org/2/library/logging.html#logging" title="(in Python v2.7)"><tt class="xref py py-mod docutils literal"><span class="pre">logging</span></tt></a> 
+module.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="call-structure-of-run">
+<h2>Call structure of <tt class="xref py py-meth docutils literal"><span class="pre">run()</span></tt><a class="headerlink" href="#call-structure-of-run" title="Permalink to this headline">¶</a></h2>
+<p>The call structure of the method <a class="reference internal" href="#pyshell.base.CLIEngine.run" title="pyshell.base.CLIEngine.run"><tt class="xref py py-meth docutils literal"><span class="pre">run()</span></tt></a>, the main script driver.
+This is provided as a reference. Note that the <a class="reference internal" href="#pyshell.base.CLIEngine.init" title="pyshell.base.CLIEngine.init"><tt class="xref py py-meth docutils literal"><span class="pre">init()</span></tt></a> is called
+during <a class="reference internal" href="#pyshell.base.CLIEngine.arguments" title="pyshell.base.CLIEngine.arguments"><tt class="xref py py-meth docutils literal"><span class="pre">arguments()</span></tt></a> when <a class="reference internal" href="#pyshell.base.CLIEngine.arguments" title="pyshell.base.CLIEngine.arguments"><tt class="xref py py-meth docutils literal"><span class="pre">arguments()</span></tt></a> is called
+outside of <a class="reference internal" href="#pyshell.base.CLIEngine.run" title="pyshell.base.CLIEngine.run"><tt class="xref py py-meth docutils literal"><span class="pre">run()</span></tt></a>, allowing you to use the following sequence to
+run a subclass of <a class="reference internal" href="#pyshell.base.CLIEngine" title="pyshell.base.CLIEngine"><tt class="xref py py-class docutils literal"><span class="pre">CLIEngine</span></tt></a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">CLIInstance</span> <span class="o">=</span> <span class="n">CLIEngine</span><span class="p">()</span>
+<span class="n">CLIInstance</span><span class="o">.</span><span class="n">arguments</span><span class="p">(</span><span class="s">&quot;--faked CLI --arguments&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+<span class="n">CLIInstance</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27</pre></div></td><td class="code"><div class="highlight"><pre>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;This method is used to run the command line engine in the expected </span>
+<span class="sd">        order. This method should be called to run the engine from another </span>
+<span class="sd">        program.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hasinit</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">init</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hasargs</span><span class="p">:</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s">&quot;Implied Command-line mode&quot;</span><span class="p">,</span> <span class="ne">UserWarning</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">before_configure</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">configure</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">after_configure</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parse</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">do</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">SystemExit</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">exc</span><span class="p">,</span> <span class="s">&#39;code&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">kill</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">__debug__</span><span class="p">:</span>
+                <span class="k">raise</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">exitcode</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">exc</span><span class="p">,</span> <span class="s">&#39;code&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exitcode</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyboardInterrupt</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kill</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">__debug__</span><span class="p">:</span>
+                <span class="k">raise</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">exitcode</span>
+    
+</pre></div>
+</td></tr></table></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#"><tt class="docutils literal"><span class="pre">CLIEngine</span></tt> – a base for Command Line Interfaces</a><ul>
+<li><a class="reference internal" href="#writing-your-own-subclass">Writing your own Subclass</a></li>
+<li><a class="reference internal" href="#running-your-subclass">Running your subclass</a><ul>
+<li><a class="reference internal" href="#using-main-or-just-running-the-file">Using <tt class="docutils literal"><span class="pre">__main__</span></tt> or just running the file</a></li>
+<li><a class="reference internal" href="#using-distutils">Using <tt class="docutils literal"><span class="pre">distutils</span></tt></a></li>
+<li><a class="reference internal" href="#running-without-a-command-line">Running without a command-line</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#how-cliengine-works">How <tt class="docutils literal"><span class="pre">CLIEngine</span></tt> works</a></li>
+<li><a class="reference internal" href="#configuration">Configuration</a></li>
+<li><a class="reference internal" href="#command-line-help">Command Line Help</a></li>
+<li><a class="reference internal" href="#reference-for-cliengine-the-command-line-interface-engine">Reference for <tt class="docutils literal"><span class="pre">CLIEngine</span></tt>, the Command Line Interface Engine</a></li>
+<li><a class="reference internal" href="#call-structure-of-run">Call structure of <tt class="docutils literal"><span class="pre">run()</span></tt></a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">PyShell - Command Line Classes for Python</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="subcommand.html"
+                        title="next chapter"><tt class="docutils literal"><span class="pre">subcommand</span></tt> – Creating commands with Subcommands</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/base.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="subcommand.html" title="subcommand – Creating commands with Subcommands"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="PyShell - Command Line Classes for Python"
+             >previous</a> |</li>
+        <li><a href="index.html">PyShell 0.2.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Alexander Rudy.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,210 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>CLIEngine Examples &mdash; PyShell 0.2.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PyShell 0.2.0 documentation" href="../index.html" />
+    <link rel="prev" title="pipeline – Event Chaining" href="../pipeline.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../pipeline.html" title="pipeline – Event Chaining"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">PyShell 0.2.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="cliengine-examples">
+<span id="id1"></span><h1><tt class="xref py py-class docutils literal"><span class="pre">CLIEngine</span></tt> Examples<a class="headerlink" href="#cliengine-examples" title="Permalink to this headline">¶</a></h1>
+<p>The simplest example we can possibly think of is below. All it does is print a line to the command line when run, but it uses the power of <tt class="xref py py-class docutils literal"><span class="pre">CLIEngine</span></tt> to make a basic command line script.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
+<span class="c"># -*- coding: utf-8 -*-</span>
+
+<span class="kn">import</span> <span class="nn">pyshell</span>
+
+<span class="k">class</span> <span class="nc">WorldCLI</span><span class="p">(</span><span class="n">pyshell</span><span class="o">.</span><span class="n">CLIEngine</span><span class="p">):</span>
+    
+    <span class="n">defaultcfg</span> <span class="o">=</span> <span class="bp">False</span>
+    
+    <span class="k">def</span> <span class="nf">do</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;CLIs make the world go round!&quot;</span><span class="p">)</span>        
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">WorldCLI</span><span class="o">.</span><span class="n">script</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Using command line arguments only requires a little bit more work. The example below shows many of the possible things that you can do using a simple configuration file and command line arguments:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="c"># </span>
+<span class="c">#  hello.py</span>
+<span class="c">#  pyshell</span>
+<span class="c">#  </span>
+<span class="c">#  Created by Jaberwocky on 2013-03-15.</span>
+<span class="c">#  Copyright 2013 Jaberwocky. All rights reserved.</span>
+<span class="c"># </span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This is a basic usage example for CLIEngine.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">unicode_literals</span>
+<span class="kn">from</span> <span class="nn">pyshell</span> <span class="kn">import</span> <span class="n">CLIEngine</span><span class="p">,</span> <span class="n">PYSHELL_LOGGING_STREAM_ALL</span>
+<span class="kn">from</span> <span class="nn">pyshell.util</span> <span class="kn">import</span> <span class="n">ipydb</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="n">ipydb</span><span class="p">()</span>
+
+<span class="k">class</span> <span class="nc">Hello</span><span class="p">(</span><span class="n">CLIEngine</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Say hello in English, French, or another language.&quot;&quot;&quot;</span>
+    
+    <span class="n">supercfg</span> <span class="o">=</span> <span class="n">PYSHELL_LOGGING_STREAM_ALL</span>
+    
+    <span class="n">defaultcfg</span> <span class="o">=</span> <span class="s">&quot;hello.yml&quot;</span>
+    
+    <span class="n">description</span> <span class="o">=</span> <span class="s">&quot;Say hello!&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Arguments to be set up at the beginning. By default, this function will set up the --config argument.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Hello</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">init</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&quot;-f&quot;</span><span class="p">,</span><span class="n">dest</span><span class="o">=</span><span class="s">&#39;flourish&#39;</span><span class="p">,</span><span class="n">action</span><span class="o">=</span><span class="s">&#39;store_true&#39;</span><span class="p">,</span><span class="n">help</span><span class="o">=</span><span class="s">u&quot;Add a little flourish!&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&quot;--name&quot;</span><span class="p">,</span><span class="n">action</span><span class="o">=</span><span class="s">&#39;store&#39;</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span><span class="n">default</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s">&quot;USER&quot;</span><span class="p">],</span>
+            <span class="n">help</span><span class="o">=</span><span class="s">u&quot;Set the name. (Default &#39;{:s}&#39;)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s">&quot;USER&quot;</span><span class="p">]))</span>
+        
+    <span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Configure the engine for operation, before help will be printed.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Hello</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">configure</span><span class="p">()</span>
+        
+        <span class="c"># Here we overwrite any basic configuration items. Really, these should go</span>
+        <span class="c"># in &#39;hello.yml&#39;, the configuration file.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&quot;Language&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="p">{</span>   <span class="s">&#39;English&#39;</span> <span class="p">:</span> <span class="s">u&quot;Hello&quot;</span><span class="p">,</span>
+                <span class="s">&#39;Spanish&#39;</span> <span class="p">:</span> <span class="s">u&quot;Hola&quot;</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+         
+        <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&quot;language&quot;</span><span class="p">,</span><span class="n">action</span><span class="o">=</span><span class="s">&#39;store&#39;</span><span class="p">)</span>
+        <span class="c"># We add this argument here, becauase it is required.</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&quot;-t&quot;</span><span class="p">,</span><span class="s">&quot;--title&quot;</span><span class="p">,</span><span class="n">action</span><span class="o">=</span><span class="s">&#39;store&#39;</span><span class="p">,</span><span class="n">default</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&quot;Address&quot;</span><span class="p">],</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s">u&quot;Change from the default title &#39;{:s}&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&quot;Address&quot;</span><span class="p">]),</span><span class="n">metavar</span><span class="o">=</span><span class="s">&quot;MR&quot;</span><span class="p">)</span>
+        <span class="c"># We add this argument here because it uses information from the configuration.</span>
+        
+        
+    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Do any parsing&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Hello</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">parse</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">.</span><span class="n">language</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&quot;Language&quot;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">u&quot;Language &#39;{:s}&#39; not understood.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">.</span><span class="n">language</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">.</span><span class="n">greeting</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&quot;Language&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">.</span><span class="n">language</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">.</span><span class="n">punct</span> <span class="o">=</span> <span class="s">u&quot;!&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">.</span><span class="n">flourish</span> <span class="k">else</span> <span class="s">u&quot;.&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&quot;utf-8&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">title</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">do</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Take the actual action&quot;&quot;&quot;</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">u&quot;{0.greeting:s}, {0.title:s} {0.name:s}{0.punct:s}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="p">))</span>
+        
+        
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">Hello</span><span class="o">.</span><span class="n">script</span><span class="p">()</span>
+    
+</pre></div>
+</div>
+<p>The configuration file used by this script is:</p>
+<div class="highlight-python"><pre>Language:
+  French: "Bienvenue"
+  English: "Sup"
+  Chinese: "你好"
+Address: "Mr."</pre>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../pipeline.html"
+                        title="previous chapter"><tt class="docutils literal"><span class="pre">pipeline</span></tt> – Event Chaining</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/examples/cliengine.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../pipeline.html" title="pipeline – Event Chaining"
+             >previous</a> |</li>
+        <li><a href="../index.html">PyShell 0.2.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Alexander Rudy.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

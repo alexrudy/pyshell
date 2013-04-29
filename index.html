@@ -1,0 +1,163 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>PyShell - Command Line Classes for Python &mdash; PyShell 0.2.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PyShell 0.2.0 documentation" href="#" />
+    <link rel="next" title="CLIEngine – a base for Command Line Interfaces" href="base.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="base.html" title="CLIEngine – a base for Command Line Interfaces"
+             accesskey="N">next</a> |</li>
+        <li><a href="#">PyShell 0.2.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="pyshell-command-line-classes-for-python">
+<h1>PyShell - Command Line Classes for Python<a class="headerlink" href="#pyshell-command-line-classes-for-python" title="Permalink to this headline">¶</a></h1>
+<p>This is a class-based command-line interface system. Using object-inheritance (my favorite thing, but maybe not yours), this module provides structure for command-line tools and configurable objects.</p>
+<p>Contents:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="base.html"><tt class="docutils literal"><span class="pre">CLIEngine</span></tt> – a base for Command Line Interfaces</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="base.html#writing-your-own-subclass">Writing your own Subclass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="base.html#running-your-subclass">Running your subclass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="base.html#how-cliengine-works">How <tt class="docutils literal"><span class="pre">CLIEngine</span></tt> works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="base.html#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="base.html#command-line-help">Command Line Help</a></li>
+<li class="toctree-l2"><a class="reference internal" href="base.html#reference-for-cliengine-the-command-line-interface-engine">Reference for <tt class="docutils literal"><span class="pre">CLIEngine</span></tt>, the Command Line Interface Engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="base.html#call-structure-of-run">Call structure of <tt class="docutils literal"><span class="pre">run()</span></tt></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="subcommand.html"><tt class="docutils literal"><span class="pre">subcommand</span></tt> – Creating commands with Subcommands</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="subcommand.html#base-class-api-documentation">Base Class API Documentation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="config.html"><tt class="docutils literal"><span class="pre">config</span></tt> — YAML-based Configuration Dictionaries</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="config.html#basic-configurations-configuration">Basic Configurations: <tt class="docutils literal"><span class="pre">Configuration</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="config.html#dotted-configurations-configuration">Dotted Configurations: <tt class="docutils literal"><span class="pre">Configuration</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="config.html#structured-configurations-structuredconfiguration">Structured Configurations: <tt class="docutils literal"><span class="pre">StructuredConfiguration</span></tt></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="loggers.html"><tt class="docutils literal"><span class="pre">loggers</span></tt> - Logging made Easy</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="loggers.html#logger-functions">Logger Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="util.html"><tt class="docutils literal"><span class="pre">util</span></tt> - Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline.html"><tt class="docutils literal"><span class="pre">pipeline</span></tt> – Event Chaining</a></li>
+</ul>
+</div>
+<p>Examples:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="examples/cliengine.html"><tt class="docutils literal"><span class="pre">CLIEngine</span></tt> Examples</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
+<li><a class="reference internal" href="py-modindex.html"><em>Module Index</em></a></li>
+<li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">PyShell - Command Line Classes for Python</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+  <h4>Next topic</h4>
+  <p class="topless"><a href="base.html"
+                        title="next chapter"><tt class="docutils literal"><span class="pre">CLIEngine</span></tt> – a base for Command Line Interfaces</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="base.html" title="CLIEngine – a base for Command Line Interfaces"
+             >next</a> |</li>
+        <li><a href="#">PyShell 0.2.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Alexander Rudy.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

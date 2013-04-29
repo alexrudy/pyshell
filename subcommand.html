@@ -1,0 +1,410 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>subcommand – Creating commands with Subcommands &mdash; PyShell 0.2.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PyShell 0.2.0 documentation" href="index.html" />
+    <link rel="next" title="config — YAML-based Configuration Dictionaries" href="config.html" />
+    <link rel="prev" title="CLIEngine – a base for Command Line Interfaces" href="base.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="config.html" title="config — YAML-based Configuration Dictionaries"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="base.html" title="CLIEngine – a base for Command Line Interfaces"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">PyShell 0.2.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <span class="target" id="module-pyshell.subcommand"></span><div class="section" id="subcommand-creating-commands-with-subcommands">
+<h1><tt class="xref py py-mod docutils literal"><span class="pre">subcommand</span></tt> – Creating commands with Subcommands<a class="headerlink" href="#subcommand-creating-commands-with-subcommands" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="base-class-api-documentation">
+<h2>Base Class API Documentation<a class="headerlink" href="#base-class-api-documentation" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pyshell.subcommand.SCEngine">
+<em class="property">class </em><tt class="descclassname">pyshell.subcommand.</tt><tt class="descname">SCEngine</tt><big>(</big><em>command=None</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/pyshell/subcommand.html#SCEngine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.subcommand.SCEngine" title="Permalink to this definition">¶</a></dt>
+<dd><p>A base engine for use as a subcommand to CLIEngine</p>
+<dl class="attribute">
+<dt id="pyshell.subcommand.SCEngine.help">
+<tt class="descname">help</tt><a class="reference internal" href="_modules/pyshell/subcommand.html#SCEngine.help"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.subcommand.SCEngine.help" title="Permalink to this definition">¶</a></dt>
+<dd><p>The help for this sub-parser or parses</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.subcommand.SCEngine.init">
+<tt class="descname">init</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pyshell/subcommand.html#SCEngine.init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.subcommand.SCEngine.init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Post-initialization functions. These will be run after the sub-parser is established.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.subcommand.SCEngine.parse">
+<tt class="descname">parse</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pyshell/subcommand.html#SCEngine.parse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.subcommand.SCEngine.parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse. By default, does nothing if this object is a subcommand.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.subcommand.SCEngine.configure">
+<tt class="descname">configure</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pyshell/subcommand.html#SCEngine.configure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.subcommand.SCEngine.configure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configure this object. Does nothing if this object is a subcommand.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.subcommand.SCEngine.after_configure">
+<tt class="descname">after_configure</tt><big>(</big><big>)</big><a class="headerlink" href="#pyshell.subcommand.SCEngine.after_configure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Actions to be run after configuration. This method can be 
+overwritten to provide custom actions to be taken before the
+engine gets configured.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.subcommand.SCEngine.arguments">
+<tt class="descname">arguments</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#pyshell.subcommand.SCEngine.arguments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse the given arguments. If no arguments are given, parses 
+the known arguments on the command line. Generally this should 
+parse all arguments except <tt class="docutils literal"><span class="pre">-h</span></tt> for help, which should be 
+parsed last after the help text has been fully assembled. The full 
+help text can be set to the <tt class="docutils literal"><span class="pre">self.parser.epilog</span></tt> attribute.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>*args</strong> &#8211; The arguments to be parsed.</td>
+</tr>
+</tbody>
+</table>
+<p>Similar to taking the command line components and doing 
+<tt class="docutils literal"><span class="pre">&quot;</span> <span class="pre">-h</span> <span class="pre">--config</span> <span class="pre">test.yml&quot;.split()</span></tt>. Same signature as would be used 
+for <a class="reference external" href="http://docs.python.org/2/library/argparse.html#argparse.ArgumentParser.parse_args" title="(in Python v2.7)"><tt class="xref py py-meth docutils literal"><span class="pre">argparse.ArgumentParser.parse_args()</span></tt></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.subcommand.SCEngine.before_configure">
+<tt class="descname">before_configure</tt><big>(</big><big>)</big><a class="headerlink" href="#pyshell.subcommand.SCEngine.before_configure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Actions to be run before configuration. This method can be 
+overwritten to provide custom actions to be taken before the
+engine gets configured.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyshell.subcommand.SCEngine.config">
+<tt class="descname">config</tt><a class="headerlink" href="#pyshell.subcommand.SCEngine.config" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="config.html#pyshell.config.Configuration" title="pyshell.config.Configuration"><tt class="xref py py-class docutils literal"><span class="pre">pyshell.config.Configuration</span></tt></a> object for this engine.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.subcommand.SCEngine.configure_logging">
+<tt class="descname">configure_logging</tt><big>(</big><big>)</big><a class="headerlink" href="#pyshell.subcommand.SCEngine.configure_logging" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configure the logging system using the configuration underneath 
+<tt class="docutils literal"><span class="pre">config[&quot;logging&quot;]</span></tt> as a dictionary configuration for the <a class="reference external" href="http://docs.python.org/2/library/logging.html#logging" title="(in Python v2.7)"><tt class="xref py py-mod docutils literal"><span class="pre">logging</span></tt></a> 
+module.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyshell.subcommand.SCEngine.description">
+<tt class="descname">description</tt><a class="headerlink" href="#pyshell.subcommand.SCEngine.description" title="Permalink to this definition">¶</a></dt>
+<dd><p>The textual description of the command line interface, 
+set as the description of the parser from <a class="reference external" href="http://docs.python.org/2/library/argparse.html#argparse" title="(in Python v2.7)"><tt class="xref py py-mod docutils literal"><span class="pre">argparse</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.subcommand.SCEngine.do">
+<tt class="descname">do</tt><big>(</big><big>)</big><a class="headerlink" href="#pyshell.subcommand.SCEngine.do" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method should handle the main operations for the command 
+line tool. The user should overwrite this method in Engine subclasses
+for thier own use. The <tt class="xref py py-exc docutils literal"><span class="pre">KeyboardInterrupt</span></tt> or <tt class="xref py py-exc docutils literal"><span class="pre">SystemExit</span></tt> 
+errors will be caught by <a class="reference internal" href="#pyshell.subcommand.SCEngine.kill" title="pyshell.subcommand.SCEngine.kill"><tt class="xref py py-meth docutils literal"><span class="pre">kill()</span></tt></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.subcommand.SCEngine.kill">
+<tt class="descname">kill</tt><big>(</big><big>)</big><a class="headerlink" href="#pyshell.subcommand.SCEngine.kill" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function should forcibly kill any subprocesses. It is called 
+when <a class="reference internal" href="#pyshell.subcommand.SCEngine.do" title="pyshell.subcommand.SCEngine.do"><tt class="xref py py-meth docutils literal"><span class="pre">do()</span></tt></a> raises a <tt class="xref py py-exc docutils literal"><span class="pre">KeyboardInterrupt</span></tt> or <tt class="xref py py-exc docutils literal"><span class="pre">SystemExit</span></tt>
+to ensure that any tasks can be finalized before the system exits.
+Errors raised here are not caught.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyshell.subcommand.SCEngine.log">
+<tt class="descname">log</tt><a class="headerlink" href="#pyshell.subcommand.SCEngine.log" title="Permalink to this definition">¶</a></dt>
+<dd><p>This engine&#8217;s logger</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyshell.subcommand.SCEngine.opts">
+<tt class="descname">opts</tt><a class="headerlink" href="#pyshell.subcommand.SCEngine.opts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Command Line Options, as paresed, for this engine</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyshell.subcommand.SCEngine.parser">
+<tt class="descname">parser</tt><a class="headerlink" href="#pyshell.subcommand.SCEngine.parser" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference external" href="http://docs.python.org/2/library/argparse.html#argparse.ArgumentParser" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">argparse.ArgumentParser</span></tt></a> instance for this engine.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.subcommand.SCEngine.run">
+<tt class="descname">run</tt><big>(</big><big>)</big><a class="headerlink" href="#pyshell.subcommand.SCEngine.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method is used to run the command line engine in the expected 
+order. This method should be called to run the engine from another 
+program.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="pyshell.subcommand.SCEngine.script">
+<em class="property">classmethod </em><tt class="descname">script</tt><big>(</big><big>)</big><a class="headerlink" href="#pyshell.subcommand.SCEngine.script" title="Permalink to this definition">¶</a></dt>
+<dd><p>The class method for using this module as a script entry 
+point. This method ensures that the engine runs correctly on 
+the command line, and is cleaned up at the end.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pyshell.subcommand.SCController">
+<em class="property">class </em><tt class="descclassname">pyshell.subcommand.</tt><tt class="descname">SCController</tt><big>(</big><em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/pyshell/subcommand.html#SCController"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.subcommand.SCController" title="Permalink to this definition">¶</a></dt>
+<dd><p>An engine for the creation of python packages</p>
+<dl class="attribute">
+<dt id="pyshell.subcommand.SCController.mode">
+<tt class="descname">mode</tt><a class="reference internal" href="_modules/pyshell/subcommand.html#SCController.mode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.subcommand.SCController.mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the mode</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyshell.subcommand.SCController.subcommand">
+<tt class="descname">subcommand</tt><a class="reference internal" href="_modules/pyshell/subcommand.html#SCController.subcommand"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.subcommand.SCController.subcommand" title="Permalink to this definition">¶</a></dt>
+<dd><p>The active subcommand.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.subcommand.SCController.do">
+<tt class="descname">do</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pyshell/subcommand.html#SCController.do"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.subcommand.SCController.do" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call the subcommand <a class="reference internal" href="#pyshell.subcommand.SCEngine.do" title="pyshell.subcommand.SCEngine.do"><tt class="xref py py-meth docutils literal"><span class="pre">do()</span></tt></a> method.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.subcommand.SCController.kill">
+<tt class="descname">kill</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pyshell/subcommand.html#SCController.kill"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.subcommand.SCController.kill" title="Permalink to this definition">¶</a></dt>
+<dd><p>Killing mid-command, calls the active subcommand <a class="reference internal" href="#pyshell.subcommand.SCEngine.kill" title="pyshell.subcommand.SCEngine.kill"><tt class="xref py py-meth docutils literal"><span class="pre">kill()</span></tt></a> method.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.subcommand.SCController.parse">
+<tt class="descname">parse</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pyshell/subcommand.html#SCController.parse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.subcommand.SCController.parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse command line args</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.subcommand.SCController.configure">
+<tt class="descname">configure</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pyshell/subcommand.html#SCController.configure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.subcommand.SCController.configure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configure the package creator</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.subcommand.SCController.after_configure">
+<tt class="descname">after_configure</tt><big>(</big><big>)</big><a class="headerlink" href="#pyshell.subcommand.SCController.after_configure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Actions to be run after configuration. This method can be 
+overwritten to provide custom actions to be taken before the
+engine gets configured.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.subcommand.SCController.arguments">
+<tt class="descname">arguments</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#pyshell.subcommand.SCController.arguments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse the given arguments. If no arguments are given, parses 
+the known arguments on the command line. Generally this should 
+parse all arguments except <tt class="docutils literal"><span class="pre">-h</span></tt> for help, which should be 
+parsed last after the help text has been fully assembled. The full 
+help text can be set to the <tt class="docutils literal"><span class="pre">self.parser.epilog</span></tt> attribute.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>*args</strong> &#8211; The arguments to be parsed.</td>
+</tr>
+</tbody>
+</table>
+<p>Similar to taking the command line components and doing 
+<tt class="docutils literal"><span class="pre">&quot;</span> <span class="pre">-h</span> <span class="pre">--config</span> <span class="pre">test.yml&quot;.split()</span></tt>. Same signature as would be used 
+for <a class="reference external" href="http://docs.python.org/2/library/argparse.html#argparse.ArgumentParser.parse_args" title="(in Python v2.7)"><tt class="xref py py-meth docutils literal"><span class="pre">argparse.ArgumentParser.parse_args()</span></tt></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.subcommand.SCController.before_configure">
+<tt class="descname">before_configure</tt><big>(</big><big>)</big><a class="headerlink" href="#pyshell.subcommand.SCController.before_configure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Actions to be run before configuration. This method can be 
+overwritten to provide custom actions to be taken before the
+engine gets configured.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyshell.subcommand.SCController.config">
+<tt class="descname">config</tt><a class="headerlink" href="#pyshell.subcommand.SCController.config" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="config.html#pyshell.config.Configuration" title="pyshell.config.Configuration"><tt class="xref py py-class docutils literal"><span class="pre">pyshell.config.Configuration</span></tt></a> object for this engine.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.subcommand.SCController.configure_logging">
+<tt class="descname">configure_logging</tt><big>(</big><big>)</big><a class="headerlink" href="#pyshell.subcommand.SCController.configure_logging" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configure the logging system using the configuration underneath 
+<tt class="docutils literal"><span class="pre">config[&quot;logging&quot;]</span></tt> as a dictionary configuration for the <a class="reference external" href="http://docs.python.org/2/library/logging.html#logging" title="(in Python v2.7)"><tt class="xref py py-mod docutils literal"><span class="pre">logging</span></tt></a> 
+module.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyshell.subcommand.SCController.description">
+<tt class="descname">description</tt><a class="headerlink" href="#pyshell.subcommand.SCController.description" title="Permalink to this definition">¶</a></dt>
+<dd><p>The textual description of the command line interface, 
+set as the description of the parser from <a class="reference external" href="http://docs.python.org/2/library/argparse.html#argparse" title="(in Python v2.7)"><tt class="xref py py-mod docutils literal"><span class="pre">argparse</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.subcommand.SCController.init">
+<tt class="descname">init</tt><big>(</big><big>)</big><a class="headerlink" href="#pyshell.subcommand.SCController.init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialization after the parser has been created.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyshell.subcommand.SCController.log">
+<tt class="descname">log</tt><a class="headerlink" href="#pyshell.subcommand.SCController.log" title="Permalink to this definition">¶</a></dt>
+<dd><p>This engine&#8217;s logger</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyshell.subcommand.SCController.opts">
+<tt class="descname">opts</tt><a class="headerlink" href="#pyshell.subcommand.SCController.opts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Command Line Options, as paresed, for this engine</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyshell.subcommand.SCController.parser">
+<tt class="descname">parser</tt><a class="headerlink" href="#pyshell.subcommand.SCController.parser" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference external" href="http://docs.python.org/2/library/argparse.html#argparse.ArgumentParser" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">argparse.ArgumentParser</span></tt></a> instance for this engine.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.subcommand.SCController.run">
+<tt class="descname">run</tt><big>(</big><big>)</big><a class="headerlink" href="#pyshell.subcommand.SCController.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method is used to run the command line engine in the expected 
+order. This method should be called to run the engine from another 
+program.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="pyshell.subcommand.SCController.script">
+<em class="property">classmethod </em><tt class="descname">script</tt><big>(</big><big>)</big><a class="headerlink" href="#pyshell.subcommand.SCController.script" title="Permalink to this definition">¶</a></dt>
+<dd><p>The class method for using this module as a script entry 
+point. This method ensures that the engine runs correctly on 
+the command line, and is cleaned up at the end.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#"><tt class="docutils literal"><span class="pre">subcommand</span></tt> – Creating commands with Subcommands</a><ul>
+<li><a class="reference internal" href="#base-class-api-documentation">Base Class API Documentation</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="base.html"
+                        title="previous chapter"><tt class="docutils literal docutils literal"><span class="pre">CLIEngine</span></tt> – a base for Command Line Interfaces</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="config.html"
+                        title="next chapter"><tt class="docutils literal"><span class="pre">config</span></tt> — YAML-based Configuration Dictionaries</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/subcommand.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="config.html" title="config — YAML-based Configuration Dictionaries"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="base.html" title="CLIEngine – a base for Command Line Interfaces"
+             >previous</a> |</li>
+        <li><a href="index.html">PyShell 0.2.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Alexander Rudy.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

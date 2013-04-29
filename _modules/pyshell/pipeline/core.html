@@ -1,0 +1,485 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pyshell.pipeline.core &mdash; PyShell 0.2.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PyShell 0.2.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">PyShell 0.2.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pyshell.pipeline.core</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="c"># </span>
+<span class="c">#  pipeline2.py</span>
+<span class="c">#  pyshell</span>
+<span class="c">#  </span>
+<span class="c">#  Created by Alexander Rudy on 2013-03-16.</span>
+<span class="c">#  Copyright 2013 Alexander Rudy. All rights reserved.</span>
+<span class="c"># </span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. autoclass:: Pipeline</span>
+<span class="sd">    :members:</span>
+<span class="sd">    :inherited-members:</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">CLIEngine</span>
+<span class="kn">from</span> <span class="nn">..core</span> <span class="kn">import</span> <span class="n">Stateful</span><span class="p">,</span> <span class="n">State</span><span class="p">,</span> <span class="n">Typedkwargs</span>
+<span class="kn">from</span> <span class="nn">.pipe</span> <span class="kn">import</span> <span class="n">Pipe</span>
+<span class="kn">from</span> <span class="nn">.profile</span> <span class="kn">import</span> <span class="n">Profile</span>
+<span class="kn">from</span> <span class="nn">..util</span> <span class="kn">import</span> <span class="n">func_lineno</span><span class="p">,</span> <span class="n">ipydb</span>
+
+<span class="n">ipydb</span><span class="p">()</span>
+
+
+<span class="n">logging</span><span class="o">.</span><span class="n">addLevelName</span><span class="p">(</span><span class="mi">25</span><span class="p">,</span><span class="s">&#39;STATUS&#39;</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">PipelineException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Exceptions in Pipelines&quot;&quot;&quot;</span>
+        
+<span class="k">class</span> <span class="nc">PipelineStateException</span><span class="p">(</span><span class="n">PipelineException</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Exceptions in Pipeline State&quot;&quot;&quot;</span>
+        
+        
+<div class="viewcode-block" id="Pipeline"><a class="viewcode-back" href="../../../pipeline.html#pyshell.pipeline.core.Pipeline">[docs]</a><span class="k">class</span> <span class="nc">Pipeline</span><span class="p">(</span><span class="n">CLIEngine</span><span class="p">,</span><span class="n">Stateful</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;docstring for Pipeline&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Pipeline</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">prefix_chars</span><span class="o">=</span><span class="s">&quot;-+&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_state</span> <span class="o">=</span> <span class="n">State</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">([</span><span class="s">&quot;initialized&quot;</span><span class="p">,</span><span class="s">&quot;configured&quot;</span><span class="p">,</span><span class="s">&quot;parsed&quot;</span><span class="p">,</span><span class="s">&quot;started&quot;</span><span class="p">,</span><span class="s">&quot;running&quot;</span><span class="p">,</span><span class="s">&quot;paused&quot;</span><span class="p">,</span><span class="s">&quot;finished&quot;</span><span class="p">],</span><span class="bp">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;0.0&quot;</span><span class="p">]</span>
+        
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">description</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">HelpDict</span> <span class="o">=</span> <span class="p">{</span> <span class="s">&#39;command&#39;</span><span class="p">:</span> <span class="s">u&quot;</span><span class="si">%(prog)s</span><span class="s">&quot;</span><span class="p">,</span><span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="p">}</span>
+        <span class="n">ShortHelp</span> <span class="o">=</span> <span class="s">u&quot;&quot;&quot;</span>
+<span class="s">        Command Line Interface for </span><span class="si">%(name)s</span><span class="s">.</span>
+<span class="s">        The pipeline is set up in pipes, which are listed below. </span>
+<span class="s">        By default, the *all pipe should run the important parts of the pipeline.</span>
+<span class="s">    </span>
+<span class="s">        (+) Include      : To include a pipe, use +pipe. This will also run the dependents for that pipe.</span>
+<span class="s">        (-) Exclude      : To exclude a pipe, use -pipe. </span>
+<span class="s">    </span>
+<span class="s">        To run the simulater, use </span>
+<span class="s">        $ </span><span class="si">%(command)s</span><span class="s"> *all&quot;&quot;&quot;</span> <span class="o">%</span> <span class="n">HelpDict</span>
+        <span class="k">return</span> <span class="n">ShortHelp</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">epilog</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">u&quot;&quot;&quot;This is a multi-function dynamic command line interface to a complex program. </span>
+<span class="s">The base unit, pipes, are individual functions which should be able to run independtly of each other. </span>
+<span class="s">Pipes can declare dependencies if they are not independent of each other. The command line interface</span>
+<span class="s">can be customized using the &#39;Default&#39; configuration variable in the configuration file.</span>
+<span class="s">        &quot;&quot;&quot;</span>
+    
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Pipeline.name"><a class="viewcode-back" href="../../../pipeline.html#pyshell.pipeline.core.Pipeline.name">[docs]</a>    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the name of this simulator&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="s">&#39;_name&#39;</span><span class="p">,</span><span class="bp">None</span><span class="p">),</span><span class="nb">unicode</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&quot;utf-8&quot;</span><span class="p">)</span>
+            
+    </div>
+<div class="viewcode-block" id="Pipeline.pipes_with_state"><a class="viewcode-back" href="../../../pipeline.html#pyshell.pipeline.core.Pipeline.pipes_with_state">[docs]</a>    <span class="k">def</span> <span class="nf">pipes_with_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">*</span><span class="n">states</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the pipes with a specific state set.&quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">states</span><span class="p">:</span>
+             <span class="n">result</span><span class="o">.</span><span class="n">update</span><span class="p">([</span> <span class="n">pipe</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">pipe</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">pipe</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="n">state</span><span class="p">]</span> <span class="p">])</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+    </div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Pipeline.attempted"><a class="viewcode-back" href="../../../pipeline.html#pyshell.pipeline.core.Pipeline.attempted">[docs]</a>    <span class="k">def</span> <span class="nf">attempted</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A list of pipes that have been attempted to run&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes_with_state</span><span class="p">(</span><span class="s">&quot;started&quot;</span><span class="p">)</span>
+        </div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Pipeline.completed"><a class="viewcode-back" href="../../../pipeline.html#pyshell.pipeline.core.Pipeline.completed">[docs]</a>    <span class="k">def</span> <span class="nf">completed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A list of completed pipes&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes_with_state</span><span class="p">(</span><span class="s">&quot;completed&quot;</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="Pipeline.init"><a class="viewcode-back" href="../../../pipeline.html#pyshell.pipeline.core.Pipeline.init">[docs]</a>    <span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initializes the command line options for this script. This function is automatically called on construction, and provides the following default command options which are already supported by the pipeline:</span>
+<span class="sd">        </span>
+<span class="sd">        Command line options are:</span>
+<span class="sd">        </span>
+<span class="sd">        =========================================== =====================</span>
+<span class="sd">        CLI Option                                  Description</span>
+<span class="sd">        =========================================== =====================</span>
+<span class="sd">        ``--version``                               Display version information about this module</span>
+<span class="sd">        ``--configure Option.Key=Value``            Set a configuration value on the command line. </span>
+<span class="sd">        ``-c file.yaml, --config-file file.yaml``   Specify a configuration file</span>
+<span class="sd">        ``-n, --dry-run``                           Print the pipes this command would have run.</span>
+<span class="sd">        ``--show-tree``                             Show a dependency tree for the simulation</span>
+<span class="sd">        ``--show-pipes``                            List all of the used pipes for the simulation</span>
+<span class="sd">        ``--dump-config``                           Write the current configuration to file</span>
+<span class="sd">        ``-p, --profile``                           Write a profile to an HTML file.</span>
+<span class="sd">        =========================================== =====================</span>
+<span class="sd">        </span>
+<span class="sd">        Macros defined at this level are:</span>
+<span class="sd">        </span>
+<span class="sd">        ========= ==================================================</span>
+<span class="sd">        Macro     Result</span>
+<span class="sd">        ========= ==================================================</span>
+<span class="sd">        ``+all``   Includes every pipe</span>
+<span class="sd">        ``+none``  Doesn&#39;t include any pipes (technically redundant)</span>
+<span class="sd">        ========= ==================================================</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Pipeline</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">init</span><span class="p">()</span>
+        
+        <span class="c"># Parsers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config_parser</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s">&quot;Configuration presets&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pos_pipe_parser</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s">&#39;Add Pipes&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">neg_pipe_parser</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s">&#39;Remove Pipes&#39;</span><span class="p">)</span>
+        
+        <span class="c"># Add the basic controls for the script</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--version&#39;</span><span class="p">,</span><span class="n">action</span><span class="o">=</span><span class="s">&#39;version&#39;</span><span class="p">,</span><span class="n">version</span><span class="o">=</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">))</span>
+                
+        <span class="c"># Config Commands</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register_config</span><span class="p">({</span><span class="s">&quot;System&quot;</span><span class="p">:{</span><span class="s">&quot;DryRun&quot;</span><span class="p">:</span><span class="bp">True</span><span class="p">}},</span><span class="s">&#39;-n&#39;</span><span class="p">,</span><span class="s">&#39;--dry-run&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;run the simulation, but do not execute pipes.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register_config</span><span class="p">({</span><span class="s">&quot;Actions&quot;</span><span class="p">:{</span><span class="s">&quot;ShowTree&quot;</span><span class="p">:</span><span class="bp">True</span><span class="p">}},</span><span class="s">&#39;--show-tree&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;show a dependcy tree of all pipes run.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register_config</span><span class="p">({</span><span class="s">&quot;Actions&quot;</span><span class="p">:{</span><span class="s">&quot;ListPipe&quot;</span><span class="p">:</span><span class="bp">True</span><span class="p">}},</span><span class="s">&#39;--show-pipes&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;show a list of all pipes.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register_config</span><span class="p">({</span><span class="s">&quot;Actions&quot;</span><span class="p">:{</span><span class="s">&quot;Profile&quot;</span><span class="p">:</span><span class="bp">True</span><span class="p">}},</span><span class="s">&#39;-p&#39;</span><span class="p">,</span><span class="s">&#39;--profile&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;output a profile to a file &#39;profile.html&#39;&quot;</span><span class="p">)</span>
+        
+        <span class="c"># Default Macro</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register_pipe</span><span class="p">(</span><span class="k">lambda</span> <span class="p">:</span> <span class="bp">None</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;all&quot;</span><span class="p">,</span><span class="n">description</span><span class="o">=</span><span class="s">&quot;Run all pipes&quot;</span><span class="p">,</span><span class="n">help</span><span class="o">=</span><span class="s">&quot;Run all pipes&quot;</span><span class="p">,</span><span class="n">include</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register_pipe</span><span class="p">(</span><span class="k">lambda</span> <span class="p">:</span> <span class="bp">None</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;none&quot;</span><span class="p">,</span><span class="n">description</span><span class="o">=</span><span class="s">&quot;Run no pipes&quot;</span><span class="p">,</span><span class="n">help</span><span class="o">=</span><span class="s">&quot;Run no pipes&quot;</span><span class="p">,</span><span class="n">include</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="s">&quot;initialized&quot;</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="Pipeline.register_pipe"><a class="viewcode-back" href="../../../pipeline.html#pyshell.pipeline.core.Pipeline.register_pipe">[docs]</a>    <span class="k">def</span> <span class="nf">register_pipe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">action</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Register a pipe for operation with the pipeline. The pipe will then be available as a command line option, and will be operated with the pipeline. Pipes should be registered early in the operation of the pipeline (preferably in the initialization, after the pipeline class itself has initialized) so that the program is aware of the pipes for running. </span>
+<span class="sd">        </span>
+<span class="sd">        :keyword action pipe: The function to run for this pipe. Should not take any arguments</span>
+<span class="sd">        :keyword string name:  The command-line name of this pipe (no spaces, `+`, `-`)</span>
+<span class="sd">        :keyword string description: A short description, which will be used by the logger when displaying information about the pipe</span>
+<span class="sd">        :keyword tuple exceptions: A tuple of exceptions which are acceptable results for this pipe. These exceptions will be caught and logged, but will allow the pipeline to continue. These exceptions will still raise errors in Debug mode.</span>
+<span class="sd">        :keyword bool include: A boolean, Whether to include this pipe in the `*all` macro or not.</span>
+<span class="sd">        :keyword string help: Help text for the command line argument. A value of False excludes the help, None includes generic help.</span>
+<span class="sd">        :keyword list dependencies: An ordered list of the pipes which must run before this pipe can run. Dependencies will be deep-searched.</span>
+<span class="sd">        :keyword list replaces: A list of pipes which can be replaced by this pipe. This pipe will now satisfy those dependencies.</span>
+<span class="sd">        :keyword bool optional: A boolean about wheather this pipe can be skipped. If so, warnings will not be raised when this pipe is explicitly skipped (like ``-pipe`` would do)</span>
+<span class="sd">        </span>
+<span class="sd">        </span>
+<span class="sd">    	Pipes are called with either a ``+`` or ``-`` character at the beginning. Their resepctive actions are shown below.</span>
+<span class="sd">	</span>
+<span class="sd">    	========= ============ ================================</span>
+<span class="sd">    	Character  Action      Description</span>
+<span class="sd">    	========= ============ ================================</span>
+<span class="sd">    	``-``     Exclude      To exclude a pipe, use ``-pipe``. This pipe (and it&#39;s dependents) will be skipped.</span>
+<span class="sd">    	``+``     Include-only To include a pipe and the dependents of that pipe, use ``+pipe``.</span>
+<span class="sd">    	========= ============ ================================</span>
+<span class="sd">        </span>
+<span class="sd">        Pipes cannot be added dynamically. Once the pipeline starts running (i.e. processing pipes) the order and settings are fixed. Attempting to adjsut the pipes at this point will raise an error.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s">&quot;started&quot;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="n">PipelineStateException</span><span class="p">(</span><span class="s">&quot;Cannot add a new pipe to the pipeline, the simulation has already started!&quot;</span><span class="p">)</span>
+        
+        <span class="n">pipe</span> <span class="o">=</span> <span class="n">Pipe</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span><span class="n">module</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__module__</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pipe</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PipelineException</span><span class="p">(</span><span class="s">&quot;Cannot have duplicate pipe named </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="n">pipe</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">pipe</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pos_pipe_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&quot;+&quot;</span><span class="o">+</span><span class="n">pipe</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="n">action</span><span class="o">=</span><span class="s">&#39;append_const&#39;</span><span class="p">,</span><span class="n">dest</span><span class="o">=</span><span class="s">&#39;include&#39;</span><span class="p">,</span><span class="n">const</span><span class="o">=</span><span class="n">pipe</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="n">help</span><span class="o">=</span><span class="n">pipe</span><span class="o">.</span><span class="n">help</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">neg_pipe_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&quot;-&quot;</span><span class="o">+</span><span class="n">pipe</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="n">action</span><span class="o">=</span><span class="s">&#39;append_const&#39;</span><span class="p">,</span><span class="n">dest</span><span class="o">=</span><span class="s">&#39;exclude&#39;</span><span class="p">,</span><span class="n">const</span><span class="o">=</span><span class="n">pipe</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="n">help</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">SUPPRESS</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pipe</span><span class="o">.</span><span class="n">include</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="s">&quot;all&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">dependencies</span> <span class="o">+=</span> <span class="p">[</span><span class="n">pipe</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+        
+        </div>
+<div class="viewcode-block" id="Pipeline.register_config"><a class="viewcode-back" href="../../../pipeline.html#pyshell.pipeline.core.Pipeline.register_config">[docs]</a>    <span class="k">def</span> <span class="nf">register_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">configuration</span><span class="p">,</span><span class="o">*</span><span class="n">arguments</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Registers a bulk configuration option which will be provided with the USAGE statement. This configuration option can easily override normal configuration settings. Configuration provided here will override programmatically specified configuration options. It will not override configuration provided by the configuration file. These configuration options are meant to provide alterantive *defaults*, not alternative configurations.</span>
+<span class="sd">        </span>
+<span class="sd">        :param string argument: The command line argument (e.g. ``-D``)</span>
+<span class="sd">        :param dict configuration: The configuration dictionary to be merged with the master configuration.</span>
+<span class="sd">        :keyword bool preconfig: Applies these adjustments before loading the configuration file.</span>
+<span class="sd">        </span>
+<span class="sd">        Other keyword arguments are passed to :meth:`ArgumentParser.add_argument`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s">&quot;started&quot;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="n">PipelineStateError</span><span class="p">(</span><span class="s">&quot;Cannot add configuration extra after pipeline has started!&quot;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="s">&quot;help&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">help</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">SUPPRESS</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">help</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&quot;help&quot;</span><span class="p">]</span>
+            <span class="k">del</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&quot;help&quot;</span><span class="p">]</span>
+                
+        <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;pre_configure&quot;</span><span class="p">,</span><span class="bp">False</span><span class="p">):</span>
+            <span class="n">dest</span> <span class="o">=</span> <span class="s">&#39;pre_configure&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dest</span> <span class="o">=</span> <span class="s">&#39;post_configure&#39;</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">config_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="o">*</span><span class="n">arguments</span><span class="p">,</span><span class="n">action</span><span class="o">=</span><span class="s">&#39;append_const&#39;</span><span class="p">,</span><span class="n">dest</span><span class="o">=</span><span class="n">dest</span><span class="p">,</span><span class="n">const</span><span class="o">=</span><span class="n">configuration</span><span class="p">,</span><span class="n">help</span><span class="o">=</span><span class="n">help</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="Pipeline.collect"><a class="viewcode-back" href="../../../pipeline.html#pyshell.pipeline.core.Pipeline.collect">[docs]</a>    <span class="k">def</span> <span class="nf">collect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">matching</span><span class="o">=</span><span class="s">r&#39;^(?!\_)&#39;</span><span class="p">,</span> <span class="n">genericClasses</span><span class="o">=</span><span class="p">(),</span> <span class="n">collectionObjects</span><span class="o">=</span><span class="p">(),</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Collect class methods for inclusion as pipeline pipes. Instance methods are collected if they do not belong to the parent :class:`Pipeline` class (i.e. this method, and others like :meth:`registerPipe` will not be collected.). Registered pipes will default to having no dependents, to be named similar to thier own methods (``collected_pipe`` becomes ``*collected-pipe`` on the command line) and will use thier doc-string as the pipe description. The way in which these pipes are collected can be adjusted using the decorators provided in this module.</span>
+<span class="sd">        </span>
+<span class="sd">        To define a method as a pipe with a dependent, help string, and by default inclusion, use::</span>
+<span class="sd">            </span>
+<span class="sd">            @collect</span>
+<span class="sd">            @include</span>
+<span class="sd">            @description(&quot;Doing something&quot;)</span>
+<span class="sd">            @help(&quot;Do something&quot;)</span>
+<span class="sd">            @depends(&quot;other-pipe&quot;)</span>
+<span class="sd">            @replaces(&quot;missing-pipe&quot;)</span>
+<span class="sd">            def pipename(self):</span>
+<span class="sd">                pass</span>
+<span class="sd">        </span>
+<span class="sd">        This method does not do any logging. It should be called before the :meth:`run` method for the pipeline is called.</span>
+<span class="sd">        </span>
+<span class="sd">        Private methods are not included using the default matching string ``r&#39;^(?!\_)&#39;``. This string excludes any method beginning with an underscore. Alternative method name matching strings can be provided by the user.</span>
+<span class="sd">        </span>
+<span class="sd">        :param string matching: Regular expression used for matching method names.</span>
+<span class="sd">        :param kwargs: Keyword arguments passed to the :meth:`registerPipe` function.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">genericList</span> <span class="o">=</span> <span class="nb">dir</span><span class="p">(</span><span class="n">Pipeline</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">gClass</span> <span class="ow">in</span> <span class="n">genericClasses</span><span class="p">:</span>
+            <span class="n">genericList</span> <span class="o">+=</span> <span class="nb">dir</span><span class="p">(</span><span class="n">gClass</span><span class="p">)</span>
+        <span class="n">currentList</span> <span class="o">=</span> <span class="nb">dir</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">cInstance</span> <span class="ow">in</span> <span class="n">collectionObjects</span><span class="p">:</span>
+            <span class="n">currentList</span> <span class="o">+=</span> <span class="nb">dir</span><span class="p">(</span><span class="n">cInstance</span><span class="p">)</span>
+        <span class="n">pipeList</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">methodname</span> <span class="ow">in</span> <span class="n">currentList</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">methodname</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">genericList</span><span class="p">):</span>
+                <span class="n">method</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">methodname</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">method</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">matching</span><span class="p">,</span><span class="n">methodname</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">method</span><span class="p">,</span><span class="s">&#39;collect&#39;</span><span class="p">,</span><span class="bp">False</span><span class="p">)</span> <span class="p">)</span> <span class="ow">and</span> <span class="p">(</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">method</span><span class="p">,</span><span class="s">&#39;ignore&#39;</span><span class="p">,</span><span class="bp">False</span><span class="p">)</span> <span class="p">):</span>
+                    <span class="n">pipeList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+        
+        <span class="n">pipeList</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">func_lineno</span><span class="p">)</span>
+        <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">register_pipe</span><span class="p">(</span><span class="n">pipe</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">pipe</span> <span class="ow">in</span> <span class="n">pipeList</span> <span class="p">]</span>
+        
+    </div>
+<div class="viewcode-block" id="Pipeline.configure"><a class="viewcode-back" href="../../../pipeline.html#pyshell.pipeline.core.Pipeline.configure">[docs]</a>    <span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Configure this pipeline object&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_opts</span><span class="p">,</span><span class="s">&#39;pre_configure&#39;</span><span class="p">,</span><span class="bp">False</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">.</span><span class="n">pre_configure</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_opts</span><span class="p">,</span><span class="s">&#39;post_configure&#39;</span><span class="p">,</span><span class="bp">False</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">.</span><span class="n">post_configure</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_opts</span><span class="p">,</span><span class="s">&#39;include&#39;</span><span class="p">,</span><span class="bp">False</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">.</span><span class="n">include</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">for</span> <span class="n">cfg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">.</span><span class="n">pre_configure</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Pipeline</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">configure</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">cfg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">.</span><span class="n">post_configure</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="s">&quot;configured&quot;</span><span class="p">)</span>
+            </div>
+<div class="viewcode-block" id="Pipeline.parse"><a class="viewcode-back" href="../../../pipeline.html#pyshell.pipeline.core.Pipeline.parse">[docs]</a>    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse this object.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Pipeline</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">parse</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">pipename</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">.</span><span class="n">include</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="n">pipename</span><span class="p">]</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="s">&quot;included&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="s">&quot;parsed&quot;</span><span class="p">)</span>
+        <span class="n">all_pipe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&quot;all&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="s">&quot;all&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">all_pipe</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+        
+        
+    <span class="c">#########################</span>
+    <span class="c">## PIPELINE RESOLUTION ##</span>
+    <span class="c">#########################</span>
+        </div>
+<div class="viewcode-block" id="Pipeline.resolve"><a class="viewcode-back" href="../../../pipeline.html#pyshell.pipeline.core.Pipeline.resolve">[docs]</a>    <span class="k">def</span> <span class="nf">resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Resolve this system&#39;s order.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="s">&quot;started&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">levels</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">pipe</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unprimed</span><span class="p">(</span><span class="n">pipe</span><span class="p">)</span> <span class="ow">and</span> <span class="n">pipe</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s">&quot;included&quot;</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_resolve</span><span class="p">(</span><span class="n">pipe</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">pipe</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">pipe</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s">&quot;primed&quot;</span><span class="p">]</span> <span class="ow">or</span> <span class="n">pipe</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s">&quot;triggered&quot;</span><span class="p">])</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">pipe</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s">&quot;replaced&quot;</span><span class="p">]):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">call</span> <span class="o">+=</span> <span class="p">[</span><span class="n">pipe</span><span class="p">]</span>
+    </div>
+    <span class="k">def</span> <span class="nf">_resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">pipe</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;docstring for _resolve&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_dependents</span><span class="p">(</span><span class="n">pipe</span><span class="p">)</span>
+        <span class="n">pipe</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="s">&quot;primed&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_triggers</span><span class="p">(</span><span class="n">pipe</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_replaces</span><span class="p">(</span><span class="n">pipe</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">_unprimed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">pipe</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;docstring for _primed&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="n">pipe</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s">&quot;primed&quot;</span><span class="p">]</span>
+    
+    <span class="k">def</span> <span class="nf">_resolve_dependents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">parent_pipe</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Handle dependents for this pipe&quot;&quot;&quot;</span>
+        <span class="n">order_error</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">for</span> <span class="n">pipe</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+            <span class="k">if</span> <span class="n">pipe</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">parent_pipe</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+                <span class="n">order_error</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="k">if</span> <span class="n">pipe</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">parent_pipe</span><span class="o">.</span><span class="n">dependencies</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unprimed</span><span class="p">(</span><span class="n">pipe</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">order_error</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">PipelineStateException</span><span class="p">(</span><span class="s">&quot;Pipe {a:s} cannot depend on pipe {b:s} because {a:s} must run before {b:s}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">parent_pipe</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="n">b</span><span class="o">=</span><span class="n">pipe</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+                <span class="n">pipe</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">parent_pipe</span><span class="o">.</span><span class="n">name</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_resolve</span><span class="p">(</span><span class="n">pipe</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">_resolve_triggers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">parent_pipe</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Handle triggers for this pipe&quot;&quot;&quot;</span>
+        <span class="n">order_error</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">for</span> <span class="n">pipe</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+            <span class="k">if</span> <span class="n">pipe</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">parent_pipe</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+                <span class="n">order_error</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">if</span> <span class="n">pipe</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">parent_pipe</span><span class="o">.</span><span class="n">triggers</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unprimed</span><span class="p">(</span><span class="n">pipe</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">pipe</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s">&quot;included&quot;</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">order_error</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">PipelineStateException</span><span class="p">(</span><span class="s">&quot;Pipe {a:s} cannot trigger pipe {b:s} because {a:s} must run after {b:s}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">parent_pipe</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="n">b</span><span class="o">=</span><span class="n">pipe</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+                <span class="n">pipe</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">parent_pipe</span><span class="o">.</span><span class="n">name</span>
+                <span class="n">pipe</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="s">&quot;triggered&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_resolve</span><span class="p">(</span><span class="n">pipe</span><span class="p">)</span>
+                
+    <span class="k">def</span> <span class="nf">_resolve_replaces</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">parent_pipe</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Handle replacements for this pipe&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">pipe</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+            <span class="k">if</span> <span class="n">pipe</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">parent_pipe</span><span class="o">.</span><span class="n">replaces</span><span class="p">:</span>
+                <span class="n">pipe</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="s">&quot;replaced&quot;</span><span class="p">)</span>
+    
+    
+<div class="viewcode-block" id="Pipeline.get_dependency_tree"><a class="viewcode-back" href="../../../pipeline.html#pyshell.pipeline.core.Pipeline.get_dependency_tree">[docs]</a>    <span class="k">def</span> <span class="nf">get_dependency_tree</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Collect the dependency tree&quot;&quot;&quot;</span>
+        <span class="n">tree</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">pipe</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">call</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">pipe</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s">&quot;included&quot;</span><span class="p">]:</span>
+                <span class="n">tree</span> <span class="o">+=</span> <span class="n">pipe</span><span class="o">.</span><span class="n">tree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tree</span>
+        </div>
+<div class="viewcode-block" id="Pipeline.get_profile"><a class="viewcode-back" href="../../../pipeline.html#pyshell.pipeline.core.Pipeline.get_profile">[docs]</a>    <span class="k">def</span> <span class="nf">get_profile</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the profile object.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Profile</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+    
+    
+    <span class="c">######################</span>
+    <span class="c">## PIPELINE ACTIONS ##</span>
+    <span class="c">######################</span>
+    </div>
+<div class="viewcode-block" id="Pipeline.do"><a class="viewcode-back" href="../../../pipeline.html#pyshell.pipeline.core.Pipeline.do">[docs]</a>    <span class="k">def</span> <span class="nf">do</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The action verb!&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_actions</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">call</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;No stages were set to run!&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">pipe</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">call</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_execute</span><span class="p">(</span><span class="n">pipe</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">end_actions</span><span class="p">()</span>
+        </div>
+<div class="viewcode-block" id="Pipeline.start_actions"><a class="viewcode-back" href="../../../pipeline.html#pyshell.pipeline.core.Pipeline.start_actions">[docs]</a>    <span class="k">def</span> <span class="nf">start_actions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Actions completed before running the system.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;System.DryRun&quot;</span><span class="p">,</span><span class="bp">False</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">25</span><span class="p">,</span><span class="s">&quot;(DRYRUN) Starting...&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">25</span><span class="p">,</span><span class="s">&quot;Starting...&quot;</span><span class="p">)</span>
+            </div>
+<div class="viewcode-block" id="Pipeline.end_actions"><a class="viewcode-back" href="../../../pipeline.html#pyshell.pipeline.core.Pipeline.end_actions">[docs]</a>    <span class="k">def</span> <span class="nf">end_actions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Actions completed after running the system.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">25</span><span class="p">,</span><span class="s">&quot;Finishing...&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;Actions.ShowTree&quot;</span><span class="p">,</span><span class="bp">False</span><span class="p">):</span>
+            <span class="k">print</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_dependency_tree</span><span class="p">())</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;Actions.Profile&quot;</span><span class="p">,</span><span class="bp">False</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_profile</span><span class="p">()</span><span class="o">.</span><span class="n">to_txt</span><span class="p">()</span>
+        </div>
+<div class="viewcode-block" id="Pipeline.execute"><a class="viewcode-back" href="../../../pipeline.html#pyshell.pipeline.core.Pipeline.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">pipename</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Execute an individual pipe by name.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_execute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="n">pipename</span><span class="p">])</span>
+        </div>
+    <span class="k">def</span> <span class="nf">_execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">pipe</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Execute an individual pipe object.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">pipe</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">dry</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;System.DryRun&quot;</span><span class="p">,</span><span class="bp">False</span><span class="p">))</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">SystemExit</span><span class="p">,</span><span class="ne">KeyboardInterrupt</span><span class="p">):</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&quot; ...killed...&quot;</span><span class="p">)</span> <span class="c">#This accounts for the User&#39;s ^C in the stdout stream.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s">u&quot;Keyboard Interrupt during </span><span class="si">%(pipe)s</span><span class="s">... ending simulator.&quot;</span> <span class="o">%</span> <span class="p">{</span><span class="s">&#39;pipe&#39;</span><span class="p">:</span><span class="n">pipe</span><span class="o">.</span><span class="n">name</span><span class="p">})</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s">u&quot;Last completed pipe: </span><span class="si">%(pipe)s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">{</span><span class="s">&#39;pipe&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">completed</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]})</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">u&quot;Pipes completed: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">completed</span><span class="p">))</span>
+            <span class="k">raise</span>
+            </div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">PyShell 0.2.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Alexander Rudy.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
