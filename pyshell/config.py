@@ -500,14 +500,29 @@ class Configuration(MutableMappingBase):
         
     @classmethod
     def fromresource(cls, module, filename):
-        """docstring for fromresource"""
+        """Create a configuration from a resource filename pair.
+        
+        :param module: The module containing the file.
+        :param filename: The filename within that module.
+        
+        """
         config = cls()
         config.load_resource(module, filename)
         return config
         
     @classmethod
     def make(cls,base):
-        """docstring for make"""
+        """Make a configuration from the input object ``base``.
+        
+        Acceptable Inputs:
+        
+        - An instance of this class.
+        - Any insatance of :class:`collections.Mapping`
+        - A string filename for :meth:`fromfile`
+        - A tuple of argumments to :meth:`fromresource`
+        - A sequence of arguments to this method, which can be recursively added to this configuration.
+        
+        """
         if isinstance(base,cls):
             return base
         elif isinstance(base,collections.Mapping):
