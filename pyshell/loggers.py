@@ -28,7 +28,7 @@ Logger Functions
     debuffer_logger
     
 .. autofunction::
-    buffer_root
+    buffer_logger
     
 
 .. autoclass::
@@ -109,10 +109,23 @@ def getLogger(name=None):
     return logger
     
 def buffer_logger(name=None):
-    """Buffer Root Loggers"""
+    """Buffer named logger.
+    
+    :param name: The name of the logger to debuffer.
+    
+    This method will add a :class:`BufferHandler` to the
+    named logger, and will remove the other handlers.
+    """
     _log = logging.getLogger(name)
+    _buffer = None
+    for handler in _log.handlers[:]:
+        if isinstance(handler,BufferHandler):
+            _buffer = handler
+        _log.removeHandler(handler)
     _log.setLevel(1)
-    _log.addHandler(BufferHandler(1e7))
+    if not _buffer:
+        _buffer = BufferHandler(1e7)
+    _log.addHandler(_buffer)
     
 _simpleConfig = None
 def getSimpleLogger(name=None,level=None):
