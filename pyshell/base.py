@@ -9,8 +9,8 @@
 """
 .. currentmodule: pyshell.base
 
-Using :class:`CLIEngine` for Command Line Interfaces
-====================================================
+:class:`CLIEngine` – a base for Command Line Interfaces
+=======================================================
 
 The :class:`CLIEngine` is designed with "Convention over Configuration"
 in mind. That is, it aims to set everything up so that it will work out
@@ -116,13 +116,18 @@ command line interaction flow. The configuration is designed
 to provide dynamic output and to configure the system 
 before it completes the parsing process.
 
-1.  Initialization loads the object, and sets up the argument parser. 
-    At this point, parser should only understand arguments that are neeeded 
-    to print the best `--help` message.
+1.  Initialization sets up the object, and sets up the argument parser.
+    Method :meth:`~CLIEngine.init` is called at this point.
+    The parser should only understand arguments that will not
+    be impacted by any configuration values. At this stage, by default, the
+    parser is aware of the ``--config`` argument. This allows the
+    :class:`CLIEngine` to load a user-specified configuration file, and to
+    use that configuration file to affect the command line arguments presented
+    and parsed.
 
 2.  Preliminary Arguments are parsed by :meth:`~CLIEngine.arguments`.
 
-3.  Configuration is handled by the :meth:`configure` function. This 
+3.  Configuration is handled by the :meth:`~CLIEngine.configure` function. This 
     function loads the following configuration files in order (such that the 
     last one loaded is the one that takes precedence):
 
@@ -162,7 +167,7 @@ To entirely disable configuration, and remove the configuration object, set
 line options, and will not load any data from YAML files.
 
 Configuration is a powerful, heirarchical system. To understand the load 
-order, see :meth:`~pyshell.config.StructuredConfiguration.configure`. 
+order, see :meth:`pyshell.config.StructuredConfiguration.configure`. 
 However, there are several levels where you can customize the order of 
 loaded configurations. Configurations loaded earlier in the system will 
 be overwritten by those loaded later.
@@ -189,6 +194,7 @@ Reference for :class:`CLIEngine`, the Command Line Interface Engine
     CLIEngine
     :members:
     :private-members:
+    :exclude-members: start, end
     
 
 Call structure of :meth:`run`

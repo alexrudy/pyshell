@@ -19,11 +19,13 @@ Base Class API Documentation
 .. autoclass::
     SCEngine
     :members:
+    :exclude-members: start, end
     :inherited-members:
     
 .. autoclass::
     SCController
     :members:
+    :exclude-members: start, end
     :inherited-members:
 
 """
@@ -126,18 +128,11 @@ class SCController(CLIEngine):
         self._add_limited_help()
         self._subcommand = {}
         for subEngine in self._subEngines:
-            # For specific cases, where the master engine sets the module name, pass that module name
-            # on to subEngines before they are instantiated.
-            if hasattr(self,'module') and (not hasattr(subEngine,'module') or
-                getattr(subEngine.module,'__isabstractmethod__',False)):
-                subEngine.module = self.module
-            # Since type-instatiation has already happened, we hook into the shenanigans below.
-            # TODO: Degrade gracefully for python<2.7
-            if isinstance(getattr(subEngine,'__abstractmethods__',None),frozenset) and 'module' in getattr(subEngine,'__abstractmethods__',set()):
-                subEngine.__abstractmethods__ = frozenset(set(subEngine.__abstractmethods__).remove('module'))
             subCommand = subEngine()
             subCommand._supercommand = self
             self._subcommand[subCommand.command] = subCommand
+            # This is important, as it passes the subCommand's super configuration on.
+            # We might want something that passes the full configuration chain down...
             self.supercfg += subCommand.supercfg
         if self._subEngines:
             self._subparsers = self._parser.add_subparsers(dest='mode',help=self._subparsers_help)
@@ -162,19 +157,17 @@ class SCController(CLIEngine):
         return self._subcommand[self.mode]
         
     def start(self):
-        """docstring for start"""
         self.subcommand.start()
         
     def do(self):
-        """docstring for start"""
+        """Call the subcommand :meth:`~SCEngine.do` method."""
         self.subcommand.do()
         
     def end(self):
-        """docstring for end"""
         self.subcommand.end()
         
     def kill(self):
-        """Killing mid-command"""
+        """Killing mid-command, calls the active subcommand :meth:`~SCEngine.kill` method."""
         self.subcommand.kill()
         self._exitcode = 1
     
