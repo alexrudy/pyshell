@@ -120,6 +120,12 @@ class test_DottedConfiguration(test_Configuration):
         CFG = self.CLASS(**self.test_dict)
         CFG["g.h"]
         
+    @nt.raises(KeyError)
+    def test_get_bad_ml_name(self):
+        """KeyError values which don't exist many levels deep"""
+        CFG = self.CLASS(**self.test_dict)
+        CFG.get("z.a.b","h")
+        CFG["z.a.b"]
     
     def test_set_dotted_name(self):
         """Set for keys with periods in them"""
