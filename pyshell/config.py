@@ -650,7 +650,7 @@ class DottedConfiguration(Configuration):
         keyparts = key.split(".")
         try:
             if len(keyparts) > 1:
-                return self._getitem(self, keyparts)
+                return self._getitem(self.store, keyparts)
             elif ((isinstance(self._store.get(key), self.dn) 
                 and not bool(self._store.get(key)))
                 and self._strict):
