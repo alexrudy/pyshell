@@ -363,13 +363,13 @@ can be customized using the 'Default' configuration variable in the configuratio
     def start_actions(self):
         """Actions completed before running the system."""
         if self.config.get("System.DryRun",False):
-            self.log.log(25,"(DRYRUN) Starting...")
+            self.log.status("(DRYRUN) Starting...")
         else:
-            self.log.log(25,"Starting...")
+            self.log.status("Starting...")
             
     def end_actions(self):
         """Actions completed after running the system."""
-        self.log.log(25,"Finishing...")
+        self.log.status("Finishing...")
         if self.config.get("Actions.ShowTree",False):
             print "\n".join(self.get_dependency_tree())
         if self.config.get("Actions.Profile",False):
@@ -384,9 +384,9 @@ can be customized using the 'Default' configuration variable in the configuratio
         try:
             pipe.run(dry=self.config.get("System.DryRun",False))
         except (SystemExit,KeyboardInterrupt):
-            print(" ...killed...") #This accounts for the User's ^C in the stdout stream.
-            self.log.critical(u"Keyboard Interrupt during %(pipe)s... ending simulator." % {'pipe':pipe.name})
-            self.log.critical(u"Last completed pipe: %(pipe)s" % {'pipe':self.completed[-1]})
+            print(" ...killed... ") #This accounts for the User's ^C in the stdout stream.
+            self.log.critical(u"Keyboard Interrupt during %(pipe)s... ending simulator." % { 'pipe': pipe.name })
+            self.log.critical(u"Last completed pipe: %(pipe)s" % { 'pipe': self.completed[-1] })
             self.log.debug(u"Pipes completed: %s" % ", ".join(self.completed))
             raise
             
