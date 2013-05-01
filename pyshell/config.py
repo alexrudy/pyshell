@@ -523,7 +523,9 @@ class Configuration(MutableMappingBase):
         - A sequence of arguments to this method, which can be recursively added to this configuration.
         
         """
-        if isinstance(base,cls):
+        if base is None:
+            return cls()
+        elif isinstance(base,cls):
             return base
         elif isinstance(base,collections.Mapping):
             return cls(base)        
