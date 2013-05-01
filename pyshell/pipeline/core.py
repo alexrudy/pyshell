@@ -252,6 +252,8 @@ can be customized using the 'Default' configuration variable in the configuratio
             self.opts.post_configure = []
         if not getattr(self._opts,'include',False):
             self.opts.include = []
+        if not getattr(self._opts,'exclude',False):
+            self.opts.exclude = []
         
         for cfg in self.opts.pre_configure:
             self.config.update(cfg)
@@ -265,6 +267,8 @@ can be customized using the 'Default' configuration variable in the configuratio
         super(Pipeline, self).parse()
         for pipename in self.opts.include:
             self.pipes[pipename].set_state("included")
+        for pipename in self.opts.exclude:
+            self.pipes[pipename].set_state("excluded")
         self.set_state("parsed")
         all_pipe = self.pipes.pop("all")
         self.pipes["all"] = all_pipe
@@ -296,7 +300,7 @@ can be customized using the 'Default' configuration variable in the configuratio
     
     def _unprimed(self,pipe):
         """docstring for _primed"""
-        return not pipe.state["primed"]
+        return not pipe.state["primed"] and not pipe.state["excluded"]
     
     def _resolve_dependents(self,parent_pipe):
         """Handle dependents for this pipe"""
