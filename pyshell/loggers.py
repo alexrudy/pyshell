@@ -144,7 +144,7 @@ def getSimpleLogger(name=None,level=None):
         _simpleConfig = DottedConfiguration.fromresource('pyshell','logging-stream-all.yml')
     logger = getLogger(name)
     if level is not None and name is not None:
-        _simpleConfig["logging.loggers"][name]["level"] = level
+        _simpleConfig["logging.loggers."+name+".level"] = level
     elif level is not None:
         _simpleConfig["logging.root.level"] = level
     configure_logging(_simpleConfig)
