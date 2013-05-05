@@ -54,7 +54,7 @@ class Pipeline(CLIEngine,Stateful):
         (-) Exclude      : To exclude a pipe, use -pipe. 
     
         To run the simulater, use 
-        $ %(command)s *all""" % HelpDict
+        $ %(command)s +all""" % HelpDict
         return ShortHelp
     
     @property
