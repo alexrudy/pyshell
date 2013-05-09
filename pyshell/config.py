@@ -65,6 +65,7 @@ import abc
 import re
 import yaml
 import warnings
+import hashlib
 from warnings import warn
 import ast
 
@@ -312,9 +313,13 @@ class Configuration(MutableMappingBase):
             with open(filename, "w") as stream:
                 stream.write("# %s: %s\n" % (self.name, filename))
                 if re.search(r"(\.yaml|\.yml)$", filename):
-                    yaml.dump(self.store, stream, 
+                    yaml.dump_all(
+                        self._save_yaml_callback() + [self.store], stream, 
                         default_flow_style=False, encoding='utf-8')
                 elif re.search(r"\.dat$", filename):
+                    for document in self._save_yaml_callback():
+                        stream.write(str(document))
+                        stream.write("\n---\n")
                     stream.write(str(self.store))
                 elif not silent:
                     raise ValueError("Filename Error, not "
@@ -337,11 +342,11 @@ class Configuration(MutableMappingBase):
         isstream = False
         try:
             if hasattr(filename, 'read') and hasattr(filename, 'readlines'):
-                new = yaml.load(filename)
+                new = list(yaml.load_all(filename))
                 isstream = True
             else:
                 with open(filename, "r") as stream:
-                    new = yaml.load(stream)
+                    new = list(yaml.load_all(stream))
         except IOError:
             if silent:
                 warnings.warn("Could not load configuration "
@@ -349,15 +354,27 @@ class Configuration(MutableMappingBase):
             else:
                 raise
         else:
-            self.merge(new)
+            if len(new) != 0:
+                self.merge(new[-1])
             if isstream and fname is not None:
                 self._filename = fname
             elif isstream and hasattr(filename,'name'):
                 self._filename = filename.name
             elif not isstream:
                 self._filename = filename
-            loaded = True
+            self._load_yaml_callback(*new[:-1])
+            loaded = bool(len(new))
         return loaded
+    
+    def _load_yaml_callback(self,*documents):
+        """Called with the extra documents that were loaded from the yaml file."""
+        if len(documents) != 0:
+            filename = self._filename if self._filename is not None else "<stream>"
+            warn("'{:s}' contained {:d} YAML documents. Ignoring all but the last one.".format(filename,len(documents)+1))
+    
+    def _save_yaml_callback(self):
+        """This function should return other yaml documents that will be prepended to the master YAML file."""
+        return []
     
     @property
     def store(self):
@@ -718,53 +735,37 @@ class StructuredConfiguration(DottedConfiguration):
         
     """
     
-    DEFAULT_FILENAME = "--NOFILE--"
+    DEFAULT_FILENAME = '__main__'
     
     def __init__(self,  *args, **kwargs):
         super(StructuredConfiguration, self).__init__(*args, **kwargs)
-        self._files = self.dn()
-        self._files["This"] = self.DEFAULT_FILENAME
-        self._files["Loaded"] = []
-        self._files["Configurations"] = self.dn()
+        self._metadata = DottedConfiguration()
+        self._metadata["Files.This"] = self.DEFAULT_FILENAME
+        self._metadata["Files.Loaded"] = []
+        self._metadata["Configurations"] = self._metadata.dn()
         self.__set_on_load = False
         
     @property
     def files(self):
         """The set of loaded filenames"""
-        return set(self._files["Loaded"])
+        return set(self._metadata["Files.Loaded"])
         
     @property
     def _set_on_load(self):
         """True for default filenames"""
-        if self._files["This"] == self.DEFAULT_FILENAME:
+        if self._metadata["Files.This"] == self.DEFAULT_FILENAME:
             self.__set_on_load = True
         return self.__set_on_load
     
-    def setFile(self, filename=None, name=None): #pylint: disable=C0103
-        """Depricated Method"""
-        return self.set_file(filename, name)
-    
-    def set_file(self, filename=None, name=None):
+    def set_file(self, filename=None):
         """Set the default/current configuration file for this configuration.
         
         The configuration file set by this method will be used next time :meth:`load` or :meth:`save` is called with no filename.
         
         :param string filename: The filename to load from.
-        :param string name: The name key for the file.
         
         """
-        if not filename:
-            if not name:
-                raise ValueError("Must provide name or filename")
-            if name not in  self._files["Configurations"]:
-                raise KeyError("Key %s does not represent "
-                "a configuration file." % name)
-        else:
-            if not name:
-                name = os.path.basename(filename)
-        if name not in self._files["Configurations"]:
-            self._files["Configurations"][name] = filename
-        self._files["This"] = self._files["Configurations"][name]
+        self._metadata["Files.This"] = filename
     
     def save(self, filename=None, silent=True):
         """Save the configuration to a YAML file. If ``filename`` is not 
@@ -775,10 +776,21 @@ class StructuredConfiguration(DottedConfiguration):
         Uses :meth:`Configuration.save`.
         """
         if filename == None:
-            filename = self._files["This"]
+            filename = self._metadata["Files.This"]
         return super(StructuredConfiguration, self).save(filename)
     
+    def _load_yaml_callback(self,*documents):
+        """Load the metadata"""
+        if len(documents) == 1:
+            self._metadata.update(documents[0])
+        elif len(documents) > 1:
+            self._metadata.update(documents[0])
+            warnings.warn("Too Many metadata documents found. Ignoring {:d} documents".format(len(documents)-1))
         
+    def _save_yaml_callback(self):
+        """Return the metadata in an array."""
+        return [ self._metadata.store ]
+    
     def load(self, filename=None, silent=True, fname=None):
         """Load the configuration to a YAML file. If ``filename`` is 
         not provided, the configuration will use the file set by 
@@ -789,10 +801,10 @@ class StructuredConfiguration(DottedConfiguration):
         
         Uses :meth:`Configuration.load`."""
         if filename == None:
-            filename = self._files["This"]
+            filename = self._metadata["Files.This"]
         loaded = super(StructuredConfiguration, self).load(filename, silent, fname=fname)
         if loaded and self._set_on_load:
-            self._files["Loaded"].append(filename)
+            self._metadata["Files.Loaded"].append(filename)
 
 
 force_yaml_unicode()
