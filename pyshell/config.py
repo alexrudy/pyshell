@@ -746,6 +746,12 @@ class StructuredConfiguration(DottedConfiguration):
         self.__set_on_load = False
         
     @property
+    def metadata(self):
+        """The metadata dictionary"""
+        self._metadata["Hash"] = self.hash
+        return self._metadata
+        
+    @property
     def files(self):
         """The set of loaded filenames"""
         return set(self._metadata["Files.Loaded"])
@@ -756,6 +762,13 @@ class StructuredConfiguration(DottedConfiguration):
         if self._metadata["Files.This"] == self.DEFAULT_FILENAME:
             self.__set_on_load = True
         return self.__set_on_load
+        
+    @property
+    def hash(self):
+        """Return the HexDigest hash"""
+        self._hash = hashlib.md5()
+        self._hash.update(str(self))
+        return self._hash.hexdigest()
     
     def set_file(self, filename=None):
         """Set the default/current configuration file for this configuration.
@@ -789,7 +802,7 @@ class StructuredConfiguration(DottedConfiguration):
         
     def _save_yaml_callback(self):
         """Return the metadata in an array."""
-        return [ self._metadata.store ]
+        return [ self.metadata.store ]
     
     def load(self, filename=None, silent=True, fname=None):
         """Load the configuration to a YAML file. If ``filename`` is 
@@ -805,6 +818,7 @@ class StructuredConfiguration(DottedConfiguration):
         loaded = super(StructuredConfiguration, self).load(filename, silent, fname=fname)
         if loaded and self._set_on_load:
             self._metadata["Files.Loaded"].append(filename)
+        
 
 
 force_yaml_unicode()
