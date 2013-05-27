@@ -28,6 +28,16 @@ YAML configuration file reading and writing interface.
     
 .. autofunction::
     pyshell.config.reformat
+    
+.. autofunction::
+    pyshell.config.force_yaml_unicode
+
+.. autofunction::
+    pyshell.config.deepmerge
+    
+.. autofunction::
+    pyshell.config.advanceddeepmerge
+    
 
 Basic Configurations: :class:`Configuration`
 --------------------------------------------
@@ -128,7 +138,7 @@ def advanceddeepmerge(d, u, s, sequence=True):
     :param d: Deep Structure
     :param u: Updated Structure
     :param s: Default structure to use when a new deep structure is required.
-    :param (bool) sequence: Control sequence merging
+    :param bool sequence: Control sequence merging
     
     """
     #pylint: disable=C0103
@@ -225,8 +235,7 @@ class MutableMappingBase(collections.MutableMapping):
     @property
     def store(self):
         """Return a copy of the internal storage object."""
-        import copy
-        return copy.deepcopy(self._store)
+        return self._store.copy()
 
 
 class Configuration(MutableMappingBase):

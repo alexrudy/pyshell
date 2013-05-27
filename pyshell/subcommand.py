@@ -12,6 +12,7 @@
 :mod:`subcommand` – Creating commands with Subcommands
 ======================================================
 
+This module provides scaffolding for subcommand classes. Individual subcommands are defined in :class:`SCEngine`. :class:`SCEngine` is a drop-in replacement for :class:`~pyshell.base.CLIEngine`. Then add each class to the :attr:`SCController.subEngines` list on a subclass of :class:`SCController`. :class:`SCController` can be run the same way :class:`~pyshell.base.CLIEngine` works. Both :class:`SCController` and :class:`SCEngine` are subclasses of :class:`~pyshell.base.CLIEngine` and should behave naturally with a :class:`~pyshell.base.CLIEngine`-style configuration.
 
 Base Class API Documentation
 ----------------------------
@@ -37,7 +38,12 @@ from argparse import Action, SUPPRESS, RawDescriptionHelpFormatter
 __all__ = ['SCEngine','SCController']
 
 class SCEngine(CLIEngine):
-    """A base engine for use as a subcommand to CLIEngine"""
+    """A base engine for use as a subcommand or stand-alone command like :class:`~pyshell.base.CLIEngine`. When used as a sub-command, it should be attached to a :class:`SCController` to act as the base command.
+    
+    :param command: The command name for this object. It can also be set as a class attribute: `cls.command` It cannot be changed once the program has initialized.
+    
+    
+    """
     
     supercfg = []
     
