@@ -317,7 +317,8 @@ class Configuration(MutableMappingBase):
         """
         if hasattr(filename,'read') and hasattr(filename,'readlines'):
             filename.write("# %s: <stream>" % self.name)
-            yaml.dump(self.store, filename, default_flow_style=False)
+            yaml.dump_all(self._save_yaml_callback() + [self.store],
+                 filename, default_flow_style=False)
         else:
             with open(filename, "w") as stream:
                 stream.write("# %s: %s\n" % (self.name, filename))
@@ -333,7 +334,7 @@ class Configuration(MutableMappingBase):
                 elif not silent:
                     raise ValueError("Filename Error, not "
                         "(.dat,.yaml,.yml): %s" % filename)
-                self._filename = filename
+            self._filename = filename
         
     def load(self, filename, silent=True, fname=None):
         """Loads a configuration from a yaml file, and merges it into 
