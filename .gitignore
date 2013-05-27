@@ -37,6 +37,8 @@ develop-eggs
 .installed.cfg
 distribute-*.tar.gz
 
+# Tests
 tests/pkg
+
 
 
