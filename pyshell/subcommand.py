@@ -53,9 +53,23 @@ class SCEngine(CLIEngine):
         prefix_chars = kwargs.pop('prefix_chars',"-")
         super(SCEngine, self).__init__(prefix_chars=prefix_chars)
         self._hasinit = False
-        self.command = command if command is not None else getattr(self,'command',"")
+        self._command = command if command is not None else getattr(self,'_command',"")
         self._kwargs = kwargs
         self._supercommand = False
+        
+    @property
+    def command(self):
+        """docstring for command"""
+        return self._command
+        
+        
+    @command.setter
+    def command(self,value):
+        """docstring for command"""
+        if not self._hasinit:
+            self._command = value
+        else:
+            raise AttributeError("Cannot change command name once parsers have initialized.")
         
     @property
     def help(self):
