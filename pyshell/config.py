@@ -558,12 +558,12 @@ class Configuration(MutableMappingBase):
             return cls(base)        
         elif isinstance(base,tuple) and len(base) == 2:
             return cls.fromresource(*base)
-        elif isinstance(configuration,basestring):
+        elif isinstance(base,basestring):
             config = cls.fromfile(base)
         elif isinstance(base,collections.Sequence):
             config = cls()
             for item in base:
-                config.update(cls.make(base))
+                config.update(cls.make(item))
             return config
         else:
             raise TypeError("{0} doesn't know how to make from {1}".format(
