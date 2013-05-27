@@ -317,13 +317,13 @@ class Configuration(MutableMappingBase):
         """
         if hasattr(filename,'read') and hasattr(filename,'readlines'):
             filename.write("# %s: <stream>" % self.name)
-            yaml.dump_all(self._save_yaml_callback() + [self.store],
-                 filename, default_flow_style=False)
+            yaml.safe_dump_all(self._save_yaml_callback() + [self.store],
+                 filename, default_flow_style=False, encoding='utf-8')
         else:
             with open(filename, "w") as stream:
                 stream.write("# %s: %s\n" % (self.name, filename))
                 if re.search(r"(\.yaml|\.yml)$", filename):
-                    yaml.dump_all(
+                    yaml.safe_dump_all(
                         self._save_yaml_callback() + [self.store], stream, 
                         default_flow_style=False, encoding='utf-8')
                 elif re.search(r"\.dat$", filename):
