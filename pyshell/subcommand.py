@@ -138,23 +138,28 @@ class _LimitedHelpAction(Action):
 class SCController(CLIEngine):
     """An engine for the creation of python packages"""
     
-    _subEngines = []
+    subEngines = []
+    """A list of :class:`SCEngine` subclasses which define the subcommands
+    for this engine. This is the only attribute required for a working :class:`SCController`.
+    """
     
     _subparsers_help = "sub-command help"
     
     def __init__(self,**kwargs):
         kwargs.setdefault('conflict_handler','resolve')
+        if hasattr(self,'_subEngines'):
+            self.subEngines = self._subEngines
         super(SCController, self).__init__(**kwargs)
         self._add_limited_help()
         self._subcommand = {}
-        for subEngine in self._subEngines:
+        for subEngine in self.subEngines:
             subCommand = subEngine()
             subCommand._supercommand = self
             self._subcommand[subCommand.command] = subCommand
             # This is important, as it passes the subCommand's super configuration on.
             # We might want something that passes the full configuration chain down...
             self.supercfg += subCommand.supercfg
-        if self._subEngines:
+        if self.subEngines:
             self._subparsers = self._parser.add_subparsers(dest='mode',help=self._subparsers_help)
         else:
             raise AttributeError("%r No SubEngines attached." % self)
