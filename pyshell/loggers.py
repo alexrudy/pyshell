@@ -90,7 +90,7 @@ def configure_logging(configuration):
         logging.config.dictConfig(config["logging"])
         
         if "py.warnings" in config["logging.loggers"]:
-            warnings.showwarning = _showwarning
+            captureWarnings(True)
         for logger in config["logging.loggers"]:
             debuffer_logger(logger)
         if "root" in config["logging"]:
