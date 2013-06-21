@@ -130,52 +130,76 @@ def reformat(d, nt):
             e[k] = v
     return e
     
-def advanceddeepmerge(d, u, s, sequence=True):
+def advanceddeepmerge(d, u, s, sequence=True, invert=False, inplace=True):
     """Merge deep collection-like structures.
     
-    This version will merge sequence structures when they are found.
+    This function will merge sequence structures when they are found. When used with ``sequence=False``, it behaves like :func:`deepmerge`.
     
-    :param d: Deep Structure
-    :param u: Updated Structure
-    :param s: Default structure to use when a new deep structure is required.
+    :param dict-like d: Deep Structure
+    :param dict-like u: Updated Structure
+    :param dict-like-type s: Default structure to use when a new deep structure is required.
     :param bool sequence: Control sequence merging
+    :param bool invert: Whether to do an inverse merge.
+    
+    *Inverse Merge* causes ``u`` to only update missing values of ``d``, but does
+    so in a deep fashion.
     
     """
     #pylint: disable=C0103
+    if isinstance(d, collections.Mapping) and not inplace:
+        e = type(d)(**d)
+    else:
+        e = d
     if (not hasattr(u,'__len__')) or len(u)==0:
-        return d
+        return e
     for k, v in u.iteritems():
         if isinstance(v, collections.Mapping):
-            r = advanceddeepmerge(d.get(k, s()), v, s, sequence)
-            d[k] = r
+            r = advanceddeepmerge(d.get(k, s()), v, s, sequence, invert, inplace)
+            e[k] = r
         elif (sequence and isinstance(v, collections.Sequence) and
             isinstance(d.get(k, None), collections.Sequence) and not
             (isinstance(v, (str, unicode)) or 
             isinstance(d.get(k, None), (str, unicode)))):
-            d[k] = [ i for i in v ] + [ i for i in d[k] ]
+            if invert:
+                e[k] = [ i for i in v ] + [ i for i in d[k] ]
+            else:
+                e[k] = [ i for i in d[k] ] + [ i for i in v ]
+        elif invert:
+            e[k] = d.get(k,u[k])
         else:
-            d[k] = u[k]
-    return d
+            e[k] = u[k]
+    return e
 
-def deepmerge(d, u, s):
+def deepmerge(d, u, s, invert=False, inplace=True):
     """Merge deep collection-like structures.
     
-    :param d: Deep Structure
-    :param u: Updated Structure
-    :param s: Default structure to use when a new deep structure is required.
+    When this function encounters a sequence, the entire sequence from ``u`` is considered a single value which replaces any value from ``d``. To allow for merging sequences in ``u`` and ``d``, see function :func:`advanceddeepmerge`.
+    
+    :param dict-like d: Deep Structure
+    :param dict-like u: Updated Structure
+    :param dict-like-type s: Default structure to use when a new deep structure is required.
+    :param bool invert: Whether to do an inverse merge.
+    
+    *Inverse Merge* causes ``u`` to only update missing values of ``d``, but does
+    so in a deep fashion.
     
     """
     #pylint: disable=C0103
+    if isinstance(d, collections.Mapping) and not inplace:
+        e = type(d)(**d)
+    else:
+        e = d
     if (not hasattr(u,'__len__')) or len(u)==0:
-        return d
+        return e
     for k, v in u.iteritems():
         if isinstance(v, collections.Mapping):
-            r = deepmerge(d.get(k, s()), v, s)
-            d[k] = r
+            r = deepmerge(d.get(k, s()), v, s, invert=invert, inplace=inplace)
+            e[k] = r
+        elif invert:
+            e[k] = d.get(k,u[k])
         else:
-            d[k] = u[k]
-    return d
-    
+            e[k] = u[k]
+    return e
 
 class ConfigurationError(Exception):
     """Configuration error"""
@@ -296,15 +320,34 @@ class Configuration(MutableMappingBase):
         
         :param dict-like other: The other dictionary to be merged.
         
+        See :func:`deepmerge`.
+        
         .. doctest::
             
-            >>> a = Configuration(**{'a':'b'})
+            >>> a = Configuration(**{'a':'b','c':'e'})
             >>> a.merge({'c':'d'})
             >>> a
             {'a': 'b', 'c': 'd'}
         
         """
         deepmerge(self, other, self.dn)
+        
+    def imerge(self, other):
+        """Inverse :meth:`merge`, where ``other`` will be considered original, and this object will be canonical.
+        
+        :param dict-like other: The other dictionary to be merged.
+        
+        See :func:`deepmerge`.
+        
+        .. doctest::
+            
+            >>> a = Configuration(**{'a':'b','c':'e'})
+            >>> a.imerge({'c':'d'})
+            >>> a
+            {'a': 'b', 'c': 'e'}
+        
+        """
+        deepmerge(self, other, self.dn, invert=True)
     
     def save(self, filename, silent=True):
         """Save this configuration as a YAML file. YAML files generally have 
@@ -754,6 +797,7 @@ class StructuredConfiguration(DottedConfiguration):
         self._metadata["Files.Loaded"] = []
         self._metadata["Configurations"] = self._metadata.dn()
         self.__set_on_load = False
+        self._dn = self.__class__
         
     @property
     def metadata(self):
