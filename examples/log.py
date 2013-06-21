@@ -44,6 +44,7 @@ class LoggerExample(CLIEngine):
         
     def configure(self):
         """Configure the engine for operation, before help will be printed."""
+        self.log.info("End of Buffered Messages")
         super(LoggerExample, self).configure()
         self.log.warn(".configure WARN")
 
