@@ -45,7 +45,7 @@ def ipydb():
     try:
         from IPython.core import ultratb
     except ImportError:
-        warnings.warn("Not enabling iPython debugger, because"
+        warnings.warn("Not enabling iPython debugger because"
             " 'ipython' isn't installed!")
     else:
         _file = getattr(sys.modules['__main__'], '__file__', '')
