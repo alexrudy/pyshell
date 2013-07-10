@@ -108,7 +108,7 @@ def check_exists(path):
 def warn_exists(path, name="path", exists=True):
     """docstring for warn_exists"""
     if check_exists(path) != exists:
-        warnings.warn("{name} '{path}' does{exist} exist".format(
+        warnings.warn("{name} '{path}' does{exist} exist!".format(
             name=name.capitalize(), path=path,
             exist=" not" if exists else ""), RuntimeWarning)
     
