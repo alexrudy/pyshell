@@ -204,8 +204,8 @@ class PyshellLogger(logging.getLoggerClass()):
         if name.upper() not in logging._levelNames:
             raise AttributeError("{0} has no attribute {1}".format(self,name))
         def log(msg, *args,**kwargs):
-            """docstring for log"""
             self._log(logging._levelNames[name.upper()],msg,args,**kwargs)
+        log.__doc__ = "Log a message at level {}".format(name)
         return log
 
 logging.setLoggerClass(PyshellLogger)
