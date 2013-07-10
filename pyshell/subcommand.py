@@ -213,6 +213,8 @@ class SCController(CLIEngine):
         """Configure the package creator"""
         super(SCController, self).configure()
         self.subcommand.__superconfig__(self._config,self._opts)
+        self.subcommand.before_configure()
         self.subcommand.configure()
+        self.subcommand.after_configure()
         
         
