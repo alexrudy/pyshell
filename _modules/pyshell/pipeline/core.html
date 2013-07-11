@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pyshell.pipeline.core &mdash; PyShell 0.2.0 documentation</title>
+    <title>pyshell.pipeline.core &mdash; PyShell 0.3.0 documentation</title>
     
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '0.2.0',
+        VERSION:     '0.3.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,7 +26,7 @@
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="PyShell 0.2.0 documentation" href="../../../index.html" />
+    <link rel="top" title="PyShell 0.3.0 documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body>
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">PyShell 0.2.0 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">PyShell 0.3.0 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -79,8 +79,6 @@
 <span class="n">ipydb</span><span class="p">()</span>
 
 
-<span class="n">logging</span><span class="o">.</span><span class="n">addLevelName</span><span class="p">(</span><span class="mi">25</span><span class="p">,</span><span class="s">&#39;STATUS&#39;</span><span class="p">)</span>
-
 <span class="k">class</span> <span class="nc">PipelineException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Exceptions in Pipelines&quot;&quot;&quot;</span>
         
@@ -108,7 +106,7 @@
 <span class="s">        (-) Exclude      : To exclude a pipe, use -pipe. </span>
 <span class="s">    </span>
 <span class="s">        To run the simulater, use </span>
-<span class="s">        $ </span><span class="si">%(command)s</span><span class="s"> *all&quot;&quot;&quot;</span> <span class="o">%</span> <span class="n">HelpDict</span>
+<span class="s">        $ </span><span class="si">%(command)s</span><span class="s"> +all&quot;&quot;&quot;</span> <span class="o">%</span> <span class="n">HelpDict</span>
         <span class="k">return</span> <span class="n">ShortHelp</span>
     
     <span class="nd">@property</span>
@@ -306,6 +304,8 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">.</span><span class="n">post_configure</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_opts</span><span class="p">,</span><span class="s">&#39;include&#39;</span><span class="p">,</span><span class="bp">False</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">.</span><span class="n">include</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_opts</span><span class="p">,</span><span class="s">&#39;exclude&#39;</span><span class="p">,</span><span class="bp">False</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">.</span><span class="n">exclude</span> <span class="o">=</span> <span class="p">[]</span>
         
         <span class="k">for</span> <span class="n">cfg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">.</span><span class="n">pre_configure</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
@@ -319,6 +319,8 @@
         <span class="nb">super</span><span class="p">(</span><span class="n">Pipeline</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">parse</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">pipename</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">.</span><span class="n">include</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="n">pipename</span><span class="p">]</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="s">&quot;included&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">pipename</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">.</span><span class="n">exclude</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="n">pipename</span><span class="p">]</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="s">&quot;excluded&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="s">&quot;parsed&quot;</span><span class="p">)</span>
         <span class="n">all_pipe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&quot;all&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="s">&quot;all&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">all_pipe</span>
@@ -350,7 +352,7 @@
     
     <span class="k">def</span> <span class="nf">_unprimed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">pipe</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;docstring for _primed&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="ow">not</span> <span class="n">pipe</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s">&quot;primed&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="n">pipe</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s">&quot;primed&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">pipe</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s">&quot;excluded&quot;</span><span class="p">]</span>
     
     <span class="k">def</span> <span class="nf">_resolve_dependents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">parent_pipe</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Handle dependents for this pipe&quot;&quot;&quot;</span>
@@ -413,13 +415,13 @@
 <div class="viewcode-block" id="Pipeline.start_actions"><a class="viewcode-back" href="../../../pipeline.html#pyshell.pipeline.core.Pipeline.start_actions">[docs]</a>    <span class="k">def</span> <span class="nf">start_actions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Actions completed before running the system.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;System.DryRun&quot;</span><span class="p">,</span><span class="bp">False</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">25</span><span class="p">,</span><span class="s">&quot;(DRYRUN) Starting...&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="s">&quot;(DRYRUN) Starting...&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">25</span><span class="p">,</span><span class="s">&quot;Starting...&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="s">&quot;Starting...&quot;</span><span class="p">)</span>
             </div>
 <div class="viewcode-block" id="Pipeline.end_actions"><a class="viewcode-back" href="../../../pipeline.html#pyshell.pipeline.core.Pipeline.end_actions">[docs]</a>    <span class="k">def</span> <span class="nf">end_actions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Actions completed after running the system.&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">25</span><span class="p">,</span><span class="s">&quot;Finishing...&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="s">&quot;Finishing...&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;Actions.ShowTree&quot;</span><span class="p">,</span><span class="bp">False</span><span class="p">):</span>
             <span class="k">print</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_dependency_tree</span><span class="p">())</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;Actions.Profile&quot;</span><span class="p">,</span><span class="bp">False</span><span class="p">):</span>
@@ -434,9 +436,9 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="n">pipe</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">dry</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;System.DryRun&quot;</span><span class="p">,</span><span class="bp">False</span><span class="p">))</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">SystemExit</span><span class="p">,</span><span class="ne">KeyboardInterrupt</span><span class="p">):</span>
-            <span class="k">print</span><span class="p">(</span><span class="s">&quot; ...killed...&quot;</span><span class="p">)</span> <span class="c">#This accounts for the User&#39;s ^C in the stdout stream.</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s">u&quot;Keyboard Interrupt during </span><span class="si">%(pipe)s</span><span class="s">... ending simulator.&quot;</span> <span class="o">%</span> <span class="p">{</span><span class="s">&#39;pipe&#39;</span><span class="p">:</span><span class="n">pipe</span><span class="o">.</span><span class="n">name</span><span class="p">})</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s">u&quot;Last completed pipe: </span><span class="si">%(pipe)s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">{</span><span class="s">&#39;pipe&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">completed</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]})</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&quot; ...killed... &quot;</span><span class="p">)</span> <span class="c">#This accounts for the User&#39;s ^C in the stdout stream.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s">u&quot;Keyboard Interrupt during </span><span class="si">%(pipe)s</span><span class="s">... ending simulator.&quot;</span> <span class="o">%</span> <span class="p">{</span> <span class="s">&#39;pipe&#39;</span><span class="p">:</span> <span class="n">pipe</span><span class="o">.</span><span class="n">name</span> <span class="p">})</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s">u&quot;Last completed pipe: </span><span class="si">%(pipe)s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">{</span> <span class="s">&#39;pipe&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">completed</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="p">})</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">u&quot;Pipes completed: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">completed</span><span class="p">))</span>
             <span class="k">raise</span>
             </div>
@@ -473,7 +475,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">PyShell 0.2.0 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">PyShell 0.3.0 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

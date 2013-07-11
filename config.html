@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>config — YAML-based Configuration Dictionaries &mdash; PyShell 0.2.0 documentation</title>
+    <title>config — YAML-based Configuration Dictionaries &mdash; PyShell 0.3.0 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.2.0',
+        VERSION:     '0.3.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,7 +26,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="PyShell 0.2.0 documentation" href="index.html" />
+    <link rel="top" title="PyShell 0.3.0 documentation" href="index.html" />
     <link rel="next" title="loggers - Logging made Easy" href="loggers.html" />
     <link rel="prev" title="subcommand – Creating commands with Subcommands" href="subcommand.html" /> 
   </head>
@@ -46,7 +46,7 @@
         <li class="right" >
           <a href="subcommand.html" title="subcommand – Creating commands with Subcommands"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">PyShell 0.2.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">PyShell 0.3.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -63,11 +63,11 @@ behavior by default. They act otherwise like dictionaries, and handle thier
 internal operation using a storage dictionary. The objects also provide a 
 YAML configuration file reading and writing interface.</p>
 <p class="graphviz">
-<img src="_images/inheritance-0e63a69059bf1cd08a3c8a13db81b63e6f05db58.png" alt="Inheritance diagram of pyshell.config.Configuration, pyshell.config.StructuredConfiguration" usemap="#inheritance3a653054bf" class="inheritance"/>
+<img src="_images/inheritance-049c0b8a069c462cba03d3747e7eb90a4cc402a0.png" alt="Inheritance diagram of pyshell.config.Configuration, pyshell.config.StructuredConfiguration" usemap="#inheritance3a653054bf" class="inheritance"/>
 <map id="inheritance3a653054bf" name="inheritance3a653054bf">
-<area shape="rect" id="node9" href="#pyshell.config.Configuration" title="Configuration" alt="" coords="420,35,490,51"/>
+<area shape="rect" id="node1" href="#pyshell.config.DottedConfiguration" title="DottedConfiguration" alt="" coords="521,35,619,51"/>
 <area shape="rect" id="node6" href="#pyshell.config.StructuredConfiguration" title="StructuredConfiguration" alt="" coords="651,35,764,51"/>
-<area shape="rect" id="node7" href="#pyshell.config.DottedConfiguration" title="DottedConfiguration" alt="" coords="521,35,619,51"/>
+<area shape="rect" id="node2" href="#pyshell.config.Configuration" title="Configuration" alt="" coords="420,35,490,51"/>
 </map>
 </p>
 <dl class="function">
@@ -87,6 +87,62 @@ nested dictionary objects.</p>
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyshell.config.force_yaml_unicode">
+<tt class="descclassname">pyshell.config.</tt><tt class="descname">force_yaml_unicode</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pyshell/config.html#force_yaml_unicode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.force_yaml_unicode" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method forces the PyYAML library to construct unicode objects when
+reading YAML instead of producing regular strings.</p>
+<p>It is designed to imporove compatibility in Python2.x using unicode 
+objects.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyshell.config.deepmerge">
+<tt class="descclassname">pyshell.config.</tt><tt class="descname">deepmerge</tt><big>(</big><em>d</em>, <em>u</em>, <em>s</em>, <em>invert=False</em>, <em>inplace=True</em><big>)</big><a class="reference internal" href="_modules/pyshell/config.html#deepmerge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.deepmerge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Merge deep collection-like structures.</p>
+<p>When this function encounters a sequence, the entire sequence from <tt class="docutils literal"><span class="pre">u</span></tt> is considered a single value which replaces any value from <tt class="docutils literal"><span class="pre">d</span></tt>. To allow for merging sequences in <tt class="docutils literal"><span class="pre">u</span></tt> and <tt class="docutils literal"><span class="pre">d</span></tt>, see function <a class="reference internal" href="#pyshell.config.advanceddeepmerge" title="pyshell.config.advanceddeepmerge"><tt class="xref py py-func docutils literal"><span class="pre">advanceddeepmerge()</span></tt></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>d</strong> (<em>dict-like</em>) &#8211; Deep Structure</li>
+<li><strong>u</strong> (<em>dict-like</em>) &#8211; Updated Structure</li>
+<li><strong>s</strong> (<em>dict-like-type</em>) &#8211; Default structure to use when a new deep structure is required.</li>
+<li><strong>invert</strong> (<a class="reference external" href="http://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Whether to do an inverse merge.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p><em>Inverse Merge</em> causes <tt class="docutils literal"><span class="pre">u</span></tt> to only update missing values of <tt class="docutils literal"><span class="pre">d</span></tt>, but does
+so in a deep fashion.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyshell.config.advanceddeepmerge">
+<tt class="descclassname">pyshell.config.</tt><tt class="descname">advanceddeepmerge</tt><big>(</big><em>d</em>, <em>u</em>, <em>s</em>, <em>sequence=True</em>, <em>invert=False</em>, <em>inplace=True</em><big>)</big><a class="reference internal" href="_modules/pyshell/config.html#advanceddeepmerge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.advanceddeepmerge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Merge deep collection-like structures.</p>
+<p>This function will merge sequence structures when they are found. When used with <tt class="docutils literal"><span class="pre">sequence=False</span></tt>, it behaves like <a class="reference internal" href="#pyshell.config.deepmerge" title="pyshell.config.deepmerge"><tt class="xref py py-func docutils literal"><span class="pre">deepmerge()</span></tt></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>d</strong> (<em>dict-like</em>) &#8211; Deep Structure</li>
+<li><strong>u</strong> (<em>dict-like</em>) &#8211; Updated Structure</li>
+<li><strong>s</strong> (<em>dict-like-type</em>) &#8211; Default structure to use when a new deep structure is required.</li>
+<li><strong>sequence</strong> (<a class="reference external" href="http://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Control sequence merging</li>
+<li><strong>invert</strong> (<a class="reference external" href="http://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Whether to do an inverse merge.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p><em>Inverse Merge</em> causes <tt class="docutils literal"><span class="pre">u</span></tt> to only update missing values of <tt class="docutils literal"><span class="pre">d</span></tt>, but does
+so in a deep fashion.</p>
 </dd></dl>
 
 <div class="section" id="basic-configurations-configuration">
@@ -154,10 +210,32 @@ shallow update.</li>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Configuration</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="s">&#39;a&#39;</span><span class="p">:</span><span class="s">&#39;b&#39;</span><span class="p">})</span>
+<p>See <a class="reference internal" href="#pyshell.config.deepmerge" title="pyshell.config.deepmerge"><tt class="xref py py-func docutils literal"><span class="pre">deepmerge()</span></tt></a>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Configuration</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="s">&#39;a&#39;</span><span class="p">:</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">:</span><span class="s">&#39;e&#39;</span><span class="p">})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">merge</span><span class="p">({</span><span class="s">&#39;c&#39;</span><span class="p">:</span><span class="s">&#39;d&#39;</span><span class="p">})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">a</span>
 <span class="go">{&#39;a&#39;: &#39;b&#39;, &#39;c&#39;: &#39;d&#39;}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.config.Configuration.imerge">
+<tt class="descname">imerge</tt><big>(</big><em>other</em><big>)</big><a class="reference internal" href="_modules/pyshell/config.html#Configuration.imerge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.Configuration.imerge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inverse <a class="reference internal" href="#pyshell.config.Configuration.merge" title="pyshell.config.Configuration.merge"><tt class="xref py py-meth docutils literal"><span class="pre">merge()</span></tt></a>, where <tt class="docutils literal"><span class="pre">other</span></tt> will be considered original, and this object will be canonical.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> (<em>dict-like</em>) &#8211; The other dictionary to be merged.</td>
+</tr>
+</tbody>
+</table>
+<p>See <a class="reference internal" href="#pyshell.config.deepmerge" title="pyshell.config.deepmerge"><tt class="xref py py-func docutils literal"><span class="pre">deepmerge()</span></tt></a>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Configuration</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="s">&#39;a&#39;</span><span class="p">:</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">:</span><span class="s">&#39;e&#39;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">imerge</span><span class="p">({</span><span class="s">&#39;c&#39;</span><span class="p">:</span><span class="s">&#39;d&#39;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span>
+<span class="go">{&#39;a&#39;: &#39;b&#39;, &#39;c&#39;: &#39;e&#39;}</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -271,7 +349,7 @@ parsing configuration command line options.</p>
 
 <dl class="method">
 <dt id="pyshell.config.Configuration.load_resource">
-<tt class="descname">load_resource</tt><big>(</big><em>module</em>, <em>filename</em>, <em>silent=True</em><big>)</big><a class="headerlink" href="#pyshell.config.Configuration.load_resource" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">load_resource</tt><big>(</big><em>module</em>, <em>filename</em>, <em>silent=True</em><big>)</big><a class="reference internal" href="_modules/pyshell/config.html#Configuration.load_resource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.Configuration.load_resource" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load from a resource filename</p>
 </dd></dl>
 
@@ -329,7 +407,7 @@ resolution order of configuration files for this method.</p>
 
 <dl class="classmethod">
 <dt id="pyshell.config.Configuration.fromresource">
-<em class="property">classmethod </em><tt class="descname">fromresource</tt><big>(</big><em>module</em>, <em>filename</em><big>)</big><a class="headerlink" href="#pyshell.config.Configuration.fromresource" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><tt class="descname">fromresource</tt><big>(</big><em>module</em>, <em>filename</em><big>)</big><a class="reference internal" href="_modules/pyshell/config.html#Configuration.fromresource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.Configuration.fromresource" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a configuration from a resource filename pair.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -347,7 +425,7 @@ resolution order of configuration files for this method.</p>
 
 <dl class="classmethod">
 <dt id="pyshell.config.Configuration.make">
-<em class="property">classmethod </em><tt class="descname">make</tt><big>(</big><em>base</em><big>)</big><a class="headerlink" href="#pyshell.config.Configuration.make" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><tt class="descname">make</tt><big>(</big><em>base</em><big>)</big><a class="reference internal" href="_modules/pyshell/config.html#Configuration.make"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.Configuration.make" title="Permalink to this definition">¶</a></dt>
 <dd><p>Make a configuration from the input object <tt class="docutils literal"><span class="pre">base</span></tt>.</p>
 <p>Acceptable Inputs:</p>
 <ul class="simple">
@@ -388,6 +466,11 @@ resolution order of configuration files for this method.</p>
 <span class="go">10</span>
 </pre></div>
 </div>
+<dl class="method">
+<dt id="pyshell.config.DottedConfiguration.clear">
+<tt class="descname">clear</tt><big>(</big><big>)</big> &rarr; None.  Remove all items from D.<a class="headerlink" href="#pyshell.config.DottedConfiguration.clear" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="method">
 <dt id="pyshell.config.DottedConfiguration.configure">
 <tt class="descname">configure</tt><big>(</big><em>module='pyshell.config'</em>, <em>defaultcfg=False</em>, <em>cfg=False</em>, <em>supercfg=None</em><big>)</big><a class="headerlink" href="#pyshell.config.DottedConfiguration.configure" title="Permalink to this definition">¶</a></dt>
@@ -486,6 +569,57 @@ most recently</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="pyshell.config.DottedConfiguration.get">
+<tt class="descname">get</tt><big>(</big><em>k</em><span class="optional">[</span>, <em>d</em><span class="optional">]</span><big>)</big> &rarr; D[k] if k in D, else d.  d defaults to None.<a class="headerlink" href="#pyshell.config.DottedConfiguration.get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyshell.config.DottedConfiguration.imerge">
+<tt class="descname">imerge</tt><big>(</big><em>other</em><big>)</big><a class="headerlink" href="#pyshell.config.DottedConfiguration.imerge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inverse <a class="reference internal" href="#pyshell.config.DottedConfiguration.merge" title="pyshell.config.DottedConfiguration.merge"><tt class="xref py py-meth docutils literal"><span class="pre">merge()</span></tt></a>, where <tt class="docutils literal"><span class="pre">other</span></tt> will be considered original, and this object will be canonical.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> (<em>dict-like</em>) &#8211; The other dictionary to be merged.</td>
+</tr>
+</tbody>
+</table>
+<p>See <a class="reference internal" href="#pyshell.config.deepmerge" title="pyshell.config.deepmerge"><tt class="xref py py-func docutils literal"><span class="pre">deepmerge()</span></tt></a>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Configuration</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="s">&#39;a&#39;</span><span class="p">:</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">:</span><span class="s">&#39;e&#39;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">imerge</span><span class="p">({</span><span class="s">&#39;c&#39;</span><span class="p">:</span><span class="s">&#39;d&#39;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span>
+<span class="go">{&#39;a&#39;: &#39;b&#39;, &#39;c&#39;: &#39;e&#39;}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.config.DottedConfiguration.items">
+<tt class="descname">items</tt><big>(</big><big>)</big> &rarr; list of D's (key, value) pairs, as 2-tuples<a class="headerlink" href="#pyshell.config.DottedConfiguration.items" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyshell.config.DottedConfiguration.iteritems">
+<tt class="descname">iteritems</tt><big>(</big><big>)</big> &rarr; an iterator over the (key, value) items of D<a class="headerlink" href="#pyshell.config.DottedConfiguration.iteritems" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyshell.config.DottedConfiguration.iterkeys">
+<tt class="descname">iterkeys</tt><big>(</big><big>)</big> &rarr; an iterator over the keys of D<a class="headerlink" href="#pyshell.config.DottedConfiguration.iterkeys" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyshell.config.DottedConfiguration.itervalues">
+<tt class="descname">itervalues</tt><big>(</big><big>)</big> &rarr; an iterator over the values of D<a class="headerlink" href="#pyshell.config.DottedConfiguration.itervalues" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyshell.config.DottedConfiguration.keys">
+<tt class="descname">keys</tt><big>(</big><big>)</big> &rarr; list of D's keys<a class="headerlink" href="#pyshell.config.DottedConfiguration.keys" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="pyshell.config.DottedConfiguration.load">
 <tt class="descname">load</tt><big>(</big><em>filename</em>, <em>silent=True</em>, <em>fname=None</em><big>)</big><a class="headerlink" href="#pyshell.config.DottedConfiguration.load" title="Permalink to this definition">¶</a></dt>
 <dd><p>Loads a configuration from a yaml file, and merges it into 
@@ -545,7 +679,8 @@ error.</li>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Configuration</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="s">&#39;a&#39;</span><span class="p">:</span><span class="s">&#39;b&#39;</span><span class="p">})</span>
+<p>See <a class="reference internal" href="#pyshell.config.deepmerge" title="pyshell.config.deepmerge"><tt class="xref py py-func docutils literal"><span class="pre">deepmerge()</span></tt></a>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Configuration</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="s">&#39;a&#39;</span><span class="p">:</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">:</span><span class="s">&#39;e&#39;</span><span class="p">})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">merge</span><span class="p">({</span><span class="s">&#39;c&#39;</span><span class="p">:</span><span class="s">&#39;d&#39;</span><span class="p">})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">a</span>
 <span class="go">{&#39;a&#39;: &#39;b&#39;, &#39;c&#39;: &#39;d&#39;}</span>
@@ -577,6 +712,18 @@ the Abstract-Syntax Tree features in python. There is great power in
 using this method with dotted configurations, as <tt class="docutils literal"><span class="pre">foo.bat=bar</span></tt> will
 get parsed to  <tt class="docutils literal"><span class="pre">self[&quot;foo.bat&quot;]</span> <span class="pre">=</span> <span class="pre">&quot;bar&quot;</span></tt>.  This is useful for 
 parsing configuration command line options.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.config.DottedConfiguration.pop">
+<tt class="descname">pop</tt><big>(</big><em>k</em><span class="optional">[</span>, <em>d</em><span class="optional">]</span><big>)</big> &rarr; v, remove specified key and return the corresponding value.<a class="headerlink" href="#pyshell.config.DottedConfiguration.pop" title="Permalink to this definition">¶</a></dt>
+<dd><p>If key is not found, d is returned if given, otherwise KeyError is raised.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.config.DottedConfiguration.popitem">
+<tt class="descname">popitem</tt><big>(</big><big>)</big> &rarr; (k, v), remove and return some (key, value) pair<a class="headerlink" href="#pyshell.config.DottedConfiguration.popitem" title="Permalink to this definition">¶</a></dt>
+<dd><p>as a 2-tuple; but raise KeyError if D is empty.</p>
 </dd></dl>
 
 <dl class="method">
@@ -616,6 +763,11 @@ the <tt class="docutils literal"><span class="pre">.yaml</span></tt> or <tt clas
 </table>
 </dd></dl>
 
+<dl class="method">
+<dt id="pyshell.config.DottedConfiguration.setdefault">
+<tt class="descname">setdefault</tt><big>(</big><em>k</em><span class="optional">[</span>, <em>d</em><span class="optional">]</span><big>)</big> &rarr; D.get(k,d), also set D[k]=d if k not in D<a class="headerlink" href="#pyshell.config.DottedConfiguration.setdefault" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="attribute">
 <dt id="pyshell.config.DottedConfiguration.store">
 <tt class="descname">store</tt><a class="headerlink" href="#pyshell.config.DottedConfiguration.store" title="Permalink to this definition">¶</a></dt>
@@ -643,6 +795,11 @@ shallow update.</li>
 </table>
 </dd></dl>
 
+<dl class="method">
+<dt id="pyshell.config.DottedConfiguration.values">
+<tt class="descname">values</tt><big>(</big><big>)</big> &rarr; list of D's values<a class="headerlink" href="#pyshell.config.DottedConfiguration.values" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 </div>
@@ -656,7 +813,7 @@ shallow update.</li>
 <ol class="arabic">
 <li><p class="first">Configurations are stored in a &#8220;Configurations&#8221; variable set. 
 They can then be loaded by configuration key instead of filename, 
-using the <a class="reference internal" href="#pyshell.config.StructuredConfiguration.setFile" title="pyshell.config.StructuredConfiguration.setFile"><tt class="xref py py-meth docutils literal"><span class="pre">setFile()</span></tt></a> method to set the filename, and then 
+using the <tt class="xref py py-meth docutils literal"><span class="pre">setFile()</span></tt> method to set the filename, and then 
 calling <a class="reference internal" href="#pyshell.config.StructuredConfiguration.load" title="pyshell.config.StructuredConfiguration.load"><tt class="xref py py-meth docutils literal"><span class="pre">load()</span></tt></a> or meth:<cite>save</cite> with no arguments.</p>
 </li>
 <li><p class="first">Configuration variables can be accessed and set with dot-qualified 
@@ -680,10 +837,42 @@ names. E.g.:</p>
 </pre></div>
 </div>
 <dl class="attribute">
+<dt id="pyshell.config.StructuredConfiguration.metadata">
+<tt class="descname">metadata</tt><a class="reference internal" href="_modules/pyshell/config.html#StructuredConfiguration.metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.StructuredConfiguration.metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>The metadata dictionary</p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="pyshell.config.StructuredConfiguration.files">
 <tt class="descname">files</tt><a class="reference internal" href="_modules/pyshell/config.html#StructuredConfiguration.files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.StructuredConfiguration.files" title="Permalink to this definition">¶</a></dt>
 <dd><p>The set of loaded filenames</p>
 </dd></dl>
+
+<dl class="attribute">
+<dt id="pyshell.config.StructuredConfiguration.hash">
+<tt class="descname">hash</tt><a class="reference internal" href="_modules/pyshell/config.html#StructuredConfiguration.hash"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.StructuredConfiguration.hash" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the HexDigest hash</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.config.StructuredConfiguration.set_file">
+<tt class="descname">set_file</tt><big>(</big><em>filename=None</em><big>)</big><a class="reference internal" href="_modules/pyshell/config.html#StructuredConfiguration.set_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.StructuredConfiguration.set_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the default/current configuration file for this configuration.</p>
+<p>The configuration file set by this method will be used next time <a class="reference internal" href="#pyshell.config.StructuredConfiguration.load" title="pyshell.config.StructuredConfiguration.load"><tt class="xref py py-meth docutils literal"><span class="pre">load()</span></tt></a> or <a class="reference internal" href="#pyshell.config.StructuredConfiguration.save" title="pyshell.config.StructuredConfiguration.save"><tt class="xref py py-meth docutils literal"><span class="pre">save()</span></tt></a> is called with no filename.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<a class="reference external" href="http://docs.python.org/2/library/string.html#string" title="(in Python v2.7)"><em>string</em></a>) &#8211; The filename to load from.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.config.StructuredConfiguration.clear">
+<tt class="descname">clear</tt><big>(</big><big>)</big> &rarr; None.  Remove all items from D.<a class="headerlink" href="#pyshell.config.StructuredConfiguration.clear" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="pyshell.config.StructuredConfiguration.configure">
@@ -783,6 +972,57 @@ most recently</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="pyshell.config.StructuredConfiguration.get">
+<tt class="descname">get</tt><big>(</big><em>k</em><span class="optional">[</span>, <em>d</em><span class="optional">]</span><big>)</big> &rarr; D[k] if k in D, else d.  d defaults to None.<a class="headerlink" href="#pyshell.config.StructuredConfiguration.get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyshell.config.StructuredConfiguration.imerge">
+<tt class="descname">imerge</tt><big>(</big><em>other</em><big>)</big><a class="headerlink" href="#pyshell.config.StructuredConfiguration.imerge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inverse <a class="reference internal" href="#pyshell.config.StructuredConfiguration.merge" title="pyshell.config.StructuredConfiguration.merge"><tt class="xref py py-meth docutils literal"><span class="pre">merge()</span></tt></a>, where <tt class="docutils literal"><span class="pre">other</span></tt> will be considered original, and this object will be canonical.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> (<em>dict-like</em>) &#8211; The other dictionary to be merged.</td>
+</tr>
+</tbody>
+</table>
+<p>See <a class="reference internal" href="#pyshell.config.deepmerge" title="pyshell.config.deepmerge"><tt class="xref py py-func docutils literal"><span class="pre">deepmerge()</span></tt></a>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Configuration</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="s">&#39;a&#39;</span><span class="p">:</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">:</span><span class="s">&#39;e&#39;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">imerge</span><span class="p">({</span><span class="s">&#39;c&#39;</span><span class="p">:</span><span class="s">&#39;d&#39;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span>
+<span class="go">{&#39;a&#39;: &#39;b&#39;, &#39;c&#39;: &#39;e&#39;}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.config.StructuredConfiguration.items">
+<tt class="descname">items</tt><big>(</big><big>)</big> &rarr; list of D's (key, value) pairs, as 2-tuples<a class="headerlink" href="#pyshell.config.StructuredConfiguration.items" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyshell.config.StructuredConfiguration.iteritems">
+<tt class="descname">iteritems</tt><big>(</big><big>)</big> &rarr; an iterator over the (key, value) items of D<a class="headerlink" href="#pyshell.config.StructuredConfiguration.iteritems" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyshell.config.StructuredConfiguration.iterkeys">
+<tt class="descname">iterkeys</tt><big>(</big><big>)</big> &rarr; an iterator over the keys of D<a class="headerlink" href="#pyshell.config.StructuredConfiguration.iterkeys" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyshell.config.StructuredConfiguration.itervalues">
+<tt class="descname">itervalues</tt><big>(</big><big>)</big> &rarr; an iterator over the values of D<a class="headerlink" href="#pyshell.config.StructuredConfiguration.itervalues" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyshell.config.StructuredConfiguration.keys">
+<tt class="descname">keys</tt><big>(</big><big>)</big> &rarr; list of D's keys<a class="headerlink" href="#pyshell.config.StructuredConfiguration.keys" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="pyshell.config.StructuredConfiguration.load_resource">
 <tt class="descname">load_resource</tt><big>(</big><em>module</em>, <em>filename</em>, <em>silent=True</em><big>)</big><a class="headerlink" href="#pyshell.config.StructuredConfiguration.load_resource" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load from a resource filename</p>
@@ -814,7 +1054,8 @@ most recently</p>
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Configuration</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="s">&#39;a&#39;</span><span class="p">:</span><span class="s">&#39;b&#39;</span><span class="p">})</span>
+<p>See <a class="reference internal" href="#pyshell.config.deepmerge" title="pyshell.config.deepmerge"><tt class="xref py py-func docutils literal"><span class="pre">deepmerge()</span></tt></a>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Configuration</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="s">&#39;a&#39;</span><span class="p">:</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">:</span><span class="s">&#39;e&#39;</span><span class="p">})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">merge</span><span class="p">({</span><span class="s">&#39;c&#39;</span><span class="p">:</span><span class="s">&#39;d&#39;</span><span class="p">})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">a</span>
 <span class="go">{&#39;a&#39;: &#39;b&#39;, &#39;c&#39;: &#39;d&#39;}</span>
@@ -849,6 +1090,18 @@ parsing configuration command line options.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="pyshell.config.StructuredConfiguration.pop">
+<tt class="descname">pop</tt><big>(</big><em>k</em><span class="optional">[</span>, <em>d</em><span class="optional">]</span><big>)</big> &rarr; v, remove specified key and return the corresponding value.<a class="headerlink" href="#pyshell.config.StructuredConfiguration.pop" title="Permalink to this definition">¶</a></dt>
+<dd><p>If key is not found, d is returned if given, otherwise KeyError is raised.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.config.StructuredConfiguration.popitem">
+<tt class="descname">popitem</tt><big>(</big><big>)</big> &rarr; (k, v), remove and return some (key, value) pair<a class="headerlink" href="#pyshell.config.StructuredConfiguration.popitem" title="Permalink to this definition">¶</a></dt>
+<dd><p>as a 2-tuple; but raise KeyError if D is empty.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="pyshell.config.StructuredConfiguration.renest">
 <tt class="descname">renest</tt><big>(</big><em>deep_nest_type=None</em><big>)</big><a class="headerlink" href="#pyshell.config.StructuredConfiguration.renest" title="Permalink to this definition">¶</a></dt>
 <dd><p>Re-nest this object. This method applies the 
@@ -866,10 +1119,25 @@ configuration object.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="pyshell.config.StructuredConfiguration.setFile">
-<tt class="descname">setFile</tt><big>(</big><em>filename=None</em>, <em>name=None</em><big>)</big><a class="reference internal" href="_modules/pyshell/config.html#StructuredConfiguration.setFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.StructuredConfiguration.setFile" title="Permalink to this definition">¶</a></dt>
-<dd><p>Depricated Method</p>
+<dt id="pyshell.config.StructuredConfiguration.save">
+<tt class="descname">save</tt><big>(</big><em>filename=None</em>, <em>silent=True</em><big>)</big><a class="reference internal" href="_modules/pyshell/config.html#StructuredConfiguration.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.StructuredConfiguration.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the configuration to a YAML file. If <tt class="docutils literal"><span class="pre">filename</span></tt> is not 
+provided, the configuration will use the file set by <tt class="xref py py-meth docutils literal"><span class="pre">setFile()</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<a class="reference external" href="http://docs.python.org/2/library/string.html#string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Destination filename.</td>
+</tr>
+</tbody>
+</table>
+<p>Uses <a class="reference internal" href="#pyshell.config.Configuration.save" title="pyshell.config.Configuration.save"><tt class="xref py py-meth docutils literal"><span class="pre">Configuration.save()</span></tt></a>.</p>
 </dd></dl>
+
+<dl class="method">
+<dt id="pyshell.config.StructuredConfiguration.setdefault">
+<tt class="descname">setdefault</tt><big>(</big><em>k</em><span class="optional">[</span>, <em>d</em><span class="optional">]</span><big>)</big> &rarr; D.get(k,d), also set D[k]=d if k not in D<a class="headerlink" href="#pyshell.config.StructuredConfiguration.setdefault" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="attribute">
 <dt id="pyshell.config.StructuredConfiguration.store">
@@ -899,46 +1167,16 @@ shallow update.</li>
 </dd></dl>
 
 <dl class="method">
-<dt id="pyshell.config.StructuredConfiguration.set_file">
-<tt class="descname">set_file</tt><big>(</big><em>filename=None</em>, <em>name=None</em><big>)</big><a class="reference internal" href="_modules/pyshell/config.html#StructuredConfiguration.set_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.StructuredConfiguration.set_file" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set the default/current configuration file for this configuration.</p>
-<p>The configuration file set by this method will be used next time <a class="reference internal" href="#pyshell.config.StructuredConfiguration.load" title="pyshell.config.StructuredConfiguration.load"><tt class="xref py py-meth docutils literal"><span class="pre">load()</span></tt></a> or <a class="reference internal" href="#pyshell.config.StructuredConfiguration.save" title="pyshell.config.StructuredConfiguration.save"><tt class="xref py py-meth docutils literal"><span class="pre">save()</span></tt></a> is called with no filename.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>filename</strong> (<a class="reference external" href="http://docs.python.org/2/library/string.html#string" title="(in Python v2.7)"><em>string</em></a>) &#8211; The filename to load from.</li>
-<li><strong>name</strong> (<a class="reference external" href="http://docs.python.org/2/library/string.html#string" title="(in Python v2.7)"><em>string</em></a>) &#8211; The name key for the file.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyshell.config.StructuredConfiguration.save">
-<tt class="descname">save</tt><big>(</big><em>filename=None</em>, <em>silent=True</em><big>)</big><a class="reference internal" href="_modules/pyshell/config.html#StructuredConfiguration.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.StructuredConfiguration.save" title="Permalink to this definition">¶</a></dt>
-<dd><p>Save the configuration to a YAML file. If <tt class="docutils literal"><span class="pre">filename</span></tt> is not 
-provided, the configuration will use the file set by <a class="reference internal" href="#pyshell.config.StructuredConfiguration.setFile" title="pyshell.config.StructuredConfiguration.setFile"><tt class="xref py py-meth docutils literal"><span class="pre">setFile()</span></tt></a>.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<a class="reference external" href="http://docs.python.org/2/library/string.html#string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Destination filename.</td>
-</tr>
-</tbody>
-</table>
-<p>Uses <a class="reference internal" href="#pyshell.config.Configuration.save" title="pyshell.config.Configuration.save"><tt class="xref py py-meth docutils literal"><span class="pre">Configuration.save()</span></tt></a>.</p>
-</dd></dl>
+<dt id="pyshell.config.StructuredConfiguration.values">
+<tt class="descname">values</tt><big>(</big><big>)</big> &rarr; list of D's values<a class="headerlink" href="#pyshell.config.StructuredConfiguration.values" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="pyshell.config.StructuredConfiguration.load">
 <tt class="descname">load</tt><big>(</big><em>filename=None</em>, <em>silent=True</em>, <em>fname=None</em><big>)</big><a class="reference internal" href="_modules/pyshell/config.html#StructuredConfiguration.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.StructuredConfiguration.load" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load the configuration to a YAML file. If <tt class="docutils literal"><span class="pre">filename</span></tt> is 
 not provided, the configuration will use the file set by 
-<a class="reference internal" href="#pyshell.config.StructuredConfiguration.setFile" title="pyshell.config.StructuredConfiguration.setFile"><tt class="xref py py-meth docutils literal"><span class="pre">setFile()</span></tt></a>.</p>
+<tt class="xref py py-meth docutils literal"><span class="pre">setFile()</span></tt>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1018,7 +1256,7 @@ not provided, the configuration will use the file set by
         <li class="right" >
           <a href="subcommand.html" title="subcommand – Creating commands with Subcommands"
              >previous</a> |</li>
-        <li><a href="index.html">PyShell 0.2.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">PyShell 0.3.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

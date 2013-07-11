@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pyshell.subcommand &mdash; PyShell 0.2.0 documentation</title>
+    <title>pyshell.subcommand &mdash; PyShell 0.3.0 documentation</title>
     
     <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.2.0',
+        VERSION:     '0.3.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,7 +26,7 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="PyShell 0.2.0 documentation" href="../../index.html" />
+    <link rel="top" title="PyShell 0.3.0 documentation" href="../../index.html" />
     <link rel="up" title="Module code" href="../index.html" /> 
   </head>
   <body>
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">PyShell 0.2.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">PyShell 0.3.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -64,6 +64,7 @@
 <span class="sd">:mod:`subcommand` – Creating commands with Subcommands</span>
 <span class="sd">======================================================</span>
 
+<span class="sd">This module provides scaffolding for subcommand classes. Individual subcommands are defined in :class:`SCEngine`. :class:`SCEngine` is a drop-in replacement for :class:`~pyshell.base.CLIEngine`. Then add each class to the :attr:`SCController.subEngines` list on a subclass of :class:`SCController`. :class:`SCController` can be run the same way :class:`~pyshell.base.CLIEngine` works. Both :class:`SCController` and :class:`SCEngine` are subclasses of :class:`~pyshell.base.CLIEngine` and should behave naturally with a :class:`~pyshell.base.CLIEngine`-style configuration.</span>
 
 <span class="sd">Base Class API Documentation</span>
 <span class="sd">----------------------------</span>
@@ -71,11 +72,13 @@
 <span class="sd">.. autoclass::</span>
 <span class="sd">    SCEngine</span>
 <span class="sd">    :members:</span>
+<span class="sd">    :exclude-members: start, end</span>
 <span class="sd">    :inherited-members:</span>
 <span class="sd">    </span>
 <span class="sd">.. autoclass::</span>
 <span class="sd">    SCController</span>
 <span class="sd">    :members:</span>
+<span class="sd">    :exclude-members: start, end</span>
 <span class="sd">    :inherited-members:</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
@@ -87,7 +90,12 @@
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;SCEngine&#39;</span><span class="p">,</span><span class="s">&#39;SCController&#39;</span><span class="p">]</span>
 
 <div class="viewcode-block" id="SCEngine"><a class="viewcode-back" href="../../subcommand.html#pyshell.subcommand.SCEngine">[docs]</a><span class="k">class</span> <span class="nc">SCEngine</span><span class="p">(</span><span class="n">CLIEngine</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A base engine for use as a subcommand to CLIEngine&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;A base engine for use as a subcommand or stand-alone command like :class:`~pyshell.base.CLIEngine`. When used as a sub-command, it should be attached to a :class:`SCController` to act as the base command.</span>
+<span class="sd">    </span>
+<span class="sd">    :param command: The command name for this object. It can also be set as a class attribute: `cls.command` It cannot be changed once the program has initialized.</span>
+<span class="sd">    </span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="n">supercfg</span> <span class="o">=</span> <span class="p">[]</span>
     
@@ -97,10 +105,24 @@
         <span class="n">prefix_chars</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;prefix_chars&#39;</span><span class="p">,</span><span class="s">&quot;-&quot;</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">SCEngine</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">prefix_chars</span><span class="o">=</span><span class="n">prefix_chars</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_hasinit</span> <span class="o">=</span> <span class="bp">False</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">command</span> <span class="o">=</span> <span class="n">command</span> <span class="k">if</span> <span class="n">command</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="k">else</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="s">&#39;command&#39;</span><span class="p">,</span><span class="s">&quot;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_command</span> <span class="o">=</span> <span class="n">command</span> <span class="k">if</span> <span class="n">command</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="k">else</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="s">&#39;_command&#39;</span><span class="p">,</span><span class="s">&quot;&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_kwargs</span> <span class="o">=</span> <span class="n">kwargs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_supercommand</span> <span class="o">=</span> <span class="bp">False</span>
         
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;docstring for command&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_command</span>
+        
+        
+    <span class="nd">@command.setter</span>
+<div class="viewcode-block" id="SCEngine.command"><a class="viewcode-back" href="../../subcommand.html#pyshell.subcommand.SCEngine.command">[docs]</a>    <span class="k">def</span> <span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;docstring for command&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hasinit</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_command</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s">&quot;Cannot change command name once parsers have initialized.&quot;</span><span class="p">)</span>
+        </div>
     <span class="nd">@property</span>
 <div class="viewcode-block" id="SCEngine.help"><a class="viewcode-back" href="../../subcommand.html#pyshell.subcommand.SCEngine.help">[docs]</a>    <span class="k">def</span> <span class="nf">help</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;The help for this sub-parser or parses&quot;&quot;&quot;</span>
@@ -168,30 +190,28 @@
 <div class="viewcode-block" id="SCController"><a class="viewcode-back" href="../../subcommand.html#pyshell.subcommand.SCController">[docs]</a><span class="k">class</span> <span class="nc">SCController</span><span class="p">(</span><span class="n">CLIEngine</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;An engine for the creation of python packages&quot;&quot;&quot;</span>
     
-    <span class="n">_subEngines</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">subEngines</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="sd">&quot;&quot;&quot;A list of :class:`SCEngine` subclasses which define the subcommands</span>
+<span class="sd">    for this engine. This is the only attribute required for a working :class:`SCController`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="n">_subparsers_help</span> <span class="o">=</span> <span class="s">&quot;sub-command help&quot;</span>
     
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s">&#39;conflict_handler&#39;</span><span class="p">,</span><span class="s">&#39;resolve&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="s">&#39;_subEngines&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">subEngines</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subEngines</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">SCController</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_limited_help</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_subcommand</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">subEngine</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subEngines</span><span class="p">:</span>
-            <span class="c"># For specific cases, where the master engine sets the module name, pass that module name</span>
-            <span class="c"># on to subEngines before they are instantiated.</span>
-            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="s">&#39;module&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">subEngine</span><span class="p">,</span><span class="s">&#39;module&#39;</span><span class="p">)</span> <span class="ow">or</span>
-                <span class="nb">getattr</span><span class="p">(</span><span class="n">subEngine</span><span class="o">.</span><span class="n">module</span><span class="p">,</span><span class="s">&#39;__isabstractmethod__&#39;</span><span class="p">,</span><span class="bp">False</span><span class="p">)):</span>
-                <span class="n">subEngine</span><span class="o">.</span><span class="n">module</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">module</span>
-            <span class="c"># Since type-instatiation has already happened, we hook into the shenanigans below.</span>
-            <span class="c"># TODO: Degrade gracefully for python&lt;2.7</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">subEngine</span><span class="p">,</span><span class="s">&#39;__abstractmethods__&#39;</span><span class="p">,</span><span class="bp">None</span><span class="p">),</span><span class="nb">frozenset</span><span class="p">)</span> <span class="ow">and</span> <span class="s">&#39;module&#39;</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">subEngine</span><span class="p">,</span><span class="s">&#39;__abstractmethods__&#39;</span><span class="p">,</span><span class="nb">set</span><span class="p">()):</span>
-                <span class="n">subEngine</span><span class="o">.</span><span class="n">__abstractmethods__</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">subEngine</span><span class="o">.</span><span class="n">__abstractmethods__</span><span class="p">)</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s">&#39;module&#39;</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">subEngine</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">subEngines</span><span class="p">:</span>
             <span class="n">subCommand</span> <span class="o">=</span> <span class="n">subEngine</span><span class="p">()</span>
             <span class="n">subCommand</span><span class="o">.</span><span class="n">_supercommand</span> <span class="o">=</span> <span class="bp">self</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_subcommand</span><span class="p">[</span><span class="n">subCommand</span><span class="o">.</span><span class="n">command</span><span class="p">]</span> <span class="o">=</span> <span class="n">subCommand</span>
+            <span class="c"># This is important, as it passes the subCommand&#39;s super configuration on.</span>
+            <span class="c"># We might want something that passes the full configuration chain down...</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">supercfg</span> <span class="o">+=</span> <span class="n">subCommand</span><span class="o">.</span><span class="n">supercfg</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subEngines</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">subEngines</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_subparsers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parser</span><span class="o">.</span><span class="n">add_subparsers</span><span class="p">(</span><span class="n">dest</span><span class="o">=</span><span class="s">&#39;mode&#39;</span><span class="p">,</span><span class="n">help</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_subparsers_help</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%r</span><span class="s"> No SubEngines attached.&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="p">)</span>
@@ -213,20 +233,18 @@
         <span class="sd">&quot;&quot;&quot;The active subcommand.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subcommand</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">]</span>
         </div>
-<div class="viewcode-block" id="SCController.start"><a class="viewcode-back" href="../../subcommand.html#pyshell.subcommand.SCController.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;docstring for start&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">subcommand</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
-        </div>
+        
 <div class="viewcode-block" id="SCController.do"><a class="viewcode-back" href="../../subcommand.html#pyshell.subcommand.SCController.do">[docs]</a>    <span class="k">def</span> <span class="nf">do</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;docstring for start&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Call the subcommand :meth:`~SCEngine.do` method.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">subcommand</span><span class="o">.</span><span class="n">do</span><span class="p">()</span>
         </div>
-<div class="viewcode-block" id="SCController.end"><a class="viewcode-back" href="../../subcommand.html#pyshell.subcommand.SCController.end">[docs]</a>    <span class="k">def</span> <span class="nf">end</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;docstring for end&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">end</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">subcommand</span><span class="o">.</span><span class="n">end</span><span class="p">()</span>
-        </div>
+        
 <div class="viewcode-block" id="SCController.kill"><a class="viewcode-back" href="../../subcommand.html#pyshell.subcommand.SCController.kill">[docs]</a>    <span class="k">def</span> <span class="nf">kill</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Killing mid-command&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Killing mid-command, calls the active subcommand :meth:`~SCEngine.kill` method.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">subcommand</span><span class="o">.</span><span class="n">kill</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_exitcode</span> <span class="o">=</span> <span class="mi">1</span>
     </div>
@@ -247,7 +265,9 @@
         <span class="sd">&quot;&quot;&quot;Configure the package creator&quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">SCController</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">configure</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">subcommand</span><span class="o">.</span><span class="n">__superconfig__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">_opts</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subcommand</span><span class="o">.</span><span class="n">before_configure</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">subcommand</span><span class="o">.</span><span class="n">configure</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subcommand</span><span class="o">.</span><span class="n">after_configure</span><span class="p">()</span>
         
         </div></div>
 </pre></div>
@@ -283,7 +303,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">PyShell 0.2.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">PyShell 0.3.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>
