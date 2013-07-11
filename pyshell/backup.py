@@ -82,13 +82,14 @@ class _BackupDestination(object):
         else:
             return [self.origin, self.destination]
         
-    def launch(self,args,delete=False,prints=False,reverse=False):
+    def launch(self,args,delete=False,prints=False,reverse=None):
         """Launch this process with the sequence of arguments."""
         if not isinstance(self.origin,basestring) or not isinstance(self.destination,basestring) \
             or not isinstance(self.delete,bool):
-            raise ValueError("Mode {mode} is incomplete.".format(mode=mode))
+            raise ValueError("Mode {mode} is incomplete.".format(mode=self.name))
         
-        self.reverse = reverse
+        if reverse is not None:
+            self.reverse = reverse
         
         # Check that the mode isn't running, and that the mode's
         # destination and origin directories exist.

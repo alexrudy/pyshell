@@ -12,6 +12,73 @@ from pkg_resources import resource_filename
 import nose.tools as nt
 import os
 
+class test_config(object):
+    """pyshell.config"""
+    def setup(self):
+        self.test_dict_A = {"Hi":{"A":1,"B":2,"D":[1,2]},}
+        self.test_dict_B = {"Hi":{"A":3,"C":4,"D":[3,4]},}
+        self.test_dict_C = {"Hi":{"A":3,"B":2,"C":4,"D":[3,4]},} #Should be a merge of A and B
+        self.test_dict_D = {"Hi":{"A":3,"B":2,"C":4,"D":[1,2,3,4]},} #Should be a merge of A and B
+    
+    def test_reformat(self):
+        """reformat(d, nt)"""
+        class nft(dict):
+            pass
+        
+        rft = config.reformat(self.test_dict_C, nft)
+        nt.ok_(isinstance(rft, nft))
+        nt.ok_(isinstance(rft["Hi"], nft))
+        nt.assert_false(isinstance(self.test_dict_C, nft))
+    
+    def test_deepmerge(self):
+        """deepmerge(d, u, s)"""
+        res = config.deepmerge(self.test_dict_A, self.test_dict_B, dict)
+        nt.eq_(self.test_dict_A, self.test_dict_C)
+        nt.eq_(res, self.test_dict_C)
+    
+    def test_deepmerge_ip(self):
+        """deepmerge(d, u, s, inplace=False)"""
+        res = config.deepmerge(self.test_dict_A, self.test_dict_B, dict, inplace=False)
+        nt.assert_not_equal(self.test_dict_A, self.test_dict_C)
+        nt.eq_(res,self.test_dict_C)
+    
+    def test_deepmerge_i(self):
+        """deepmerge(d, u, s, invert=True)"""
+        res = config.deepmerge(self.test_dict_B, self.test_dict_A, dict, invert=True)
+        nt.eq_(self.test_dict_B, self.test_dict_C)
+        nt.eq_(res, self.test_dict_C)
+    
+    def test_deepmerge_ip_i(self):
+        """deepmerge(d, u, s, invert=True, inplace=False)"""
+        res = config.deepmerge(self.test_dict_B, self.test_dict_A, dict, invert=True, inplace=False)
+        nt.assert_not_equal(self.test_dict_B, self.test_dict_C)
+        nt.eq_(res, self.test_dict_C)
+    
+    def test_advdeepmerge(self):
+        """advanceddeepmerge(d, u, s)"""
+        res = config.advanceddeepmerge(self.test_dict_A, self.test_dict_B, dict)
+        nt.eq_(self.test_dict_A, self.test_dict_D)
+        nt.eq_(res, self.test_dict_D)
+    
+    def test_advdeepmerge_ip_(self):
+        """advanceddeepmerge(d, u, s, inplace=False)"""
+        res = config.advanceddeepmerge(self.test_dict_A, self.test_dict_B, dict, inplace=False)
+        nt.assert_not_equal(self.test_dict_A, self.test_dict_D)
+        nt.eq_(res, self.test_dict_D)
+    
+    def test_advdeepmerge_i(self):
+        """advanceddeepmerge(d, u, s, invert=True)"""
+        res = config.advanceddeepmerge(self.test_dict_B, self.test_dict_A, dict, invert=True)
+        nt.eq_(self.test_dict_B, self.test_dict_D)
+        nt.eq_(res, self.test_dict_D)
+        
+    def test_advdeepmerge_ip_i(self):
+        """advanceddeepmerge(d, u, s, invert=True, inplace=False)"""
+        res = config.advanceddeepmerge(self.test_dict_B, self.test_dict_A, dict, invert=True, inplace=False)
+        nt.assert_not_equal(self.test_dict_B, self.test_dict_D)
+        nt.eq_(res, self.test_dict_D)
+    
+
 class test_Configuration(object):
     """pyshell.config.Configuration"""
     
@@ -50,6 +117,12 @@ class test_Configuration(object):
         cfg.merge(self.test_dict_B)
         assert cfg == self.test_dict_C
         
+    def test_imerge(self):
+        """.imerge() deep updates in reverse."""
+        cfg = self.CLASS(self.test_dict_B)
+        cfg.imerge(self.test_dict_A)
+        assert cfg == self.test_dict_C
+        
     def test_save(self):
         """.save() writes yaml file or dat file"""
         cfg = self.CLASS(self.test_dict_C)
@@ -67,6 +140,17 @@ class test_Configuration(object):
         cfg = self.CLASS()
         cfg.load("Test.yaml")
         assert cfg == self.test_dict_C
+        
+    def test_read_empty(self):
+        """.load() reads an empty yaml file."""
+        cfg = self.CLASS()
+        cfg.save("Test.yaml")
+        cfg = self.CLASS(a="a")
+        cfg.load("Test.yaml")
+        assert cfg.store == {'a':'a'}
+        from StringIO import StringIO
+        cfg.load(StringIO(""))
+        assert cfg.store == {'a':'a'}
         
 class test_DottedConfiguration(test_Configuration):
     """pyshell.config.DottedConfiguration"""
@@ -109,6 +193,12 @@ class test_DottedConfiguration(test_Configuration):
         CFG = self.CLASS(**self.test_dict)
         CFG["g.h"]
         
+    @nt.raises(KeyError)
+    def test_get_bad_ml_name(self):
+        """KeyError values which don't exist many levels deep"""
+        CFG = self.CLASS(**self.test_dict)
+        CFG.get("z.a.b","h")
+        CFG["z.a.b"]
     
     def test_set_dotted_name(self):
         """Set for keys with periods in them"""

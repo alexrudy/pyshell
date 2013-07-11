@@ -12,6 +12,7 @@
 :mod:`subcommand` – Creating commands with Subcommands
 ======================================================
 
+This module provides scaffolding for subcommand classes. Individual subcommands are defined in :class:`SCEngine`. :class:`SCEngine` is a drop-in replacement for :class:`~pyshell.base.CLIEngine`. Then add each class to the :attr:`SCController.subEngines` list on a subclass of :class:`SCController`. :class:`SCController` can be run the same way :class:`~pyshell.base.CLIEngine` works. Both :class:`SCController` and :class:`SCEngine` are subclasses of :class:`~pyshell.base.CLIEngine` and should behave naturally with a :class:`~pyshell.base.CLIEngine`-style configuration.
 
 Base Class API Documentation
 ----------------------------
@@ -19,11 +20,13 @@ Base Class API Documentation
 .. autoclass::
     SCEngine
     :members:
+    :exclude-members: start, end
     :inherited-members:
     
 .. autoclass::
     SCController
     :members:
+    :exclude-members: start, end
     :inherited-members:
 
 """
@@ -35,7 +38,12 @@ from argparse import Action, SUPPRESS, RawDescriptionHelpFormatter
 __all__ = ['SCEngine','SCController']
 
 class SCEngine(CLIEngine):
-    """A base engine for use as a subcommand to CLIEngine"""
+    """A base engine for use as a subcommand or stand-alone command like :class:`~pyshell.base.CLIEngine`. When used as a sub-command, it should be attached to a :class:`SCController` to act as the base command.
+    
+    :param command: The command name for this object. It can also be set as a class attribute: `cls.command` It cannot be changed once the program has initialized.
+    
+    
+    """
     
     supercfg = []
     
@@ -45,9 +53,23 @@ class SCEngine(CLIEngine):
         prefix_chars = kwargs.pop('prefix_chars',"-")
         super(SCEngine, self).__init__(prefix_chars=prefix_chars)
         self._hasinit = False
-        self.command = command if command is not None else self.command
+        self._command = command if command is not None else getattr(self,'_command',"")
         self._kwargs = kwargs
         self._supercommand = False
+        
+    @property
+    def command(self):
+        """docstring for command"""
+        return self._command
+        
+        
+    @command.setter
+    def command(self,value):
+        """docstring for command"""
+        if not self._hasinit:
+            self._command = value
+        else:
+            raise AttributeError("Cannot change command name once parsers have initialized.")
         
     @property
     def help(self):
@@ -77,7 +99,8 @@ class SCEngine(CLIEngine):
         
     def init(self):
         """Post-initialization functions. These will be run after the sub-parser is established."""
-        pass
+        super(SCEngine, self).init()
+        
         
     def parse(self):
         """Parse. By default, does nothing if this object is a subcommand."""
@@ -90,7 +113,7 @@ class SCEngine(CLIEngine):
         if not self._supercommand:
             super(SCEngine, self).configure()
         else:
-            self.config.configure(module=self.module,defaultcfg=self.defaultcfg,cfg=False,supercfg=self.supercfg)
+            self.config.configure(module=self.__module__,defaultcfg=self.defaultcfg,cfg=False,supercfg=self.supercfg)
         
     
 class _LimitedHelpAction(Action):
@@ -115,33 +138,31 @@ class _LimitedHelpAction(Action):
 class SCController(CLIEngine):
     """An engine for the creation of python packages"""
     
-    _subEngines = []
+    subEngines = []
+    """A list of :class:`SCEngine` subclasses which define the subcommands
+    for this engine. This is the only attribute required for a working :class:`SCController`.
+    """
     
     _subparsers_help = "sub-command help"
     
     def __init__(self,**kwargs):
         kwargs.setdefault('conflict_handler','resolve')
+        if hasattr(self,'_subEngines'):
+            self.subEngines = self._subEngines
         super(SCController, self).__init__(**kwargs)
         self._add_limited_help()
         self._subcommand = {}
-        for subEngine in self._subEngines:
-            # For specific cases, where the master engine sets the module name, pass that module name
-            # on to subEngines before they are instantiated.
-            if not hasattr(subEngine,'module') or getattr(subEngine.module,'__isabstractmethod__',False):
-                subEngine.module = self.module
-            # Since type-instatiation has already happened, we hook into the shenanigans below.
-            # TODO: Degrade gracefully for python<2.7
-            if isinstance(getattr(subEngine,'__abstractmethods__',None),frozenset):
-                abm = set(subEngine.__abstractmethods__)
-                if 'module' in abm:
-                    abm.remove('module')
-                    subEngine.__abstractmethods__ = frozenset(abm)
+        for subEngine in self.subEngines:
             subCommand = subEngine()
             subCommand._supercommand = self
             self._subcommand[subCommand.command] = subCommand
+            # This is important, as it passes the subCommand's super configuration on.
+            # We might want something that passes the full configuration chain down...
             self.supercfg += subCommand.supercfg
-        if self._subEngines:
+        if self.subEngines:
             self._subparsers = self._parser.add_subparsers(dest='mode',help=self._subparsers_help)
+        else:
+            raise AttributeError("%r No SubEngines attached." % self)
         for subEngine in self._subcommand:
             self._subcommand[subEngine].__parser__(self._subparsers)
             self._subcommand[subEngine].init()
@@ -161,19 +182,17 @@ class SCController(CLIEngine):
         return self._subcommand[self.mode]
         
     def start(self):
-        """docstring for start"""
         self.subcommand.start()
         
     def do(self):
-        """docstring for start"""
+        """Call the subcommand :meth:`~SCEngine.do` method."""
         self.subcommand.do()
         
     def end(self):
-        """docstring for end"""
         self.subcommand.end()
         
     def kill(self):
-        """Killing mid-command"""
+        """Killing mid-command, calls the active subcommand :meth:`~SCEngine.kill` method."""
         self.subcommand.kill()
         self._exitcode = 1
     
@@ -194,6 +213,8 @@ class SCController(CLIEngine):
         """Configure the package creator"""
         super(SCController, self).configure()
         self.subcommand.__superconfig__(self._config,self._opts)
+        self.subcommand.before_configure()
         self.subcommand.configure()
+        self.subcommand.after_configure()
         
         

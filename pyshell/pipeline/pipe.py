@@ -34,7 +34,7 @@ class Pipe(Stateful,Typedkwargs):
         super(Pipe, self).__init__()
         self.log = logging.getLogger(module if module is not None else self.__module__)
         self._name = name
-        self._state = State.fromkeys(["initialized","included","primed","replaced","triggered","started","excepted","completed","finished"],False)
+        self._state = State.fromkeys(["initialized","included","excluded","primed","replaced","triggered","started","excepted","completed","finished"],False)
         self.do = action
         self._desc = description
         self._help = help
@@ -116,13 +116,16 @@ class Pipe(Stateful,Typedkwargs):
         elif self.state["included"]:
             arrow = u"┼─>" if not dup else u"┼  "
             space = u" "
+        elif self.state["excluded"]:
+            arrow = u"╶  "
+            space = u" "
         elif self.state["primed"]:
             arrow = u"└─>" if not dup else u"└  "
             space = u" "
             
         lines = []
         for pipe in reversed(pipes):
-            if pipe.name in self.dependencies:
+            if pipe.name in self.dependencies and not dup:
                 if pipe.parent == self.name:
                     lines += pipe.tree(pipes,level+1,False)
                 else:
@@ -132,7 +135,7 @@ class Pipe(Stateful,Typedkwargs):
                             left = (space * level) + arrow + self.name,
                             desc = self.description,
                         )]
-            if pipe.name in self.triggers:
+            if pipe.name in self.triggers and not dup:
                 if pipe.parent == self.name:
                     lines += pipe.tree(pipes,level+1,False)
                 else:

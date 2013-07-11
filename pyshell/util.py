@@ -36,25 +36,40 @@ import sys
 import warnings
 import functools
 
+with warnings.catch_warnings():
+    warnings.simplefilter('ignore')
+    import pkg_resources # pylint: disable = unused-import
+
 def ipydb():
-    """Require the ipython debugger"""
-    _file = getattr(sys.modules['__main__'],'__file__')
-    from IPython.core import ultratb
-    sys.excepthook = ultratb.FormattedTB(mode='Verbose',
-    color_scheme='Linux', call_pdb=1)
-    setattr(sys.modules['__main__'],'__file__',_file)
+    """Try to use the iPython debugger on program failures."""
+    try:
+        from IPython.core import ultratb
+    except ImportError:
+        warnings.warn("Not enabling iPython debugger because"
+            " 'ipython' isn't installed!")
+    else:
+        _file = getattr(sys.modules['__main__'], '__file__', '')
+        sys.excepthook = ultratb.ColorTB(color_scheme='Linux', call_pdb=1)
+        setattr(sys.modules['__main__'], '__file__', _file)
 
 def is_type_factory(ttype):
-    """Return a function which checks if an object can be cast as a given type."""
-    def is_type(obj):
+    """Return a function which checks if an object can be cast as a given 
+    type. Basic usage allows for checking string-casting to a specific type.
+    
+    :param ttype: Usually a ``type`` but really, any function which takes one
+        argument and which will raise a :exc:`ValueError` if that one argument can't be 
+        cast correctly.
+        
+    """
+    def is_type(obj): # pylint: disable = missing-docstring
         try:
             ttype(obj)
-        except:
+        except ValueError:
             return False
         else:
             return True
-    is_type.__doc__ = "Checks if obj can be *cast* as {type}.".format(type=repr(ttype))
-    is_type.__hlp__ = "Input must be of {!s}".format(ttype)
+    is_type.__doc__ = "Checks if obj can be *cast* as {!r}.".format(ttype)
+    is_type.__hlp__ = "Input must be an {!s}".format(ttype)
     return is_type
 
 def force_dir_path(path):
@@ -73,8 +88,8 @@ def collapseuser(path):
     """Collapse the username from a path."""
     userpath = os.path.expanduser("~")
     if path.startswith(userpath):
-        relpath = os.path.relpath(path,userpath)
-        return os.path.normpath(os.path.join("~",relpath))
+        relpath = os.path.relpath(path, userpath)
+        return os.path.normpath(os.path.join("~", relpath))
     else:
         return path
     
@@ -83,18 +98,19 @@ def join(*args):
     args = list(args)
     path = args.pop(0)
     for arg in args:
-        path = os.path.join(path,arg)
+        path = os.path.join(path, arg)
     return os.path.expanduser(path)
     
 def check_exists(path):
     """Check whether the given directory exists."""
     return os.path.exists(os.path.expanduser(path))
     
-def warn_exists(path,name="path",exists=True):
+def warn_exists(path, name="path", exists=True):
     """docstring for warn_exists"""
     if check_exists(path) != exists:
-        warnings.warn("{name} '{path}' does{exist} exist".format(name=name.capitalize(),path=path,
-            exist=" not" if exists else ""),warnings.RuntimeWarning)
+        warnings.warn("{name} '{path}' does{exist} exist!".format(
+            name=name.capitalize(), path=path,
+            exist=" not" if exists else ""), RuntimeWarning)
     
 def is_remote_path(path):
     """Path looks like an SSH or other URL compatible path?"""
@@ -126,12 +142,12 @@ def semiabstractmethod(txt):
         NotImplementedError
     
     """
-    def decorator(func):
-        @functools.wraps(func)
-        def raiser(*args, **kwargs):
+    def decorator(func): # pylint: disable= missing-docstring
+        @functools.wraps(func) # pylint: disable = unused-argument
+        def raiser(*args, **kwargs): # pylint: disable= missing-docstring
             name = func.__name__
-            if hasattr(func,'im_class'):
-                name = ".".join([func.im_class.__name__,name])
+            if hasattr(func, 'im_class'):
+                name = ".".join([func.im_class.__name__, name])
             msg = txt % (name)
             raise NotImplementedError(msg)
         return raiser
@@ -141,28 +157,28 @@ def semiabstractmethod(txt):
         return decorator(func)
     return decorator
 
-def depricatedmethod(message=None,version=None,replacement=None):
-    """Mark a method as depricated"""
-    def decorator(func):
+def deprecatedmethod(message=None, version=None, replacement=None):
+    """Mark a method as deprecated"""
+    def decorator(func): # pylint: disable = missing-docstring
         try:
             txt.format(method=func.__name__)
         except KeyError:
             pass
         @functools.wraps(func)
-        def warner(*args, **kwargs):
-            warnings.warn(txt,warnings.DepricationWarning)
-            return func(*args,**kwargs)
+        def warner(*args, **kwargs): # pylint: disable = missing-docstring
+            warnings.warn(txt, DeprecationWarning)
+            return func(*args, **kwargs)
         return warner
     if callable(message) or message is None:
-        txt = "Method {method} will be depricated"
+        txt = "Method {method} will be deprecated"
     else:
         txt = message
     if version is not None:
-        txt += "in version {version}".format(version=version)
+        txt += "in version {}".format(version)
     else:
         txt += "soon"
     if replacement is not None:
-        txt += "please use {replacement} instead".format(replacement=replacement)
+        txt += "please use {} instead".format(replacement)
     txt += "."
     if callable(message):
         return decorator(message)
@@ -225,9 +241,10 @@ def query_string(question, default=None, validate=None):
         if validate is None or validate(answer):
             return answer
         else:
-            if hasattr(validate,'__hlp__'):
+            if hasattr(validate, '__hlp__'):
                 sys.stdout.write(validate.__hlp__+"\n")
-            elif hasattr(validate,'__doc__'):
-                sys.stdout.write("Invalid input, the validation function has the following documentaion:\n"+validate.__doc__+"\n")
+            elif hasattr(validate, '__doc__'):
+                sys.stdout.write("Invalid input, the validation function"
+                " has the following documentaion:\n"+validate.__doc__+"\n")
             sys.stdout.write("Invalid input. Please try again.\n")
             

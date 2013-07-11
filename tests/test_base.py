@@ -53,7 +53,7 @@ class test_base_cliengine(object):
         nt.ok_(isinstance(IN.parser,argparse.ArgumentParser),
             "The .parser attribute must be an <type 'argparse.ArgumentParser'>")
         nt.eq_(IN.config.store,{})
-        nt.eq_(IN.description,"A command line interface.")
+        nt.eq_(IN.description,IN.__doc__)
         nt.eq_(IN.epilog,"")
         nt.eq_(IN.defaultcfg,"Config.yml")
         nt.eq_(IN.supercfg,[])
