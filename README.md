@@ -1,6 +1,6 @@
 # PyShell: Command Line Tools in Python
 
-This distribution, which consists solely of the `pyshell` module, is my attempt to port more complex `bash` scripts into python. Mostly, it has become a proving ground for my pythonic shell scripting architecutre.
+This distribution, which consists solely of the `pyshell` module, is my attempt to port more complex `bash` scripts into python. Mostly, it has become a proving ground for my pythonic shell scripting architecutre. The documentation is on [Github Pages](http://alexrudy.github.com/pyshell/).
 
 ## Installation
 
