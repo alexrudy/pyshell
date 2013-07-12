@@ -220,7 +220,8 @@ class MutableMappingBase(collections.MutableMapping):
     def __init__(self, *args, **kwargs):
         super(MutableMappingBase, self).__init__()
         self.log = loggers.getLogger(self.__module__)
-        self._store = dict(*args, **kwargs)
+        self._store = dict()
+        self.merge(dict(*args,**kwargs))
         
     __metaclass__ = abc.ABCMeta
         
@@ -260,6 +261,10 @@ class MutableMappingBase(collections.MutableMapping):
     def store(self):
         """Return a copy of the internal storage object."""
         return self._store.copy()
+        
+    def merge(self, item):
+        """Alias between merge and update in the basic case."""
+        return self._store.update(item)
 
 
 class Configuration(MutableMappingBase):
@@ -268,6 +273,10 @@ class Configuration(MutableMappingBase):
         super(Configuration, self).__init__(*args, **kwargs)
         self._filename = None
         self._strict = False
+        self._dn = self.__class__
+    
+    _strict = False
+    """Whether to use strict lookup controls.""" #pylint: disable=W0105
     
     _dn = DeepNestDict
     """Deep nesting dictionary setting. This class will be used to create 
@@ -286,8 +295,7 @@ class Configuration(MutableMappingBase):
     @dn.setter
     def dn(self, new_type):
         """Deep nesting type setter.""" #pylint: disable=C0103
-        if new_type != self._dn:
-            self.renest(new_type)
+        self.renest(new_type)
     
     name = "Configuration"
     """The name/type of this configuration."""
@@ -331,6 +339,7 @@ class Configuration(MutableMappingBase):
         
         """
         deepmerge(self, other, self.dn)
+        reformat(self, self.dn)
         
     def imerge(self, other):
         """Inverse :meth:`merge`, where ``other`` will be considered original, and this object will be canonical.
@@ -348,6 +357,8 @@ class Configuration(MutableMappingBase):
         
         """
         deepmerge(self, other, self.dn, invert=True)
+        reformat(self, self.dn)
+        
     
     def save(self, filename, silent=True):
         """Save this configuration as a YAML file. YAML files generally have 
@@ -446,7 +457,7 @@ class Configuration(MutableMappingBase):
         
         This method does not return anything.
         """
-        if issubclass(deep_nest_type, collections.Mapping):
+        if deep_nest_type is not None and issubclass(deep_nest_type, collections.Mapping):
             self._dn = deep_nest_type #pylint: disable=C0103
         elif deep_nest_type is not None:
             raise TypeError("%r is not a mapping type." % deep_nest_type)
@@ -639,6 +650,7 @@ class DottedConfiguration(Configuration):
         10
         
     """
+    
     def _isempty(self, item):
         """Test if the given item is empty"""
         #pylint: disable=W0703
@@ -660,13 +672,13 @@ class DottedConfiguration(Configuration):
         """Recursive getitem calling function."""
         if len(parts) == 0:
             return store
-        # elif len(parts) == 1:
-        #     return store[parts[0]]
         if not isinstance(store, collections.Mapping):
             raise KeyError
+        
         for i in range(len(parts)):
             key = ".".join(parts[:i+1])
-            if key in store:
+            d = reformat(store, dict)
+            if key in d:
                 if self._isempty(store[key]) and self._strict:
                     raise KeyError
                 elif not self._isempty(store[key]):
@@ -704,9 +716,8 @@ class DottedConfiguration(Configuration):
         """Recursive containment algorithm"""
         key = parts.pop(0)
         if len(parts) == 0:
-            if ((isinstance(store.get(key), self.dn) 
-                and not bool(store.get(key))) 
-                and self._strict):
+            if (self._strict and (isinstance(store.get(key), self.dn) 
+                and not bool(store.get(key)))):
                 return False
             return store.__contains__(key)
         elif key in store:
@@ -720,10 +731,9 @@ class DottedConfiguration(Configuration):
         keyparts = key.split(".")
         try:
             if len(keyparts) > 1:
-                return self._getitem(self.store, keyparts)
-            elif ((isinstance(self._store.get(key), self.dn) 
-                and not bool(self._store.get(key)))
-                and self._strict):
+                return self._getitem(self, keyparts)
+            elif (self._strict and (isinstance(self._store.get(key), self.dn) 
+                and not bool(self._store.get(key)))):
                 raise KeyError
             return self._store[key]
         except KeyError:
@@ -749,9 +759,8 @@ class DottedConfiguration(Configuration):
         keyparts = key.split(".")
         if len(keyparts) > 1:
             return self._contains(self, keyparts)
-        elif ((isinstance(self._store.get(key), self.dn) 
-            and not bool(self._store.get(key)))
-            and self._strict):
+        elif (self._strict and (isinstance(self._store.get(key), self.dn) 
+            and not bool(self._store.get(key)))):
             return False
         else:
             return self._store.__contains__(key)
@@ -797,7 +806,7 @@ class StructuredConfiguration(DottedConfiguration):
         self._metadata["Files.Loaded"] = []
         self._metadata["Configurations"] = self._metadata.dn()
         self.__set_on_load = False
-        self._dn = self.__class__
+        self._dn = DottedConfiguration
         
     @property
     def metadata(self):
