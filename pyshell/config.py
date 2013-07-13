@@ -301,6 +301,13 @@ class Configuration(MutableMappingBase):
     """The name/type of this configuration."""
         
     @property
+    def hash(self):
+        """Return the HexDigest hash"""
+        self._hash = hashlib.md5()
+        self._hash.update(str(self))
+        return self._hash.hexdigest()
+        
+    @property
     def filename(self):
         """The filename which has been used to save/load this configuration 
         most recently"""
@@ -825,13 +832,6 @@ class StructuredConfiguration(DottedConfiguration):
         if self._metadata["Files.This"] == self.DEFAULT_FILENAME:
             self.__set_on_load = True
         return self.__set_on_load
-        
-    @property
-    def hash(self):
-        """Return the HexDigest hash"""
-        self._hash = hashlib.md5()
-        self._hash.update(str(self))
-        return self._hash.hexdigest()
     
     def set_file(self, filename=None):
         """Set the default/current configuration file for this configuration.
