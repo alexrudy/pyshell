@@ -167,11 +167,11 @@ can be customized using the 'Default' configuration variable in the configuratio
         Pipes cannot be added dynamically. Once the pipeline starts running (i.e. processing pipes) the order and settings are fixed. Attempting to adjsut the pipes at this point will raise an error.
         """
         if self.state["started"]:
-            raise PipelineStateException("Cannot add a new pipe to the pipeline, the simulation has already started!")
+            raise PipelineStateException("Cannot add a new pipe to the pipeline, the pipeline has already started!")
         
         pipe = Pipe(action=action,module=self.__module__,**kwargs)
         if pipe.name in self.pipes:
-            raise PipelineException("Cannot have duplicate pipe named %s" % name)
+            raise PipelineException("Cannot have duplicate pipe named '%s'" % pipe.name)
         
         self.pipes[pipe.name] = pipe
         self.pos_pipe_parser.add_argument("+"+pipe.name,action='append_const',dest='include',const=pipe.name,help=pipe.help)
