@@ -220,8 +220,7 @@ class MutableMappingBase(collections.MutableMapping):
     def __init__(self, *args, **kwargs):
         super(MutableMappingBase, self).__init__()
         self.log = loggers.getLogger(self.__module__)
-        self._store = dict()
-        self.merge(dict(*args,**kwargs))
+        self._store = dict(*args,**kwargs)
         
     __metaclass__ = abc.ABCMeta
         
@@ -369,7 +368,6 @@ class Configuration(MutableMappingBase):
         
         """
         deepmerge(self, other, self.dt)
-        # reformat(self, self.dt)
         
     def imerge(self, other):
         """Inverse :meth:`merge`, where ``other`` will be considered original, and this object will be canonical.
@@ -387,7 +385,6 @@ class Configuration(MutableMappingBase):
         
         """
         deepmerge(self, other, self.dt, invert=True)
-        # reformat(self, self.dt)
         
     
     def save(self, filename, silent=True):
