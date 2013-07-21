@@ -492,15 +492,6 @@ class Configuration(MutableMappingBase):
             raise TypeError("%r is not a mapping type." % deep_store_type)
         self._store = reformat(self._store, self.dt)
         
-    def extract(self):
-        """Extract the dictionary from this object.
-        
-        .. deprecated:: 0.4
-            use :attr:`store`
-        
-        """
-        return self.store
-        
     def parse_literals(self, *literals, **kwargs):
         """Turn a list of literals into configuration items.
         
