@@ -190,6 +190,10 @@ Command Line Help
 Reference for :class:`CLIEngine`, the Command Line Interface Engine
 -------------------------------------------------------------------
 
+.. inheritance-diagram::
+    CLIEngine
+    :parts: 1
+
 .. autoclass::
     CLIEngine
     :members:
