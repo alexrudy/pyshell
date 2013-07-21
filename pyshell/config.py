@@ -900,7 +900,7 @@ class StructuredConfiguration(DottedConfiguration):
             filename = self._metadata["Files.This"]
         loaded = super(StructuredConfiguration, self).load(filename, silent, fname=fname)
         if loaded and self._set_on_load:
-            self._metadata["Files.Loaded"].append(filename)
+            self._metadata["Files.Loaded"].append(self.filename)
         
 
 

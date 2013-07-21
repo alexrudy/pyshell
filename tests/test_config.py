@@ -172,6 +172,12 @@ class test_DottedConfiguration(test_Configuration):
         CFG["z"] = {'a.b':'c'}
         nt.eq_(CFG["z.a.b"], CFG.store["z"]["a.b"])
         
+    def test_multiple_sub_dotted_dictionaries(self):
+        """Lookup with multiple correct paths."""
+        CFG = self.CLASS(**self.test_dict)
+        CFG["z"] = {'a.b':'c','a':{'b':'d'}}
+        nt.eq_(CFG["z.a.b"],'d')
+        
     @nt.raises(KeyError)
     def test_sub_dotted_dictionary_fail(self):
         """Inerting a dotted sub-dictionary, KeyError"""
