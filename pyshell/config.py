@@ -220,9 +220,11 @@ class MutableMappingBase(collections.MutableMapping):
     def __init__(self, *args, **kwargs):
         super(MutableMappingBase, self).__init__()
         self.log = loggers.getLogger(self.__module__)
-        self._store = dict(*args,**kwargs)
+        self._store = self._dt(*args,**kwargs)
         
     __metaclass__ = abc.ABCMeta
+    
+    _dt = dict
         
     def __repr__(self):
         """String representation of this object"""
