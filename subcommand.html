@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>subcommand – Creating commands with Subcommands &mdash; PyShell 0.3.0 documentation</title>
+    <title>subcommand – Creating commands with Subcommands &mdash; PyShell 0.3.1 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.3.0',
+        VERSION:     '0.3.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,7 +26,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="PyShell 0.3.0 documentation" href="index.html" />
+    <link rel="top" title="PyShell 0.3.1 documentation" href="index.html" />
     <link rel="next" title="config — YAML-based Configuration Dictionaries" href="config.html" />
     <link rel="prev" title="CLIEngine – a base for Command Line Interfaces" href="base.html" /> 
   </head>
@@ -46,7 +46,7 @@
         <li class="right" >
           <a href="base.html" title="CLIEngine – a base for Command Line Interfaces"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">PyShell 0.3.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">PyShell 0.3.1 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -58,6 +58,14 @@
   <span class="target" id="module-pyshell.subcommand"></span><div class="section" id="subcommand-creating-commands-with-subcommands">
 <h1><tt class="xref py py-mod docutils literal"><span class="pre">subcommand</span></tt> – Creating commands with Subcommands<a class="headerlink" href="#subcommand-creating-commands-with-subcommands" title="Permalink to this headline">¶</a></h1>
 <p>This module provides scaffolding for subcommand classes. Individual subcommands are defined in <a class="reference internal" href="#pyshell.subcommand.SCEngine" title="pyshell.subcommand.SCEngine"><tt class="xref py py-class docutils literal"><span class="pre">SCEngine</span></tt></a>. <a class="reference internal" href="#pyshell.subcommand.SCEngine" title="pyshell.subcommand.SCEngine"><tt class="xref py py-class docutils literal"><span class="pre">SCEngine</span></tt></a> is a drop-in replacement for <a class="reference internal" href="base.html#pyshell.base.CLIEngine" title="pyshell.base.CLIEngine"><tt class="xref py py-class docutils literal"><span class="pre">CLIEngine</span></tt></a>. Then add each class to the <a class="reference internal" href="#pyshell.subcommand.SCController.subEngines" title="pyshell.subcommand.SCController.subEngines"><tt class="xref py py-attr docutils literal"><span class="pre">SCController.subEngines</span></tt></a> list on a subclass of <a class="reference internal" href="#pyshell.subcommand.SCController" title="pyshell.subcommand.SCController"><tt class="xref py py-class docutils literal"><span class="pre">SCController</span></tt></a>. <a class="reference internal" href="#pyshell.subcommand.SCController" title="pyshell.subcommand.SCController"><tt class="xref py py-class docutils literal"><span class="pre">SCController</span></tt></a> can be run the same way <a class="reference internal" href="base.html#pyshell.base.CLIEngine" title="pyshell.base.CLIEngine"><tt class="xref py py-class docutils literal"><span class="pre">CLIEngine</span></tt></a> works. Both <a class="reference internal" href="#pyshell.subcommand.SCController" title="pyshell.subcommand.SCController"><tt class="xref py py-class docutils literal"><span class="pre">SCController</span></tt></a> and <a class="reference internal" href="#pyshell.subcommand.SCEngine" title="pyshell.subcommand.SCEngine"><tt class="xref py py-class docutils literal"><span class="pre">SCEngine</span></tt></a> are subclasses of <a class="reference internal" href="base.html#pyshell.base.CLIEngine" title="pyshell.base.CLIEngine"><tt class="xref py py-class docutils literal"><span class="pre">CLIEngine</span></tt></a> and should behave naturally with a <a class="reference internal" href="base.html#pyshell.base.CLIEngine" title="pyshell.base.CLIEngine"><tt class="xref py py-class docutils literal"><span class="pre">CLIEngine</span></tt></a>-style configuration.</p>
+<p class="graphviz">
+<img src="_images/inheritance-d947c0cf4aa417fec43bb5e337d7c4c447c149f6.png" alt="Inheritance diagram of pyshell.subcommand.SCEngine, pyshell.subcommand.SCController" usemap="#inheritance6696988e9e" class="inheritance"/>
+<map id="inheritance6696988e9e" name="inheritance6696988e9e">
+<area shape="rect" id="node1" href="#pyshell.subcommand.SCController" title="SCController" alt="" coords="139,5,242,30"/>
+<area shape="rect" id="node2" href="base.html#pyshell.base.CLIEngine" title="CLIEngine" alt="" coords="6,30,90,55"/>
+<area shape="rect" id="node4" href="#pyshell.subcommand.SCEngine" title="SCEngine" alt="" coords="149,54,232,79"/>
+</map>
+</p>
 <div class="section" id="base-class-api-documentation">
 <h2>Base Class API Documentation<a class="headerlink" href="#base-class-api-documentation" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
@@ -421,7 +429,7 @@ the command line, and is cleaned up at the end.</p>
         <li class="right" >
           <a href="base.html" title="CLIEngine – a base for Command Line Interfaces"
              >previous</a> |</li>
-        <li><a href="index.html">PyShell 0.3.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">PyShell 0.3.1 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

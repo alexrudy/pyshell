@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>config — YAML-based Configuration Dictionaries &mdash; PyShell 0.3.0 documentation</title>
+    <title>config — YAML-based Configuration Dictionaries &mdash; PyShell 0.3.1 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.3.0',
+        VERSION:     '0.3.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,7 +26,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="PyShell 0.3.0 documentation" href="index.html" />
+    <link rel="top" title="PyShell 0.3.1 documentation" href="index.html" />
     <link rel="next" title="loggers - Logging made Easy" href="loggers.html" />
     <link rel="prev" title="subcommand – Creating commands with Subcommands" href="subcommand.html" /> 
   </head>
@@ -46,7 +46,7 @@
         <li class="right" >
           <a href="subcommand.html" title="subcommand – Creating commands with Subcommands"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">PyShell 0.3.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">PyShell 0.3.1 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -63,10 +63,10 @@ behavior by default. They act otherwise like dictionaries, and handle thier
 internal operation using a storage dictionary. The objects also provide a 
 YAML configuration file reading and writing interface.</p>
 <p class="graphviz">
-<img src="_images/inheritance-049c0b8a069c462cba03d3747e7eb90a4cc402a0.png" alt="Inheritance diagram of pyshell.config.Configuration, pyshell.config.StructuredConfiguration" usemap="#inheritance3a653054bf" class="inheritance"/>
+<img src="_images/inheritance-0edc7ccf299bcee56bf25bdf62d1faa0e416d9de.png" alt="Inheritance diagram of pyshell.config.Configuration, pyshell.config.StructuredConfiguration" usemap="#inheritance3a653054bf" class="inheritance"/>
 <map id="inheritance3a653054bf" name="inheritance3a653054bf">
 <area shape="rect" id="node1" href="#pyshell.config.DottedConfiguration" title="DottedConfiguration" alt="" coords="521,35,619,51"/>
-<area shape="rect" id="node6" href="#pyshell.config.StructuredConfiguration" title="StructuredConfiguration" alt="" coords="651,35,764,51"/>
+<area shape="rect" id="node15" href="#pyshell.config.StructuredConfiguration" title="StructuredConfiguration" alt="" coords="651,35,764,51"/>
 <area shape="rect" id="node2" href="#pyshell.config.Configuration" title="Configuration" alt="" coords="420,35,490,51"/>
 </map>
 </p>
@@ -152,24 +152,27 @@ so in a deep fashion.</p>
 <em class="property">class </em><tt class="descclassname">pyshell.config.</tt><tt class="descname">Configuration</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/pyshell/config.html#Configuration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.Configuration" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds extra methods to dictionary for configuration</p>
 <dl class="attribute">
-<dt id="pyshell.config.Configuration.dt">
-<tt class="descname">dt</tt><a class="headerlink" href="#pyshell.config.Configuration.dt" title="Permalink to this definition">¶</a></dt>
-<dd><p>Exctraction nesting dictionary setting. This class will be used to
-create deep nesting structures when this object is
-extracted.</p>
-<p>alias of <a class="reference external" href="http://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt></a></p>
-</dd></dl>
-
-<dl class="attribute">
 <dt id="pyshell.config.Configuration.dn">
 <tt class="descname">dn</tt><a class="reference internal" href="_modules/pyshell/config.html#Configuration.dn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.Configuration.dn" title="Permalink to this definition">¶</a></dt>
 <dd><p>Deep nesting attribute reader</p>
 </dd></dl>
 
 <dl class="attribute">
+<dt id="pyshell.config.Configuration.dt">
+<tt class="descname">dt</tt><a class="headerlink" href="#pyshell.config.Configuration.dt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deep storage type.</p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="pyshell.config.Configuration.name">
 <tt class="descname">name</tt><em class="property"> = u'Configuration'</em><a class="headerlink" href="#pyshell.config.Configuration.name" title="Permalink to this definition">¶</a></dt>
 <dd><p>The name/type of this configuration.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyshell.config.Configuration.hash">
+<tt class="descname">hash</tt><a class="headerlink" href="#pyshell.config.Configuration.hash" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the HexDigest hash</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -298,27 +301,19 @@ internally to write this configuration to a YAML file.</p>
 
 <dl class="method">
 <dt id="pyshell.config.Configuration.renest">
-<tt class="descname">renest</tt><big>(</big><em>deep_nest_type=None</em><big>)</big><a class="reference internal" href="_modules/pyshell/config.html#Configuration.renest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.Configuration.renest" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">renest</tt><big>(</big><em>deep_store_type=None</em><big>)</big><a class="reference internal" href="_modules/pyshell/config.html#Configuration.renest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.Configuration.renest" title="Permalink to this definition">¶</a></dt>
 <dd><p>Re-nest this object. This method applies the 
-<a class="reference internal" href="#pyshell.config.Configuration.dn" title="pyshell.config.Configuration.dn"><tt class="xref py py-attr docutils literal"><span class="pre">dn</span></tt></a> deep-nesting attribute to each nesting level in the 
+<a class="reference internal" href="#pyshell.config.Configuration.dt" title="pyshell.config.Configuration.dt"><tt class="xref py py-attr docutils literal"><span class="pre">dt</span></tt></a> deep-storage attribute to each nesting level in the 
 configuration object.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>deep_nest_type</strong> &#8211; mapping nesting type, will set <a class="reference internal" href="#pyshell.config.Configuration.dn" title="pyshell.config.Configuration.dn"><tt class="xref py py-attr docutils literal"><span class="pre">dn</span></tt></a>.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>deep_store_type</strong> &#8211; mapping nesting type, will set <a class="reference internal" href="#pyshell.config.Configuration.dn" title="pyshell.config.Configuration.dn"><tt class="xref py py-attr docutils literal"><span class="pre">dn</span></tt></a>.</td>
 </tr>
 </tbody>
 </table>
 <p>This method does not return anything.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyshell.config.Configuration.extract">
-<tt class="descname">extract</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pyshell/config.html#Configuration.extract"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.Configuration.extract" title="Permalink to this definition">¶</a></dt>
-<dd><p>Extract the dictionary from this object.</p>
-<p class="deprecated">
-<span class="versionmodified">Deprecated since version 0.4: </span>use <a class="reference internal" href="#pyshell.config.Configuration.store" title="pyshell.config.Configuration.store"><tt class="xref py py-attr docutils literal"><span class="pre">store</span></tt></a></p>
 </dd></dl>
 
 <dl class="method">
@@ -526,15 +521,7 @@ resolution order of configuration files for this method.</p>
 <dl class="attribute">
 <dt id="pyshell.config.DottedConfiguration.dt">
 <tt class="descname">dt</tt><a class="headerlink" href="#pyshell.config.DottedConfiguration.dt" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <a class="reference external" href="http://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt></a></p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyshell.config.DottedConfiguration.extract">
-<tt class="descname">extract</tt><big>(</big><big>)</big><a class="headerlink" href="#pyshell.config.DottedConfiguration.extract" title="Permalink to this definition">¶</a></dt>
-<dd><p>Extract the dictionary from this object.</p>
-<p class="deprecated">
-<span class="versionmodified">Deprecated since version 0.4: </span>use <a class="reference internal" href="#pyshell.config.DottedConfiguration.store" title="pyshell.config.DottedConfiguration.store"><tt class="xref py py-attr docutils literal"><span class="pre">store</span></tt></a></p>
+<dd><p>Deep storage type.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -572,6 +559,12 @@ most recently</p>
 <dt id="pyshell.config.DottedConfiguration.get">
 <tt class="descname">get</tt><big>(</big><em>k</em><span class="optional">[</span>, <em>d</em><span class="optional">]</span><big>)</big> &rarr; D[k] if k in D, else d.  d defaults to None.<a class="headerlink" href="#pyshell.config.DottedConfiguration.get" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pyshell.config.DottedConfiguration.hash">
+<tt class="descname">hash</tt><a class="headerlink" href="#pyshell.config.DottedConfiguration.hash" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the HexDigest hash</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="pyshell.config.DottedConfiguration.imerge">
@@ -728,15 +721,15 @@ parsing configuration command line options.</p>
 
 <dl class="method">
 <dt id="pyshell.config.DottedConfiguration.renest">
-<tt class="descname">renest</tt><big>(</big><em>deep_nest_type=None</em><big>)</big><a class="headerlink" href="#pyshell.config.DottedConfiguration.renest" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">renest</tt><big>(</big><em>deep_store_type=None</em><big>)</big><a class="headerlink" href="#pyshell.config.DottedConfiguration.renest" title="Permalink to this definition">¶</a></dt>
 <dd><p>Re-nest this object. This method applies the 
-<a class="reference internal" href="#pyshell.config.DottedConfiguration.dn" title="pyshell.config.DottedConfiguration.dn"><tt class="xref py py-attr docutils literal"><span class="pre">dn</span></tt></a> deep-nesting attribute to each nesting level in the 
+<a class="reference internal" href="#pyshell.config.DottedConfiguration.dt" title="pyshell.config.DottedConfiguration.dt"><tt class="xref py py-attr docutils literal"><span class="pre">dt</span></tt></a> deep-storage attribute to each nesting level in the 
 configuration object.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>deep_nest_type</strong> &#8211; mapping nesting type, will set <a class="reference internal" href="#pyshell.config.DottedConfiguration.dn" title="pyshell.config.DottedConfiguration.dn"><tt class="xref py py-attr docutils literal"><span class="pre">dn</span></tt></a>.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>deep_store_type</strong> &#8211; mapping nesting type, will set <a class="reference internal" href="#pyshell.config.DottedConfiguration.dn" title="pyshell.config.DottedConfiguration.dn"><tt class="xref py py-attr docutils literal"><span class="pre">dn</span></tt></a>.</td>
 </tr>
 </tbody>
 </table>
@@ -836,39 +829,6 @@ names. E.g.:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Config</span><span class="o">.</span><span class="n">dn</span> <span class="o">=</span> <span class="n">DottedConfiguration</span>
 </pre></div>
 </div>
-<dl class="attribute">
-<dt id="pyshell.config.StructuredConfiguration.metadata">
-<tt class="descname">metadata</tt><a class="reference internal" href="_modules/pyshell/config.html#StructuredConfiguration.metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.StructuredConfiguration.metadata" title="Permalink to this definition">¶</a></dt>
-<dd><p>The metadata dictionary</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="pyshell.config.StructuredConfiguration.files">
-<tt class="descname">files</tt><a class="reference internal" href="_modules/pyshell/config.html#StructuredConfiguration.files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.StructuredConfiguration.files" title="Permalink to this definition">¶</a></dt>
-<dd><p>The set of loaded filenames</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="pyshell.config.StructuredConfiguration.hash">
-<tt class="descname">hash</tt><a class="reference internal" href="_modules/pyshell/config.html#StructuredConfiguration.hash"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.StructuredConfiguration.hash" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the HexDigest hash</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyshell.config.StructuredConfiguration.set_file">
-<tt class="descname">set_file</tt><big>(</big><em>filename=None</em><big>)</big><a class="reference internal" href="_modules/pyshell/config.html#StructuredConfiguration.set_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.StructuredConfiguration.set_file" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set the default/current configuration file for this configuration.</p>
-<p>The configuration file set by this method will be used next time <a class="reference internal" href="#pyshell.config.StructuredConfiguration.load" title="pyshell.config.StructuredConfiguration.load"><tt class="xref py py-meth docutils literal"><span class="pre">load()</span></tt></a> or <a class="reference internal" href="#pyshell.config.StructuredConfiguration.save" title="pyshell.config.StructuredConfiguration.save"><tt class="xref py py-meth docutils literal"><span class="pre">save()</span></tt></a> is called with no filename.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<a class="reference external" href="http://docs.python.org/2/library/string.html#string" title="(in Python v2.7)"><em>string</em></a>) &#8211; The filename to load from.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
 <dl class="method">
 <dt id="pyshell.config.StructuredConfiguration.clear">
 <tt class="descname">clear</tt><big>(</big><big>)</big> &rarr; None.  Remove all items from D.<a class="headerlink" href="#pyshell.config.StructuredConfiguration.clear" title="Permalink to this definition">¶</a></dt>
@@ -929,15 +889,7 @@ resolution order of configuration files for this method.</p>
 <dl class="attribute">
 <dt id="pyshell.config.StructuredConfiguration.dt">
 <tt class="descname">dt</tt><a class="headerlink" href="#pyshell.config.StructuredConfiguration.dt" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <a class="reference external" href="http://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt></a></p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyshell.config.StructuredConfiguration.extract">
-<tt class="descname">extract</tt><big>(</big><big>)</big><a class="headerlink" href="#pyshell.config.StructuredConfiguration.extract" title="Permalink to this definition">¶</a></dt>
-<dd><p>Extract the dictionary from this object.</p>
-<p class="deprecated">
-<span class="versionmodified">Deprecated since version 0.4: </span>use <a class="reference internal" href="#pyshell.config.StructuredConfiguration.store" title="pyshell.config.StructuredConfiguration.store"><tt class="xref py py-attr docutils literal"><span class="pre">store</span></tt></a></p>
+<dd><p>Deep storage type.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -975,6 +927,12 @@ most recently</p>
 <dt id="pyshell.config.StructuredConfiguration.get">
 <tt class="descname">get</tt><big>(</big><em>k</em><span class="optional">[</span>, <em>d</em><span class="optional">]</span><big>)</big> &rarr; D[k] if k in D, else d.  d defaults to None.<a class="headerlink" href="#pyshell.config.StructuredConfiguration.get" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pyshell.config.StructuredConfiguration.hash">
+<tt class="descname">hash</tt><a class="reference internal" href="_modules/pyshell/config.html#StructuredConfiguration.hash"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.StructuredConfiguration.hash" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the HexDigest hash</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="pyshell.config.StructuredConfiguration.imerge">
@@ -1063,6 +1021,12 @@ most recently</p>
 </div>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="pyshell.config.StructuredConfiguration.metadata">
+<tt class="descname">metadata</tt><a class="reference internal" href="_modules/pyshell/config.html#StructuredConfiguration.metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.StructuredConfiguration.metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>The metadata dictionary</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="pyshell.config.StructuredConfiguration.parse_literals">
 <tt class="descname">parse_literals</tt><big>(</big><em>*literals</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pyshell.config.StructuredConfiguration.parse_literals" title="Permalink to this definition">¶</a></dt>
@@ -1103,35 +1067,19 @@ parsing configuration command line options.</p>
 
 <dl class="method">
 <dt id="pyshell.config.StructuredConfiguration.renest">
-<tt class="descname">renest</tt><big>(</big><em>deep_nest_type=None</em><big>)</big><a class="headerlink" href="#pyshell.config.StructuredConfiguration.renest" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">renest</tt><big>(</big><em>deep_store_type=None</em><big>)</big><a class="headerlink" href="#pyshell.config.StructuredConfiguration.renest" title="Permalink to this definition">¶</a></dt>
 <dd><p>Re-nest this object. This method applies the 
-<a class="reference internal" href="#pyshell.config.StructuredConfiguration.dn" title="pyshell.config.StructuredConfiguration.dn"><tt class="xref py py-attr docutils literal"><span class="pre">dn</span></tt></a> deep-nesting attribute to each nesting level in the 
+<a class="reference internal" href="#pyshell.config.StructuredConfiguration.dt" title="pyshell.config.StructuredConfiguration.dt"><tt class="xref py py-attr docutils literal"><span class="pre">dt</span></tt></a> deep-storage attribute to each nesting level in the 
 configuration object.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>deep_nest_type</strong> &#8211; mapping nesting type, will set <a class="reference internal" href="#pyshell.config.StructuredConfiguration.dn" title="pyshell.config.StructuredConfiguration.dn"><tt class="xref py py-attr docutils literal"><span class="pre">dn</span></tt></a>.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>deep_store_type</strong> &#8211; mapping nesting type, will set <a class="reference internal" href="#pyshell.config.StructuredConfiguration.dn" title="pyshell.config.StructuredConfiguration.dn"><tt class="xref py py-attr docutils literal"><span class="pre">dn</span></tt></a>.</td>
 </tr>
 </tbody>
 </table>
 <p>This method does not return anything.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyshell.config.StructuredConfiguration.save">
-<tt class="descname">save</tt><big>(</big><em>filename=None</em>, <em>silent=True</em><big>)</big><a class="reference internal" href="_modules/pyshell/config.html#StructuredConfiguration.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.StructuredConfiguration.save" title="Permalink to this definition">¶</a></dt>
-<dd><p>Save the configuration to a YAML file. If <tt class="docutils literal"><span class="pre">filename</span></tt> is not 
-provided, the configuration will use the file set by <tt class="xref py py-meth docutils literal"><span class="pre">setFile()</span></tt>.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<a class="reference external" href="http://docs.python.org/2/library/string.html#string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Destination filename.</td>
-</tr>
-</tbody>
-</table>
-<p>Uses <a class="reference internal" href="#pyshell.config.Configuration.save" title="pyshell.config.Configuration.save"><tt class="xref py py-meth docutils literal"><span class="pre">Configuration.save()</span></tt></a>.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1171,6 +1119,43 @@ shallow update.</li>
 <tt class="descname">values</tt><big>(</big><big>)</big> &rarr; list of D's values<a class="headerlink" href="#pyshell.config.StructuredConfiguration.values" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="attribute">
+<dt id="pyshell.config.StructuredConfiguration.files">
+<tt class="descname">files</tt><a class="reference internal" href="_modules/pyshell/config.html#StructuredConfiguration.files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.StructuredConfiguration.files" title="Permalink to this definition">¶</a></dt>
+<dd><p>The set of loaded filenames</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.config.StructuredConfiguration.set_file">
+<tt class="descname">set_file</tt><big>(</big><em>filename=None</em><big>)</big><a class="reference internal" href="_modules/pyshell/config.html#StructuredConfiguration.set_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.StructuredConfiguration.set_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the default/current configuration file for this configuration.</p>
+<p>The configuration file set by this method will be used next time <a class="reference internal" href="#pyshell.config.StructuredConfiguration.load" title="pyshell.config.StructuredConfiguration.load"><tt class="xref py py-meth docutils literal"><span class="pre">load()</span></tt></a> or <a class="reference internal" href="#pyshell.config.StructuredConfiguration.save" title="pyshell.config.StructuredConfiguration.save"><tt class="xref py py-meth docutils literal"><span class="pre">save()</span></tt></a> is called with no filename.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<a class="reference external" href="http://docs.python.org/2/library/string.html#string" title="(in Python v2.7)"><em>string</em></a>) &#8211; The filename to load from.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.config.StructuredConfiguration.save">
+<tt class="descname">save</tt><big>(</big><em>filename=None</em>, <em>silent=True</em><big>)</big><a class="reference internal" href="_modules/pyshell/config.html#StructuredConfiguration.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.StructuredConfiguration.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the configuration to a YAML file. If <tt class="docutils literal"><span class="pre">filename</span></tt> is not 
+provided, the configuration will use the file set by <tt class="xref py py-meth docutils literal"><span class="pre">setFile()</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<a class="reference external" href="http://docs.python.org/2/library/string.html#string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Destination filename.</td>
+</tr>
+</tbody>
+</table>
+<p>Uses <a class="reference internal" href="#pyshell.config.Configuration.save" title="pyshell.config.Configuration.save"><tt class="xref py py-meth docutils literal"><span class="pre">Configuration.save()</span></tt></a>.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="pyshell.config.StructuredConfiguration.load">
 <tt class="descname">load</tt><big>(</big><em>filename=None</em>, <em>silent=True</em>, <em>fname=None</em><big>)</big><a class="reference internal" href="_modules/pyshell/config.html#StructuredConfiguration.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.StructuredConfiguration.load" title="Permalink to this definition">¶</a></dt>
@@ -1195,6 +1180,19 @@ not provided, the configuration will use the file set by
 </dd></dl>
 
 </div>
+<div class="section" id="developer-notes">
+<h2>Developer Notes<a class="headerlink" href="#developer-notes" title="Permalink to this headline">¶</a></h2>
+<p>There are a few design decisions in <a class="reference internal" href="#module-pyshell.config" title="pyshell.config"><tt class="xref py py-mod docutils literal"><span class="pre">pyshell.config</span></tt></a> that are worth explaining.</p>
+<p>The configuration items work with an internal storage object. That storage object is a dictionary of dictionaries, in its purest form. Configuration classes are responsible for re-casting any returned value as the correct external configuration object when accessed. This should be done as lightly as possible (i.e. only on the first layer, not renested).</p>
+<p>There is some tricky handling of dictionary keys which contain the default separator, <tt class="docutils literal"><span class="pre">&quot;.&quot;</span></tt>. The following rules apply:</p>
+<ul class="simple">
+<li>Dictionaries inserted with dotted keys remain intact.</li>
+<li>Dotted keys inserted are interperted as heirarchical keys.</li>
+<li>Heirarchical keys will be retrieved only when the key can&#8217;t be interpreted as a dotted key.</li>
+<li>To retrieve a heirarchical key which is <cite>hidden</cite> by a dotted key, retrieve the key levels as separate items, without the <tt class="docutils literal"><span class="pre">&quot;.&quot;</span></tt></li>
+</ul>
+<p>When writing to YAML files, there are two callback functions which can be used to encapsulate metadata, or multiple YAML documents in a single document. By default, the included YAML reader reads documents separated by <tt class="docutils literal"><span class="pre">---</span></tt>. Only the last document is the configuration interpreted by the <a class="reference internal" href="#pyshell.config.Configuration" title="pyshell.config.Configuration"><tt class="xref py py-class docutils literal"><span class="pre">Configuration</span></tt></a> object. The other documents are passed to <tt class="xref py py-meth docutils literal"><span class="pre">_load_yaml_callback()</span></tt>, which accepts many arguments as individual YAML documents. To save multiple YAML documents as output, the extra YAML documents should be returned as a list by <tt class="xref py py-meth docutils literal"><span class="pre">_save_yaml_callback()</span></tt>. If you don&#8217;t want to save any extra documents, <tt class="xref py py-meth docutils literal"><span class="pre">_save_yaml_callback()</span></tt> may return an empty list (as it does by default). These callback functions could be used to silently change the underlying configuration object before serialization to YAML. This behavior has not been tested.</p>
+</div>
 </div>
 
 
@@ -1209,6 +1207,7 @@ not provided, the configuration will use the file set by
 <li><a class="reference internal" href="#basic-configurations-configuration">Basic Configurations: <tt class="docutils literal"><span class="pre">Configuration</span></tt></a></li>
 <li><a class="reference internal" href="#dotted-configurations-configuration">Dotted Configurations: <tt class="docutils literal"><span class="pre">Configuration</span></tt></a></li>
 <li><a class="reference internal" href="#structured-configurations-structuredconfiguration">Structured Configurations: <tt class="docutils literal"><span class="pre">StructuredConfiguration</span></tt></a></li>
+<li><a class="reference internal" href="#developer-notes">Developer Notes</a></li>
 </ul>
 </li>
 </ul>
@@ -1256,7 +1255,7 @@ not provided, the configuration will use the file set by
         <li class="right" >
           <a href="subcommand.html" title="subcommand – Creating commands with Subcommands"
              >previous</a> |</li>
-        <li><a href="index.html">PyShell 0.3.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">PyShell 0.3.1 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
