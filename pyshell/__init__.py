@@ -14,7 +14,7 @@ Use this for quick access to commonly used classes!
 
 # pylint: disable = invalid-name
 
-version = "0.3.0"
+version = "0.3.1"
 __all__ = []
 
 from .base import *
