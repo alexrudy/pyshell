@@ -196,7 +196,7 @@ def deepmerge(d, u, s, invert=False, inplace=True):
             r = deepmerge(d.get(k, s()), v, s, invert=invert, inplace=inplace)
             e[k] = r
         elif invert:
-            e[k] = d.get(k,u[k])
+            e[k] = d.get(k, v)
         else:
             e[k] = u[k]
     return e
@@ -220,10 +220,11 @@ class MutableMappingBase(collections.MutableMapping):
     def __init__(self, *args, **kwargs):
         super(MutableMappingBase, self).__init__()
         self.log = loggers.getLogger(self.__module__)
-        self._store = dict()
-        self.merge(dict(*args,**kwargs))
+        self._store = self._dt(*args,**kwargs)
         
     __metaclass__ = abc.ABCMeta
+    
+    _dt = dict
         
     def __repr__(self):
         """String representation of this object"""
@@ -282,11 +283,6 @@ class Configuration(MutableMappingBase):
     """Deep nesting dictionary setting. This class will be used to create 
     deep nesting structures for this dictionary.""" #pylint: disable=W0105
     
-    dt = dict
-    """Exctraction nesting dictionary setting. This class will be used to 
-    create deep nesting structures when this object is 
-    extracted.""" #pylint: disable=W0105
-    
     @property
     def dn(self):
         """Deep nesting attribute reader""" #pylint: disable=C0103
@@ -295,7 +291,27 @@ class Configuration(MutableMappingBase):
     @dn.setter
     def dn(self, new_type):
         """Deep nesting type setter.""" #pylint: disable=C0103
+        if not issubclass(new_type, collections.MutableMapping):
+            raise ValueError("Deep nesting type must be an instance of {:s}, got {:s}".format(
+                collections.MutableMapping, new_type
+            ))
+        self._dn = new_type
+    
+    _dt = dict
+    """Exctraction nesting dictionary setting. This class will be used to 
+    create deep nesting structures when this object is 
+    extracted.""" #pylint: disable=W0105
+    
+    @property
+    def dt(self):
+        """Deep storage type."""
+        return self._dt
+        
+    @dt.setter
+    def dt(self, new_type):
+        """Set the deep storage type"""
         self.renest(new_type)
+        
     
     name = "Configuration"
     """The name/type of this configuration."""
@@ -316,6 +332,14 @@ class Configuration(MutableMappingBase):
     def __str__(self):
         """String for this object"""
         return "<%s %s>" % (self.name, repr(self))
+        
+    def __getitem__(self, key):
+        """Dictionary getter"""
+        rval = self._store.__getitem__(key)
+        if isinstance(rval, collections.MutableMapping):
+            return self.dn(rval)
+        else:
+            return rval
     
     def update(self, other, deep=True): #pylint: disable=W0221
         """Update the dictionary using :meth:`merge`.
@@ -345,8 +369,7 @@ class Configuration(MutableMappingBase):
             {'a': 'b', 'c': 'd'}
         
         """
-        deepmerge(self, other, self.dn)
-        reformat(self, self.dn)
+        deepmerge(self, other, self.dt)
         
     def imerge(self, other):
         """Inverse :meth:`merge`, where ``other`` will be considered original, and this object will be canonical.
@@ -363,8 +386,7 @@ class Configuration(MutableMappingBase):
             {'a': 'b', 'c': 'e'}
         
         """
-        deepmerge(self, other, self.dn, invert=True)
-        reformat(self, self.dn)
+        deepmerge(self, other, self.dt, invert=True)
         
     
     def save(self, filename, silent=True):
@@ -455,29 +477,20 @@ class Configuration(MutableMappingBase):
         """
         return reformat(self._store, self.dt)
     
-    def renest(self, deep_nest_type=None):
+    def renest(self, deep_store_type=None):
         """Re-nest this object. This method applies the 
-        :attr:`dn` deep-nesting attribute to each nesting level in the 
+        :attr:`dt` deep-storage attribute to each nesting level in the 
         configuration object.
         
-        :param deep_nest_type: mapping nesting type, will set :attr:`dn`.
+        :param deep_store_type: mapping nesting type, will set :attr:`dn`.
         
         This method does not return anything.
         """
-        if deep_nest_type is not None and issubclass(deep_nest_type, collections.Mapping):
-            self._dn = deep_nest_type #pylint: disable=C0103
-        elif deep_nest_type is not None:
-            raise TypeError("%r is not a mapping type." % deep_nest_type)
-        self._store = reformat(self._store, self.dn)
-        
-    def extract(self):
-        """Extract the dictionary from this object.
-        
-        .. deprecated:: 0.4
-            use :attr:`store`
-        
-        """
-        return self.store
+        if deep_store_type is not None and issubclass(deep_store_type, collections.Mapping):
+            self._dt = deep_store_type #pylint: disable=C0103
+        elif deep_store_type is not None:
+            raise TypeError("%r is not a mapping type." % deep_store_type)
+        self._store = reformat(self._store, self.dt)
         
     def parse_literals(self, *literals, **kwargs):
         """Turn a list of literals into configuration items.
@@ -682,17 +695,18 @@ class DottedConfiguration(Configuration):
         if not isinstance(store, collections.Mapping):
             raise KeyError
         
-        for i in range(len(parts)):
-            key = ".".join(parts[:i+1])
-            d = reformat(store, dict)
+        np = len(parts)
+        for i in range(np):
+            key = ".".join(parts[:np-i])
+            d = store
             if key in d:
-                if self._isempty(store[key]) and self._strict:
+                if self._strict and self._isempty(store[key]):
                     raise KeyError
                 elif not self._isempty(store[key]):
-                    return self._getitem(store[key], parts[i+1:])
+                    return self._getitem(store[key], parts[np-i:])
         key = parts.pop(0)
-        if len(parts) != 0 and not self._strict:
-            store.setdefault(key, self.dn())
+        if (not self._strict) and len(parts) != 0:
+            store.setdefault(key, self.dt())
         return self._getitem(store[key], parts)
             
     def _setitem(self, store, parts, value=None):
@@ -707,7 +721,7 @@ class DottedConfiguration(Configuration):
         if len(parts) == 0:
             return store.__setitem__(key, value)
         elif not self._strict:
-            store.setdefault(key, self.dn())
+            store.setdefault(key, self.dt())
         return self._setitem(store[key], parts, value)
             
     def _delitem(self, store, parts):
@@ -716,14 +730,14 @@ class DottedConfiguration(Configuration):
         if len(parts) == 0:
             return store.__delitem__(key)
         elif not self._strict:
-            store.setdefault(key, self.dn())
+            store.setdefault(key, self.dt())
         return self._delitem(store[key], parts)
             
     def _contains(self, store, parts):
         """Recursive containment algorithm"""
         key = parts.pop(0)
         if len(parts) == 0:
-            if (self._strict and (isinstance(store.get(key), self.dn) 
+            if (self._strict and (isinstance(store.get(key), self.dt) 
                 and not bool(store.get(key)))):
                 return False
             return store.__contains__(key)
@@ -738,35 +752,42 @@ class DottedConfiguration(Configuration):
         keyparts = key.split(".")
         try:
             if len(keyparts) > 1:
-                return self._getitem(self, keyparts)
-            elif (self._strict and (isinstance(self._store.get(key), self.dn) 
+                rval = self._getitem(self._store, keyparts)
+            elif (self._strict and (isinstance(self._store.get(key), self.dt) 
                 and not bool(self._store.get(key)))):
                 raise KeyError
-            return self._store[key]
+            else:
+                rval =  self._store[key]
         except KeyError:
-            raise KeyError('%s' % key)
-            # raise
+            # raise KeyError('%s' % key)
+            raise
+        
+        if isinstance(rval,collections.MutableMapping):
+            return self.dn(rval)
+        else:
+            return rval
+            
         
     def __setitem__(self, key, value):
         """Dictonary setter"""
         keyparts = key.split(".")
         if len(keyparts) > 1:
-            return self._setitem(self, keyparts, value)
+            return self._setitem(self._store, keyparts, value)
         return self._store.__setitem__(key, value)
         
     def __delitem__(self, key):
         """Dictionary delete"""
         keyparts = key.split(".")
         if len(keyparts) > 1:
-            return self._delitem(self, keyparts)        
+            return self._delitem(self._store, keyparts)        
         return self._store.__delitem__(key)
         
     def __contains__(self, key):
         """Dictionary in"""
         keyparts = key.split(".")
         if len(keyparts) > 1:
-            return self._contains(self, keyparts)
-        elif (self._strict and (isinstance(self._store.get(key), self.dn) 
+            return self._contains(self._store, keyparts)
+        elif (self._strict and (isinstance(self._store.get(key), self.dt) 
             and not bool(self._store.get(key)))):
             return False
         else:
@@ -880,7 +901,7 @@ class StructuredConfiguration(DottedConfiguration):
             filename = self._metadata["Files.This"]
         loaded = super(StructuredConfiguration, self).load(filename, silent, fname=fname)
         if loaded and self._set_on_load:
-            self._metadata["Files.Loaded"].append(filename)
+            self._metadata["Files.Loaded"].append(self.filename)
         
 
 

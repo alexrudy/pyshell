@@ -14,6 +14,11 @@
 
 This module provides scaffolding for subcommand classes. Individual subcommands are defined in :class:`SCEngine`. :class:`SCEngine` is a drop-in replacement for :class:`~pyshell.base.CLIEngine`. Then add each class to the :attr:`SCController.subEngines` list on a subclass of :class:`SCController`. :class:`SCController` can be run the same way :class:`~pyshell.base.CLIEngine` works. Both :class:`SCController` and :class:`SCEngine` are subclasses of :class:`~pyshell.base.CLIEngine` and should behave naturally with a :class:`~pyshell.base.CLIEngine`-style configuration.
 
+.. inheritance-diagram::
+    pyshell.subcommand.SCEngine
+    pyshell.subcommand.SCController
+    :parts: 1
+
 Base Class API Documentation
 ----------------------------
 
