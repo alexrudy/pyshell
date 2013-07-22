@@ -176,7 +176,8 @@ class test_DottedConfiguration(test_Configuration):
         """Lookup with multiple correct paths."""
         CFG = self.CLASS(**self.test_dict)
         CFG["z"] = {'a.b':'c','a':{'b':'d'}}
-        nt.eq_(CFG["z.a.b"],'d')
+        nt.eq_(CFG["z.a.b"],'c')
+        nt.eq_(CFG["z.a"]["b"],'d')
         
     @nt.raises(KeyError)
     def test_sub_dotted_dictionary_fail(self):
@@ -214,7 +215,14 @@ class test_DottedConfiguration(test_Configuration):
         CFG = self.CLASS(**self.test_dict)
         CFG["g.h"] = 'a'
         nt.eq_(CFG["g.h"],'a')
-        CFG["g"]
+        nt.eq_(CFG["g"]["h"],'a')
+        
+    def test_set_deep_dotted_name(self):
+        """Set for keys with many periods in them."""
+        CFG = self.CLASS(**self.test_dict)
+        CFG["g.h.z.f.k"] = 'a'
+        nt.eq_(CFG["g.h.z.f.k"],'a')
+        nt.eq_(CFG["g"]["h.z.f.k"],'a')
         
     def test_get_deep_class(self):
         """Test deep class transfer."""

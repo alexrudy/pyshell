@@ -695,14 +695,15 @@ class DottedConfiguration(Configuration):
         if not isinstance(store, collections.Mapping):
             raise KeyError
         
-        for i in range(len(parts)):
-            key = ".".join(parts[:i+1])
+        np = len(parts)
+        for i in range(np):
+            key = ".".join(parts[:np-i])
             d = store
             if key in d:
                 if self._strict and self._isempty(store[key]):
                     raise KeyError
                 elif not self._isempty(store[key]):
-                    return self._getitem(store[key], parts[i+1:])
+                    return self._getitem(store[key], parts[np-i:])
         key = parts.pop(0)
         if (not self._strict) and len(parts) != 0:
             store.setdefault(key, self.dt())
