@@ -25,3 +25,7 @@
 - Subcommand bug fixes.
 - Improved utility functions.
 - Expanded tests.
+
+**0.3.1**
+- Fixes to the internal structure in `config` module.
+- Documentation improvements.

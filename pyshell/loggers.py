@@ -87,7 +87,7 @@ def configure_logging(configuration):
         if "root" in config["logging"]:
             _prepare_config()
         
-        logging.config.dictConfig(config["logging"])
+        logging.config.dictConfig(config["logging"].store)
         
         if "py.warnings" in config["logging.loggers"]:
             captureWarnings(True)

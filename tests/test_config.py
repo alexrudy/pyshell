@@ -15,10 +15,10 @@ import os
 class test_config(object):
     """pyshell.config"""
     def setup(self):
-        self.test_dict_A = {"Hi":{"A":1,"B":2,"D":[1,2]},}
-        self.test_dict_B = {"Hi":{"A":3,"C":4,"D":[3,4]},}
-        self.test_dict_C = {"Hi":{"A":3,"B":2,"C":4,"D":[3,4]},} #Should be a merge of A and B
-        self.test_dict_D = {"Hi":{"A":3,"B":2,"C":4,"D":[1,2,3,4]},} #Should be a merge of A and B
+        self.test_dict_A = {"Hi":{"A":1,"B":2,"D":[1,2],"E":{"F":"G"}},}
+        self.test_dict_B = {"Hi":{"A":3,"C":4,"D":[3,4],"E":{"F":"G"}},}
+        self.test_dict_C = {"Hi":{"A":3,"B":2,"C":4,"D":[3,4],"E":{"F":"G"}},} #Should be a merge of A and B
+        self.test_dict_D = {"Hi":{"A":3,"B":2,"C":4,"D":[1,2,3,4],"E":{"F":"G"}},} #Should be a merge of A and B
     
     def test_reformat(self):
         """reformat(d, nt)"""
@@ -28,6 +28,7 @@ class test_config(object):
         rft = config.reformat(self.test_dict_C, nft)
         nt.ok_(isinstance(rft, nft))
         nt.ok_(isinstance(rft["Hi"], nft))
+        nt.ok_(isinstance(rft["Hi"]["E"], nft))
         nt.assert_false(isinstance(self.test_dict_C, nft))
     
     def test_deepmerge(self):
@@ -88,9 +89,11 @@ class test_Configuration(object):
         filename = resource_filename(__name__,"test_config/test_config.yml")
         with open(filename,'r') as stream:
             self.test_dict = yaml.load(stream)
-        self.test_dict_A = {"Hi":{"A":1,"B":2,},}
-        self.test_dict_B = {"Hi":{"A":3,"C":4,},}
-        self.test_dict_C = {"Hi":{"A":3,"B":2,"C":4,},} #Should be a merge of A and B
+        self.test_dict_A = {"Hi":{"A":1,"B":2,"D":[1,2],"E":{"F":"G"}},}
+        self.test_dict_B = {"Hi":{"A":3,"C":4,"D":[3,4],"E":{"F":"G"}},}
+        self.test_dict_C = {"Hi":{"A":3,"B":2,"C":4,"D":[3,4],"E":{"F":"G"}},} #Should be a merge of A and B
+        self.test_dict_D = {"Hi":{"A":3,"B":2,"C":4,"D":[1,2,3,4],"E":{"F":"G"}},} #Should be a merge of A and B
+
         
     def teardown(self):
         """Remove junky files if they showed up"""
@@ -129,7 +132,7 @@ class test_Configuration(object):
         cfg.save("Test.yaml")
         loaded = self.CLASS()
         loaded.load("Test.yaml")
-        assert self.test_dict_C == loaded.extract()
+        assert self.test_dict_C == loaded.store
         cfg.save("Test.dat")
         
         
@@ -169,8 +172,15 @@ class test_DottedConfiguration(test_Configuration):
         CFG["z"] = {'a.b':'c'}
         nt.eq_(CFG["z.a.b"], CFG.store["z"]["a.b"])
         
+    def test_multiple_sub_dotted_dictionaries(self):
+        """Lookup with multiple correct paths."""
+        CFG = self.CLASS(**self.test_dict)
+        CFG["z"] = {'a.b':'c','a':{'b':'d'}}
+        nt.eq_(CFG["z.a.b"],'c')
+        nt.eq_(CFG["z.a"]["b"],'d')
+        
     @nt.raises(KeyError)
-    def test_sub_dotted_dictionary(self):
+    def test_sub_dotted_dictionary_fail(self):
         """Inerting a dotted sub-dictionary, KeyError"""
         CFG = self.CLASS(**self.test_dict)
         CFG["z"] = {'a.b':'c'}
@@ -205,7 +215,21 @@ class test_DottedConfiguration(test_Configuration):
         CFG = self.CLASS(**self.test_dict)
         CFG["g.h"] = 'a'
         nt.eq_(CFG["g.h"],'a')
-        CFG["g"]
+        nt.eq_(CFG["g"]["h"],'a')
+        
+    def test_set_deep_dotted_name(self):
+        """Set for keys with many periods in them."""
+        CFG = self.CLASS(**self.test_dict)
+        CFG["g.h.z.f.k"] = 'a'
+        nt.eq_(CFG["g.h.z.f.k"],'a')
+        nt.eq_(CFG["g"]["h.z.f.k"],'a')
+        
+    def test_get_deep_class(self):
+        """Test deep class transfer."""
+        CFG = self.CLASS()
+        CFG.merge(self.test_dict)
+        assert isinstance(CFG["c.l"],CFG.dn)
+        
         
 class test_StructuredConfiguration(test_DottedConfiguration):
     """pyshell.config.StructuredConfiguration"""
