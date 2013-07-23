@@ -698,8 +698,7 @@ class DottedConfiguration(Configuration):
         np = len(parts)
         for i in range(np):
             key = ".".join(parts[:np-i])
-            d = store
-            if key in d:
+            if key in store:
                 if self._strict and self._isempty(store[key]):
                     raise KeyError
                 elif not self._isempty(store[key]):
@@ -716,7 +715,9 @@ class DottedConfiguration(Configuration):
         - Store is passed in as a variable to make the recursive mode work.
         - If there are no more parts left, then we call the store's setitem.
         - If there are parts left, then we get the value of the next key in line. When we do this, if that key has not been set, we use a default nester, the ``self.dn`` attribute, which should construct a mapping object.
-        - Recurses into the system."""
+        - Recurses into the system.
+        
+        """
         key = parts.pop(0)
         if len(parts) == 0:
             return store.__setitem__(key, value)
@@ -726,24 +727,29 @@ class DottedConfiguration(Configuration):
             
     def _delitem(self, store, parts):
         """Recursive delitem calling function"""
-        key = parts.pop(0)
-        if len(parts) == 0:
-            return store.__delitem__(key)
-        elif not self._strict:
-            store.setdefault(key, self.dt())
-        return self._delitem(store[key], parts)
+        if len(parts) == 1:
+            return store.__delitem__(parts[0])
+        else:
+            np = len(parts)
+            for i in range(np):
+                key = ".".join(parts[:np-i])
+                remain = parts[np-i:]
+                if key in store and remain:
+                    return self._delitem(store[key], remain)
+                elif key in store:
+                    return store.__delitem__(key)
+            raise KeyError
             
     def _contains(self, store, parts):
         """Recursive containment algorithm"""
-        key = parts.pop(0)
         if len(parts) == 0:
-            if (self._strict and (isinstance(store.get(key), self.dt) 
-                and not bool(store.get(key)))):
-                return False
-            return store.__contains__(key)
-        elif key in store:
-            return self._contains(store[key], parts)
+            return True
         else:
+            np = len(parts)
+            for i in range(np):
+                key = ".".join(parts[:np-i])
+                if key in store:
+                    return self._contains(store[key], parts[np-i:])
             return False
         
         
@@ -759,8 +765,7 @@ class DottedConfiguration(Configuration):
             else:
                 rval =  self._store[key]
         except KeyError:
-            # raise KeyError('%s' % key)
-            raise
+            raise KeyError('%s' % key)
         
         if isinstance(rval,collections.MutableMapping):
             return self.dn(rval)
@@ -778,9 +783,14 @@ class DottedConfiguration(Configuration):
     def __delitem__(self, key):
         """Dictionary delete"""
         keyparts = key.split(".")
-        if len(keyparts) > 1:
-            return self._delitem(self._store, keyparts)        
-        return self._store.__delitem__(key)
+        try:
+            if len(keyparts) > 1:
+                return self._delitem(self._store, keyparts)        
+            return self._store.__delitem__(key)
+        except KeyError:
+            # raise KeyError('%s' % key)
+            raise
+        
         
     def __contains__(self, key):
         """Dictionary in"""

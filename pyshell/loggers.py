@@ -54,7 +54,7 @@ import math
 import copy
 import sys
 import time
-import os
+import os, os.path
 import yaml
 import collections
 
@@ -344,7 +344,7 @@ def _showwarning(message, category, filename, lineno, file=None, line=None):
     logger = getLogger("py.warnings")
     if logger.isEnabledFor(logging.WARN):
         if category != UserWarning:
-            s = "{0}: {1}".format(category, message)
+            s = "{0}: {1} ({2}:{3})".format(category.__name__, message, os.path.basename(filename), lineno)
         else:
             s = "{0}".format(message)
         logger._log(30,s,tuple())
@@ -361,10 +361,10 @@ def captureWarnings(capture):
     if capture:
         if _warnings_showwarning is None:
             _warnings_showwarning = warnings.showwarning
-            warnings.showwarning = _showwarning
+        warnings.showwarning = _showwarning
     else:
+        warnings.showwarning = _warnings_showwarning
         if _warnings_showwarning is not None:
-            warnings.showwarning = _warnings_showwarning
             _warnings_showwarning = None
             
 logging.captureWarnings = captureWarnings
