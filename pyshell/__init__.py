@@ -21,8 +21,8 @@ from .base import *
 import base
 __all__ += base.__all__
 
-from loggers import getLogger, getSimpleLogger
-__all__ += ['getLogger' , 'getSimpleLogger']
+from loggers import getLogger, getSimpleLogger, configure_logging
+__all__ += ['getLogger' , 'getSimpleLogger', 'configure_logging']
 
 import loggers
 loggers.buffer_logger()

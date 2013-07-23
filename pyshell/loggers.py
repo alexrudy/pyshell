@@ -129,7 +129,7 @@ def buffer_logger(name=None):
     
 _simpleConfig = None
 def getSimpleLogger(name=None,level=None):
-    """Retrieves a lgoger with a simple logging configuration setup,
+    """Retrieves a logger with a simple logging configuration setup,
     which writes colorful logging output to the console using the configuration
     provided by ``logging-stream-all.yml``. Only the root logger is configured with
     the console handler, all others have only a level set.
