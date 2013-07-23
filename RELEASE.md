@@ -29,3 +29,7 @@
 **0.3.1**
 - Fixes to the internal structure in `config` module.
 - Documentation improvements.
+
+**0.3.2**
+- Fixes for the internal structure in `config` module. Specifically, delete, set and contains.
+- Tweaks to warning logs.
