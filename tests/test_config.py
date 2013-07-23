@@ -179,6 +179,25 @@ class test_DottedConfiguration(test_Configuration):
         nt.eq_(CFG["z.a.b"],'c')
         nt.eq_(CFG["z.a"]["b"],'d')
         
+    def test_sub_dotted_contains(self):
+        """Testing contains for dotted names."""
+        CFG = self.CLASS(**self.test_dict)
+        CFG["z"] = {'a.b':'c'}
+        nt.ok_("a.b" in CFG["z"], "Couldn't find 'a.b' in {:s}".format(CFG["z"]))
+        nt.ok_("a" not in CFG["z"], "Found 'a' in {:s}".format(CFG["z"]))
+        nt.ok_("d" not in CFG["z"], "Found 'd' in {:s}".format(CFG["z"]))
+        
+    def test_sub_dotted_del(self):
+        """Testing contains for dotted names."""
+        CFG = self.CLASS(**self.test_dict)
+        CFG["z"] = {'a.b':'c'}
+        del CFG["z.a.b"]
+        nt.ok_("a.b" not in CFG["z"], "Found 'a.b' (not deleted) in {:s}".format(CFG["z"]))
+        del CFG["c.d"]
+        nt.ok_("c.d" not in CFG, "Found 'c.d' (not deleted) in {:s}".format(CFG))
+        
+        
+        
     @nt.raises(KeyError)
     def test_sub_dotted_dictionary_fail(self):
         """Inerting a dotted sub-dictionary, KeyError"""
