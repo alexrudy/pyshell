@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pyshell.pipeline.core &mdash; PyShell 0.3.1 documentation</title>
+    <title>pyshell.pipeline.core &mdash; PyShell 0.3.2 documentation</title>
     
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '0.3.1',
+        VERSION:     '0.3.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,7 +26,7 @@
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="PyShell 0.3.1 documentation" href="../../../index.html" />
+    <link rel="top" title="PyShell 0.3.2 documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body>
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">PyShell 0.3.1 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">PyShell 0.3.2 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -219,11 +219,11 @@
 <span class="sd">        Pipes cannot be added dynamically. Once the pipeline starts running (i.e. processing pipes) the order and settings are fixed. Attempting to adjsut the pipes at this point will raise an error.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s">&quot;started&quot;</span><span class="p">]:</span>
-            <span class="k">raise</span> <span class="n">PipelineStateException</span><span class="p">(</span><span class="s">&quot;Cannot add a new pipe to the pipeline, the simulation has already started!&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">PipelineStateException</span><span class="p">(</span><span class="s">&quot;Cannot add a new pipe to the pipeline, the pipeline has already started!&quot;</span><span class="p">)</span>
         
         <span class="n">pipe</span> <span class="o">=</span> <span class="n">Pipe</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span><span class="n">module</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__module__</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">pipe</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">PipelineException</span><span class="p">(</span><span class="s">&quot;Cannot have duplicate pipe named </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">PipelineException</span><span class="p">(</span><span class="s">&quot;Cannot have duplicate pipe named &#39;</span><span class="si">%s</span><span class="s">&#39;&quot;</span> <span class="o">%</span> <span class="n">pipe</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
         
         <span class="bp">self</span><span class="o">.</span><span class="n">pipes</span><span class="p">[</span><span class="n">pipe</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">pipe</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pos_pipe_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&quot;+&quot;</span><span class="o">+</span><span class="n">pipe</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="n">action</span><span class="o">=</span><span class="s">&#39;append_const&#39;</span><span class="p">,</span><span class="n">dest</span><span class="o">=</span><span class="s">&#39;include&#39;</span><span class="p">,</span><span class="n">const</span><span class="o">=</span><span class="n">pipe</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="n">help</span><span class="o">=</span><span class="n">pipe</span><span class="o">.</span><span class="n">help</span><span class="p">)</span>
@@ -475,7 +475,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">PyShell 0.3.1 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">PyShell 0.3.2 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>
