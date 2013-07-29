@@ -226,13 +226,22 @@ class MutableMappingBase(collections.MutableMapping):
     
     _dt = dict
         
-    def __repr__(self):
+    def __str__(self):
         """String representation of this object"""
         return repr(self.store)
         
-    def __str__(self):
+    def __repr__(self):
         """String for this object"""
-        return "<%s %s>" % (self.__class__.__name__, repr(self))
+        return "<%s %s>" % (self.__class__.__name__, str(self.store))
+        
+    def _repr_pretty_(self, p, cycle):
+        """Pretty representation of this object."""
+        if cycle:
+            p.text("{}(...)".format(self.__class__.__name__))
+        else:
+            from cStringIO import StringIO
+            with p.group(2,"{}(".format(self.__class__.__name__),")"):
+                p.pretty(self.store)
         
     def __getitem__(self, key):
         """Dictionary getter"""
@@ -329,10 +338,7 @@ class Configuration(MutableMappingBase):
         most recently"""
         return self._filename
     
-    def __str__(self):
-        """String for this object"""
-        return "<%s %s>" % (self.name, repr(self))
-        
+    
     def __getitem__(self, key):
         """Dictionary getter"""
         rval = self._store.__getitem__(key)
