@@ -39,6 +39,6 @@ distribute-*.tar.gz
 
 # Tests
 tests/pkg
-
+development/
 
 
