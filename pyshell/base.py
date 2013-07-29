@@ -227,7 +227,7 @@ from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import os, os.path
 import abc
 from warnings import warn
-from .config import StructuredConfiguration as Config, Configuration as BConfig
+from .config import StructuredConfiguration
 from .util import semiabstractmethod, deprecatedmethod
 from .loggers import configure_logging, getLogger
 
@@ -300,8 +300,7 @@ class CLIEngine(object):
             epilog = self.epilog,
             conflict_handler = conflict_handler)
         self._home = os.environ["HOME"]
-        self._config = Config()
-        self._config.dn = BConfig
+        self._config = StructuredConfiguration()
         self._opts = None
         self._rargs = None
         self.__help_action = None
