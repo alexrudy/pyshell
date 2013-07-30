@@ -95,11 +95,7 @@ def collapseuser(path):
     
 def join(*args):
     """docstring for join"""
-    args = list(args)
-    path = args.pop(0)
-    for arg in args:
-        path = os.path.join(path, arg)
-    return os.path.expanduser(path)
+    return os.path.expanduser(os.path.join(*args))
     
 def check_exists(path):
     """Check whether the given directory exists."""
