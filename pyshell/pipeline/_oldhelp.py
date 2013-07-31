@@ -7,6 +7,10 @@
 #  Copyright 2012 Alexander Rudy. All rights reserved.
 # 
 
+from __future__ import (absolute_import, unicode_literals, division,
+                        print_function)
+
+
 def optional(optional=True):
     """Makes this object optional. This stage will now trap all exceptions, and will not cause the simulator to fail if it fails."""
     if callable(optional) or optional:

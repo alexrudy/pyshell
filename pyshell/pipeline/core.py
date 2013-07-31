@@ -12,6 +12,11 @@
     :inherited-members:
 
 """
+
+from __future__ import (absolute_import, unicode_literals, division,
+                        print_function)
+
+
 import time
 import argparse
 import re
@@ -371,7 +376,7 @@ can be customized using the 'Default' configuration variable in the configuratio
         """Actions completed after running the system."""
         self.log.status("Finishing...")
         if self.config.get("Actions.ShowTree",False):
-            print "\n".join(self.get_dependency_tree())
+            print("\n".join(self.get_dependency_tree()))
         if self.config.get("Actions.Profile",False):
             self.get_profile().to_txt()
         

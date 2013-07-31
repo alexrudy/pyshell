@@ -6,7 +6,10 @@
 #  Created by Alexander Rudy on 2012-11-21.
 #  Copyright 2012 Alexander Rudy. All rights reserved.
 # 
-from __future__ import division
+from __future__ import (absolute_import, unicode_literals, division,
+                        print_function)
+
+
 from datetime import datetime
 
 from .base import CLIEngine

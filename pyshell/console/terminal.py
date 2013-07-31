@@ -9,6 +9,10 @@ Example of usage:
     print BLUE + BG_YELLOW + BOLD + 'text' + NORMAL
 """
 
+from __future__ import (absolute_import, unicode_literals, division,
+                        print_function)
+
+
 import sys
 
 # The current module
@@ -76,7 +80,7 @@ def render(text):
 try:
     import curses
     setup()
-except Exception, e:
+except Exception as e:
     # There is a failure; set all attributes to default
-    print 'Warning: %s' % e
+    print(('Warning: %s' % e ))
     default()   
