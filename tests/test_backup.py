@@ -124,7 +124,7 @@ class test_BackupScript(object):
         make_files(os.path.join(self.PATH,'c/'),self.NUM_FILES)
 
         clear_dir(os.path.join(self.PATH,'d/'))
-        for i in range(self.NUM_FILES/self.SKIP_FACT):
+        for i in range(self.NUM_FILES//self.SKIP_FACT):
             shutil.copy2(os.path.join(self.PATH,'c/c.%03d.test' % (i * self.SKIP_FACT)),os.path.join(self.PATH,'d/'))
             
         self.engine = pyshell.backup.BackupEngine()
