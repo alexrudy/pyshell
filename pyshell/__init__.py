@@ -21,13 +21,13 @@ version = "0.3.2"
 __all__ = []
 
 from .base import *
-import base
+from . import base
 __all__ += base.__all__
 
 from loggers import getLogger, getSimpleLogger, configure_logging
 __all__ += ['getLogger' , 'getSimpleLogger', 'configure_logging']
 
-import loggers
+from . import loggers
 loggers.buffer_logger()
 
 from .subcommand import SCEngine, SCController
