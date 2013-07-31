@@ -12,7 +12,12 @@ from __future__ import (absolute_import, unicode_literals, division,
 
 
 import argparse
+import os
 
 def dests_from_argparse(parser):
     """Get destinations from a parser"""
     return [ action.dest for action in parser._actions ]
+
+def on_travis_ci():
+    """Check whether we are on travis"""
+    return os.environ.get("CI",False) and os.environ.get("TRAVIS",False)

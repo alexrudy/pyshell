@@ -17,7 +17,7 @@ import warnings
 from nose.plugins.skip import Skip,SkipTest
 from subprocess import CalledProcessError, Popen, PIPE
 import shlex
-from .util import dests_from_argparse
+from .util import dests_from_argparse, on_travis_ci
 
 
 def clear_dir(tdir):
@@ -151,6 +151,9 @@ class test_BackupScript(object):
         
     def test_engine_subproc(self):
         """Test full engine as a subprocess."""
+        if on_travis_ci():
+            from nose.plugins.skip import SkipTest
+            raise SkipTest()
         assert len(os.listdir(os.path.join(self.PATH,'a/'))) != len(os.listdir(os.path.join(self.PATH,'b/')))
         assert len(os.listdir(os.path.join(self.PATH,'c/'))) != len(os.listdir(os.path.join(self.PATH,'d/')))
         backup_py_path = os.path.join(self.EXEPATH,"backup.py")
