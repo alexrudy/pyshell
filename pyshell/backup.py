@@ -11,6 +11,10 @@
 BackUp - A command-line backup tool.
 """
 
+from __future__ import (absolute_import, unicode_literals, division,
+                        print_function)
+
+
 from subprocess import Popen
 import subprocess
 import os, os.path

@@ -6,6 +6,9 @@
 #  Copyright 2013 Alexander Rudy. All rights reserved.
 # 
 
+from __future__ import (absolute_import, unicode_literals, division,
+                        print_function)
+
 import yaml
 import pyshell.config as config
 from pkg_resources import resource_filename

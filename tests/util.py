@@ -7,6 +7,10 @@
 #  Copyright 2013 Jaberwocky. All rights reserved.
 # 
 
+from __future__ import (absolute_import, unicode_literals, division,
+                        print_function)
+
+
 import argparse
 
 def dests_from_argparse(parser):

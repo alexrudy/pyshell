@@ -103,8 +103,8 @@ def force_yaml_unicode():
         string object from a YAML key, forcing all YAML strings
         to be unicode objects."""
         return self.construct_scalar(node)
-    Loader.add_constructor(u'tag:yaml.org,2002:str', construct_yaml_str)
-    SafeLoader.add_constructor(u'tag:yaml.org,2002:str', construct_yaml_str)
+    Loader.add_constructor('tag:yaml.org,2002:str', construct_yaml_str)
+    SafeLoader.add_constructor('tag:yaml.org,2002:str', construct_yaml_str)
     
     
 def reformat(d, nt):

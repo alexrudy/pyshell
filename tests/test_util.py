@@ -7,6 +7,9 @@
 # 
 """pyshell.util"""
 
+from __future__ import (absolute_import, unicode_literals, division,
+                        print_function)
+
 
 import pyshell.util
 import nose.tools as nt

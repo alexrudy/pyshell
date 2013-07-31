@@ -7,6 +7,9 @@
 #  Copyright 2012 Alexander Rudy. All rights reserved.
 # 
 
+from __future__ import (absolute_import, unicode_literals, division,
+                        print_function)
+
 import shutil, os, os.path
 import pyshell.backup
 import nose.tools as nt
@@ -42,7 +45,7 @@ class test_BackupEngine(object):
         """BackupEngine attributes"""
         from argparse import ArgumentParser
         engine = pyshell.backup.BackupEngine()
-        nt.eq_(engine.description.splitlines()[0],u"BackUp – A simple backup utility using rsync. The utility has")
+        nt.eq_(engine.description.splitlines()[0],"BackUp – A simple backup utility using rsync. The utility has")
         nt.eq_(engine.cfgbase,'')
         nt.eq_(engine.defaultcfg,"Backup.yml")
         nt.ok_(isinstance(engine.parser,ArgumentParser),"engine.parser should be an argparse.ArgumentParser")

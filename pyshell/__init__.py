@@ -12,6 +12,9 @@ PyShell master module
 Use this for quick access to commonly used classes!
 """
 
+from __future__ import (absolute_import, unicode_literals, division,
+                        print_function)
+
 # pylint: disable = invalid-name
 
 version = "0.3.2"

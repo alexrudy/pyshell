@@ -31,6 +31,10 @@
     query_string
 
 """
+
+from __future__ import (absolute_import, unicode_literals, division,
+                        print_function)
+
 import os
 import sys
 import warnings
@@ -149,7 +153,7 @@ def semiabstractmethod(txt):
         return raiser
     if callable(txt):
         func = txt
-        txt = u"Abstract method %s() cannot be called."
+        txt = "Abstract method %s() cannot be called."
         return decorator(func)
     return decorator
 

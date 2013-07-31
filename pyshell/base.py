@@ -221,7 +221,10 @@ run a subclass of :class:`CLIEngine`::
 
 
 """
-from __future__ import print_function, unicode_literals, division
+
+from __future__ import (absolute_import, unicode_literals, division,
+                        print_function)
+
 
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import os, os.path
