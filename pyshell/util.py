@@ -208,14 +208,13 @@ def query_yes_no(question, default="yes"):
         raise ValueError("invalid default answer: '%s'" % default)
 
     while True:
-        sys.stdout.write(question + prompt)
-        choice = raw_input().lower()
+        choice = raw_input(question + prompt).lower()
         if default is not None and choice == '':
             return valid[default]
         elif choice in valid:
             return valid[choice]
         else:
-            sys.stdout.write("Please respond with 'yes' or 'no' "\
+            sys.stdout.write("Please respond with 'yes' or 'no' "
                              "(or 'y' or 'n').\n")
                              
 def query_string(question, default=None, validate=None):
@@ -228,14 +227,13 @@ def query_string(question, default=None, validate=None):
     """
     
     if default is None:
-        prompt = " : "
+        prompt = ": "
     else:
         prompt = " (%s): " % default
     
     
     while True:
-        sys.stdout.write(question + prompt)
-        answer = raw_input()
+        answer = raw_input(question + prompt)
         if default is not None and answer == '':
             answer = default
         if validate is None or validate(answer):
