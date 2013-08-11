@@ -196,8 +196,8 @@ def query_yes_no(question, default="yes"):
     :return: `True` or `False` for "yes" or "no" respectively.
     
     """
-    valid = {"yes":True,   "y":True,  "ye":True,
-             "no":False,     "n":False}
+    valid = {"yes":True, "y":True, "ye":True,
+             "no":False, "n":False}
     if default == None:
         prompt = " [y/n] "
     elif default == "yes":
@@ -217,7 +217,7 @@ def query_yes_no(question, default="yes"):
             sys.stdout.write("Please respond with 'yes' or 'no' "
                              "(or 'y' or 'n').\n")
                              
-def query_string(question, default=None, validate=None):
+def query_string(question, default=None, validate=None, output=sys.stdout):
     """Ask a question via raw_input, and return the answer as a string.
     
     :param question: A string presented to the user
@@ -229,7 +229,7 @@ def query_string(question, default=None, validate=None):
     if default is None:
         prompt = ": "
     else:
-        prompt = " (%s): " % default
+        prompt = " ({:s}): ".format(default)
     
     
     while True:
@@ -240,9 +240,50 @@ def query_string(question, default=None, validate=None):
             return answer
         else:
             if hasattr(validate, '__hlp__'):
-                sys.stdout.write(validate.__hlp__+"\n")
+                output.write(validate.__hlp__+"\n")
             elif hasattr(validate, '__doc__'):
-                sys.stdout.write("Invalid input, the validation function"
+                output.write("Invalid input, the validation function"
                 " has the following documentaion:\n"+validate.__doc__+"\n")
-            sys.stdout.write("Invalid input. Please try again.\n")
+            output.write("Invalid input. Please try again.\n")
+            
+def select(iterable, labels=None, default=None, 
+    before="Select from:", question="Select an item", output=sys.stdout):
+    """A simple CLI UI to let the user choose an item from a list of items.
+    
+    :param iterable: The list from which to choose.
+    :param labels: The labels for the list from which to choose.
+    :param default: The index of the default item in `iterable`
+    :param before: The string to print before the choice list.
+    :param question: The question to use as the prompt.
+    """
+    
+    if labels is None:
+        labels = iterable
+    elif len(labels) != len(iterable):
+        raise ValueError("Labels must be the same length as the iterable.")
+    
+    def validate(answer):
+        valid = is_type_factory(int)(answer)
+        if valid:
+            valid &= int(answer) <= len(iterable)
+            valid &= int(answer) >= 1
+        return valid
+    
+    validate.__hlp__ = "Selection must be an integer between {:d} and {:d}".format(1,len(iterable))
+    
+    # String Formatting Tools
+    line_template = "{number:{indent:d}d}) {text:s}"
+    indent = len("{:d}".format(len(iterable)))
+    
+    output.write(before)
+    output.write("\n")
+    
+    for i,item in enumerate(labels):
+        line = line_template.format(number=i+1, indent=indent, text=item)
+        output.write(line)
+        output.write("\n")
+    
+    answer = query_string(question, default=default, validate=validate)
+    index = int(answer) - 1
+    return iterable[index]
             
