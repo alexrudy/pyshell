@@ -848,8 +848,7 @@ class StructuredConfiguration(DottedConfiguration):
         self._metadata = DottedConfiguration()
         self._metadata["Files.This"] = self.DEFAULT_FILENAME
         self._metadata["Files.Loaded"] = []
-        self._metadata["Configurations"] = self._metadata.dn()
-        self.__set_on_load = False
+        self.__set_on_load = True
         self._dn = DottedConfiguration
         
     @property
