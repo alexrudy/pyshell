@@ -158,7 +158,18 @@ def semiabstractmethod(txt):
     return decorator
 
 def deprecatedmethod(message=None, version=None, replacement=None):
-    """Mark a method as deprecated"""
+    """Mark a method as deprecated.
+    
+    :param message: The warning message to display, or None.
+    :param version: The deprication version. Will be appended to the message.
+    :param replacement: A string describing the text to replace.
+    
+    The final :exc:`DepricationWarning` message is formatted as follows::
+        
+        "Method {method} will be depricated in version {version}, please use {replacement} instead."
+    
+    Setting the `message` argument replaces the string ``"Method {method} will be depricated".
+    """
     def decorator(func): # pylint: disable = missing-docstring
         try:
             txt.format(method=func.__name__)
@@ -174,11 +185,11 @@ def deprecatedmethod(message=None, version=None, replacement=None):
     else:
         txt = message
     if version is not None:
-        txt += "in version {}".format(version)
+        txt += " in version {}".format(version)
     else:
-        txt += "soon"
+        txt += " soon"
     if replacement is not None:
-        txt += "please use {} instead".format(replacement)
+        txt += " please use {} instead".format(replacement)
     txt += "."
     if callable(message):
         return decorator(message)
