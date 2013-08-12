@@ -19,16 +19,40 @@
     force_dir_path
     
 .. autofunction::
+    collapseuser
+    
+.. autofunction::
+    check_exists
+    
+.. autofunction::
+    warn_exists
+    
+.. autofunction::
+    is_remote_path
+    
+.. autofunction::
     semiabstractmethod
     
 .. autofunction::
+    deprecatedmethod
+    
+.. autofunction::
     func_lineno
+
+.. autofunction::
+    ipydb
+
+.. autofunction::
+    is_type_factory
 
 .. autofunction::
     query_yes_no
 
 .. autofunction::
     query_string
+    
+.. autofunction::
+    query_select
 
 """
 
@@ -98,7 +122,7 @@ def collapseuser(path):
         return path
     
 def join(*args):
-    """docstring for join"""
+    """Join and expand user."""
     return os.path.expanduser(os.path.join(*args))
     
 def check_exists(path):
@@ -106,7 +130,13 @@ def check_exists(path):
     return os.path.exists(os.path.expanduser(path))
     
 def warn_exists(path, name="path", exists=True):
-    """docstring for warn_exists"""
+    """Warn if the file path does or does not exist.
+    
+    :param path: The path to search for.
+    :param name: The textual name to use in output.
+    :param exists: Whether the filepath **should** exist or not.
+    
+    """
     if check_exists(path) != exists:
         warnings.warn("{name} '{path}' does{exist} exist!".format(
             name=name.capitalize(), path=path,
@@ -168,7 +198,7 @@ def deprecatedmethod(message=None, version=None, replacement=None):
         
         "Method {method} will be depricated in version {version}, please use {replacement} instead."
     
-    Setting the `message` argument replaces the string ``"Method {method} will be depricated".
+    Setting the `message` argument replaces the string ``"Method {method} will be depricated"``.
     """
     def decorator(func): # pylint: disable = missing-docstring
         try:
@@ -204,6 +234,7 @@ def query_yes_no(question, default="yes"):
     :param default: The answer if the user hits <Enter> with no input.
         It must be "yes" (the default), "no" or None (meaning
         an answer is required of the user).
+    :param output: The output stream.
     :return: `True` or `False` for "yes" or "no" respectively.
     
     """
@@ -233,6 +264,8 @@ def query_string(question, default=None, validate=None, output=sys.stdout):
     
     :param question: A string presented to the user
     :param default: The answer if the user hits <Enter> with no input.
+    :param validate: A function to validate responses. To validate that the answer is a specific type, use :func:`is_type_factory`.
+    :param output: The output stream.
     :return: A string with the user's answer or the default if no answer.
     
     """
@@ -257,7 +290,7 @@ def query_string(question, default=None, validate=None, output=sys.stdout):
                 " has the following documentaion:\n"+validate.__doc__+"\n")
             output.write("Invalid input. Please try again.\n")
             
-def select(iterable, labels=None, default=None, 
+def query_select(iterable, labels=None, default=None, 
     before="Select from:", question="Select an item", output=sys.stdout):
     """A simple CLI UI to let the user choose an item from a list of items.
     
@@ -266,6 +299,7 @@ def select(iterable, labels=None, default=None,
     :param default: The index of the default item in `iterable`
     :param before: The string to print before the choice list.
     :param question: The question to use as the prompt.
+    :param output: The output stream.
     """
     
     if labels is None:
