@@ -59,7 +59,7 @@
 from __future__ import (absolute_import, unicode_literals, division,
                         print_function)
 
-import os
+import os, os.path
 import sys
 import warnings
 import functools
@@ -141,6 +141,15 @@ def warn_exists(path, name="path", exists=True):
         warnings.warn("{name} '{path}' does{exist} exist!".format(
             name=name.capitalize(), path=path,
             exist=" not" if exists else ""), RuntimeWarning)
+            
+def remove(path, warn=False, name='path'):
+    """docstring for remove"""
+    if os.path.exists(path):
+        os.remove(path)
+    elif warn:
+        warnings.warn("{name} '{path}' does not exist!".format(
+            name=name.capitalize(), path=path
+        ))
     
 def is_remote_path(path):
     """Path looks like an SSH or other URL compatible path?"""
