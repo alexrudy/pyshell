@@ -224,8 +224,6 @@ class test_DottedConfiguration(test_Configuration):
         del CFG["c.d"]
         nt.ok_("c.d" not in CFG, "Found 'c.d' (not deleted) in {:s}".format(CFG))
         
-        
-        
     @nt.raises(KeyError)
     def test_sub_dotted_dictionary_fail(self):
         """Inerting a dotted sub-dictionary, KeyError"""
@@ -272,10 +270,21 @@ class test_DottedConfiguration(test_Configuration):
         nt.eq_(CFG["g"]["h.z.f.k"],'a')
         
     def test_get_deep_class(self):
-        """Test deep class transfer."""
+        """Deep class transfer."""
         CFG = self.CLASS()
         CFG.merge(self.test_dict)
         assert isinstance(CFG["c.l"],CFG.dn)
+        
+    def test_separator_change(self):
+        """Change separator"""
+        CFG = self.CLASS()
+        CFG.separator = "-"
+        CFG["A-B-C"] = 2
+        nt.eq_(CFG["A"]["B"]["C"],2)
+        CFG.merge({'A':{'B':{'D':3}}})
+        nt.eq_(CFG["A-B-D"],3)
+        del CFG["A-B-C"]
+        nt.ok_("A-B-C" not in CFG)
         
         
 class test_StructuredConfiguration(test_DottedConfiguration):
