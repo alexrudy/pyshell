@@ -7,6 +7,9 @@
 # 
 """pyshell.util"""
 
+from __future__ import (absolute_import, unicode_literals, division,
+                        print_function)
+
 
 import pyshell.util
 import nose.tools as nt
@@ -72,7 +75,7 @@ def test_semiabstractmethod_decorator():
     @pyshell.util.semiabstractmethod
     def my_method():
         """test-doc"""
-        print "Doing my not-implemented method"
+        print("Doing my not-implemented method")
     
     nt.eq_(my_method.__name__,'my_method')
     nt.eq_(my_method.__doc__,'test-doc')
@@ -84,7 +87,7 @@ def test_semiabstractmethod_decorator_with_args():
     @pyshell.util.semiabstractmethod("My Message %s()")
     def my_method():
         """test-doc"""
-        print "Doing my not-implemented method"
+        print("Doing my not-implemented method")
 
     nt.eq_(my_method.__name__,'my_method')
     nt.eq_(my_method.__doc__,'test-doc')

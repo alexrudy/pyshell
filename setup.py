@@ -7,8 +7,12 @@
 #  Copyright 2012 Alexander Rudy. All rights reserved.
 # 
 
-from distribute_setup import use_setuptools
-use_setuptools()
+try:
+    import setuptools
+except ImportError:
+    from distribute_setup import use_setuptools
+    use_setuptools()
+
 from setuptools import setup, find_packages
 
 from pyshell import version
@@ -27,6 +31,9 @@ setup(
     zip_safe = True,
     entry_points = {
         'console_scripts' : ["BackUp = pyshell.backup:BackupEngine.script",
-                            "PyPackage = pyshell.package:PyPackageEngine.script"]
+                            "PyPackage = pyshell.package:PyPackageEngine.script"],
+        'nose.plugins.0.10': [
+                    'postmortem = pyshell.nosetests.postmortem:PostMortemPlugin',
+                    ]
     }
 )

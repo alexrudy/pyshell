@@ -12,6 +12,11 @@
     :inherited-members:
 
 """
+
+from __future__ import (absolute_import, unicode_literals, division,
+                        print_function)
+
+
 import time
 import argparse
 import re
@@ -26,8 +31,6 @@ from ..util import func_lineno, ipydb
 
 ipydb()
 
-
-logging.addLevelName(25,'STATUS')
 
 class PipelineException(Exception):
     """Exceptions in Pipelines"""
@@ -56,7 +59,7 @@ class Pipeline(CLIEngine,Stateful):
         (-) Exclude      : To exclude a pipe, use -pipe. 
     
         To run the simulater, use 
-        $ %(command)s *all""" % HelpDict
+        $ %(command)s +all""" % HelpDict
         return ShortHelp
     
     @property
@@ -169,11 +172,11 @@ can be customized using the 'Default' configuration variable in the configuratio
         Pipes cannot be added dynamically. Once the pipeline starts running (i.e. processing pipes) the order and settings are fixed. Attempting to adjsut the pipes at this point will raise an error.
         """
         if self.state["started"]:
-            raise PipelineStateException("Cannot add a new pipe to the pipeline, the simulation has already started!")
+            raise PipelineStateException("Cannot add a new pipe to the pipeline, the pipeline has already started!")
         
         pipe = Pipe(action=action,module=self.__module__,**kwargs)
         if pipe.name in self.pipes:
-            raise PipelineException("Cannot have duplicate pipe named %s" % name)
+            raise PipelineException("Cannot have duplicate pipe named '%s'" % pipe.name)
         
         self.pipes[pipe.name] = pipe
         self.pos_pipe_parser.add_argument("+"+pipe.name,action='append_const',dest='include',const=pipe.name,help=pipe.help)
@@ -254,6 +257,8 @@ can be customized using the 'Default' configuration variable in the configuratio
             self.opts.post_configure = []
         if not getattr(self._opts,'include',False):
             self.opts.include = []
+        if not getattr(self._opts,'exclude',False):
+            self.opts.exclude = []
         
         for cfg in self.opts.pre_configure:
             self.config.update(cfg)
@@ -267,6 +272,8 @@ can be customized using the 'Default' configuration variable in the configuratio
         super(Pipeline, self).parse()
         for pipename in self.opts.include:
             self.pipes[pipename].set_state("included")
+        for pipename in self.opts.exclude:
+            self.pipes[pipename].set_state("excluded")
         self.set_state("parsed")
         all_pipe = self.pipes.pop("all")
         self.pipes["all"] = all_pipe
@@ -298,7 +305,7 @@ can be customized using the 'Default' configuration variable in the configuratio
     
     def _unprimed(self,pipe):
         """docstring for _primed"""
-        return not pipe.state["primed"]
+        return not pipe.state["primed"] and not pipe.state["excluded"]
     
     def _resolve_dependents(self,parent_pipe):
         """Handle dependents for this pipe"""
@@ -361,15 +368,15 @@ can be customized using the 'Default' configuration variable in the configuratio
     def start_actions(self):
         """Actions completed before running the system."""
         if self.config.get("System.DryRun",False):
-            self.log.log(25,"(DRYRUN) Starting...")
+            self.log.status("(DRYRUN) Starting...")
         else:
-            self.log.log(25,"Starting...")
+            self.log.status("Starting...")
             
     def end_actions(self):
         """Actions completed after running the system."""
-        self.log.log(25,"Finishing...")
+        self.log.status("Finishing...")
         if self.config.get("Actions.ShowTree",False):
-            print "\n".join(self.get_dependency_tree())
+            print("\n".join(self.get_dependency_tree()))
         if self.config.get("Actions.Profile",False):
             self.get_profile().to_txt()
         
@@ -382,9 +389,9 @@ can be customized using the 'Default' configuration variable in the configuratio
         try:
             pipe.run(dry=self.config.get("System.DryRun",False))
         except (SystemExit,KeyboardInterrupt):
-            print(" ...killed...") #This accounts for the User's ^C in the stdout stream.
-            self.log.critical(u"Keyboard Interrupt during %(pipe)s... ending simulator." % {'pipe':pipe.name})
-            self.log.critical(u"Last completed pipe: %(pipe)s" % {'pipe':self.completed[-1]})
+            print(" ...killed... ") #This accounts for the User's ^C in the stdout stream.
+            self.log.critical(u"Keyboard Interrupt during %(pipe)s... ending simulator." % { 'pipe': pipe.name })
+            self.log.critical(u"Last completed pipe: %(pipe)s" % { 'pipe': self.completed[-1] })
             self.log.debug(u"Pipes completed: %s" % ", ".join(self.completed))
             raise
             

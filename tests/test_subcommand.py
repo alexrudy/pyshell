@@ -6,6 +6,10 @@
 #  Created by Jaberwocky on 2013-04-12.
 #  Copyright 2013 Jaberwocky. All rights reserved.
 # 
+
+from __future__ import (absolute_import, unicode_literals, division,
+                        print_function)
+
 import shutil, os, os.path
 import pyshell.subcommand
 import nose.tools as nt

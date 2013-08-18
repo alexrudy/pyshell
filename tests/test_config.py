@@ -6,11 +6,82 @@
 #  Copyright 2013 Alexander Rudy. All rights reserved.
 # 
 
+from __future__ import (absolute_import, unicode_literals, division,
+                        print_function)
+
 import yaml
 import pyshell.config as config
 from pkg_resources import resource_filename
 import nose.tools as nt
 import os
+
+class test_config(object):
+    """pyshell.config"""
+    def setup(self):
+        self.test_dict_A = {"Hi":{"A":1,"B":2,"D":[1,2],"E":{"F":"G"}},}
+        self.test_dict_B = {"Hi":{"A":3,"C":4,"D":[3,4],"E":{"F":"G"}},}
+        self.test_dict_C = {"Hi":{"A":3,"B":2,"C":4,"D":[3,4],"E":{"F":"G"}},} #Should be a merge of A and B
+        self.test_dict_D = {"Hi":{"A":3,"B":2,"C":4,"D":[1,2,3,4],"E":{"F":"G"}},} #Should be a merge of A and B
+    
+    def test_reformat(self):
+        """reformat(d, nt)"""
+        class nft(dict):
+            pass
+        
+        rft = config.reformat(self.test_dict_C, nft)
+        nt.ok_(isinstance(rft, nft))
+        nt.ok_(isinstance(rft["Hi"], nft))
+        nt.ok_(isinstance(rft["Hi"]["E"], nft))
+        nt.assert_false(isinstance(self.test_dict_C, nft))
+    
+    def test_deepmerge(self):
+        """deepmerge(d, u, s)"""
+        res = config.deepmerge(self.test_dict_A, self.test_dict_B, dict)
+        nt.eq_(self.test_dict_A, self.test_dict_C)
+        nt.eq_(res, self.test_dict_C)
+    
+    def test_deepmerge_ip(self):
+        """deepmerge(d, u, s, inplace=False)"""
+        res = config.deepmerge(self.test_dict_A, self.test_dict_B, dict, inplace=False)
+        nt.assert_not_equal(self.test_dict_A, self.test_dict_C)
+        nt.eq_(res,self.test_dict_C)
+    
+    def test_deepmerge_i(self):
+        """deepmerge(d, u, s, invert=True)"""
+        res = config.deepmerge(self.test_dict_B, self.test_dict_A, dict, invert=True)
+        nt.eq_(self.test_dict_B, self.test_dict_C)
+        nt.eq_(res, self.test_dict_C)
+    
+    def test_deepmerge_ip_i(self):
+        """deepmerge(d, u, s, invert=True, inplace=False)"""
+        res = config.deepmerge(self.test_dict_B, self.test_dict_A, dict, invert=True, inplace=False)
+        nt.assert_not_equal(self.test_dict_B, self.test_dict_C)
+        nt.eq_(res, self.test_dict_C)
+    
+    def test_advdeepmerge(self):
+        """advanceddeepmerge(d, u, s)"""
+        res = config.advanceddeepmerge(self.test_dict_A, self.test_dict_B, dict)
+        nt.eq_(self.test_dict_A, self.test_dict_D)
+        nt.eq_(res, self.test_dict_D)
+    
+    def test_advdeepmerge_ip_(self):
+        """advanceddeepmerge(d, u, s, inplace=False)"""
+        res = config.advanceddeepmerge(self.test_dict_A, self.test_dict_B, dict, inplace=False)
+        nt.assert_not_equal(self.test_dict_A, self.test_dict_D)
+        nt.eq_(res, self.test_dict_D)
+    
+    def test_advdeepmerge_i(self):
+        """advanceddeepmerge(d, u, s, invert=True)"""
+        res = config.advanceddeepmerge(self.test_dict_B, self.test_dict_A, dict, invert=True)
+        nt.eq_(self.test_dict_B, self.test_dict_D)
+        nt.eq_(res, self.test_dict_D)
+        
+    def test_advdeepmerge_ip_i(self):
+        """advanceddeepmerge(d, u, s, invert=True, inplace=False)"""
+        res = config.advanceddeepmerge(self.test_dict_B, self.test_dict_A, dict, invert=True, inplace=False)
+        nt.assert_not_equal(self.test_dict_B, self.test_dict_D)
+        nt.eq_(res, self.test_dict_D)
+    
 
 class test_Configuration(object):
     """pyshell.config.Configuration"""
@@ -21,9 +92,11 @@ class test_Configuration(object):
         filename = resource_filename(__name__,"test_config/test_config.yml")
         with open(filename,'r') as stream:
             self.test_dict = yaml.load(stream)
-        self.test_dict_A = {"Hi":{"A":1,"B":2,},}
-        self.test_dict_B = {"Hi":{"A":3,"C":4,},}
-        self.test_dict_C = {"Hi":{"A":3,"B":2,"C":4,},} #Should be a merge of A and B
+        self.test_dict_A = {"Hi":{"A":1,"B":2,"D":[1,2],"E":{"F":"G"}},}
+        self.test_dict_B = {"Hi":{"A":3,"C":4,"D":[3,4],"E":{"F":"G"}},}
+        self.test_dict_C = {"Hi":{"A":3,"B":2,"C":4,"D":[3,4],"E":{"F":"G"}},} #Should be a merge of A and B
+        self.test_dict_D = {"Hi":{"A":3,"B":2,"C":4,"D":[1,2,3,4],"E":{"F":"G"}},} #Should be a merge of A and B
+
         
     def teardown(self):
         """Remove junky files if they showed up"""
@@ -50,13 +123,19 @@ class test_Configuration(object):
         cfg.merge(self.test_dict_B)
         assert cfg == self.test_dict_C
         
+    def test_imerge(self):
+        """.imerge() deep updates in reverse."""
+        cfg = self.CLASS(self.test_dict_B)
+        cfg.imerge(self.test_dict_A)
+        assert cfg == self.test_dict_C
+        
     def test_save(self):
         """.save() writes yaml file or dat file"""
         cfg = self.CLASS(self.test_dict_C)
         cfg.save("Test.yaml")
         loaded = self.CLASS()
         loaded.load("Test.yaml")
-        assert self.test_dict_C == loaded.extract()
+        assert self.test_dict_C == loaded.store
         cfg.save("Test.dat")
         
         
@@ -96,8 +175,34 @@ class test_DottedConfiguration(test_Configuration):
         CFG["z"] = {'a.b':'c'}
         nt.eq_(CFG["z.a.b"], CFG.store["z"]["a.b"])
         
+    def test_multiple_sub_dotted_dictionaries(self):
+        """Lookup with multiple correct paths."""
+        CFG = self.CLASS(**self.test_dict)
+        CFG["z"] = {'a.b':'c','a':{'b':'d'}}
+        nt.eq_(CFG["z.a.b"],'c')
+        nt.eq_(CFG["z.a"]["b"],'d')
+        
+    def test_sub_dotted_contains(self):
+        """Testing contains for dotted names."""
+        CFG = self.CLASS(**self.test_dict)
+        CFG["z"] = {'a.b':'c'}
+        nt.ok_("a.b" in CFG["z"], "Couldn't find 'a.b' in {:s}".format(CFG["z"]))
+        nt.ok_("a" not in CFG["z"], "Found 'a' in {:s}".format(CFG["z"]))
+        nt.ok_("d" not in CFG["z"], "Found 'd' in {:s}".format(CFG["z"]))
+        
+    def test_sub_dotted_del(self):
+        """Testing contains for dotted names."""
+        CFG = self.CLASS(**self.test_dict)
+        CFG["z"] = {'a.b':'c'}
+        del CFG["z.a.b"]
+        nt.ok_("a.b" not in CFG["z"], "Found 'a.b' (not deleted) in {:s}".format(CFG["z"]))
+        del CFG["c.d"]
+        nt.ok_("c.d" not in CFG, "Found 'c.d' (not deleted) in {:s}".format(CFG))
+        
+        
+        
     @nt.raises(KeyError)
-    def test_sub_dotted_dictionary(self):
+    def test_sub_dotted_dictionary_fail(self):
         """Inerting a dotted sub-dictionary, KeyError"""
         CFG = self.CLASS(**self.test_dict)
         CFG["z"] = {'a.b':'c'}
@@ -120,13 +225,33 @@ class test_DottedConfiguration(test_Configuration):
         CFG = self.CLASS(**self.test_dict)
         CFG["g.h"]
         
+    @nt.raises(KeyError)
+    def test_get_bad_ml_name(self):
+        """KeyError values which don't exist many levels deep"""
+        CFG = self.CLASS(**self.test_dict)
+        CFG.get("z.a.b","h")
+        CFG["z.a.b"]
     
     def test_set_dotted_name(self):
         """Set for keys with periods in them"""
         CFG = self.CLASS(**self.test_dict)
         CFG["g.h"] = 'a'
         nt.eq_(CFG["g.h"],'a')
-        CFG["g"]
+        nt.eq_(CFG["g"]["h"],'a')
+        
+    def test_set_deep_dotted_name(self):
+        """Set for keys with many periods in them."""
+        CFG = self.CLASS(**self.test_dict)
+        CFG["g.h.z.f.k"] = 'a'
+        nt.eq_(CFG["g.h.z.f.k"],'a')
+        nt.eq_(CFG["g"]["h.z.f.k"],'a')
+        
+    def test_get_deep_class(self):
+        """Test deep class transfer."""
+        CFG = self.CLASS()
+        CFG.merge(self.test_dict)
+        assert isinstance(CFG["c.l"],CFG.dn)
+        
         
 class test_StructuredConfiguration(test_DottedConfiguration):
     """pyshell.config.StructuredConfiguration"""

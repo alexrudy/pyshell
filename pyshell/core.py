@@ -7,11 +7,14 @@
 #  Copyright 2013 Alexander Rudy. All rights reserved.
 # 
 
+from __future__ import (absolute_import, unicode_literals, division,
+                        print_function)
+
 import time
 from collections import OrderedDict
 from .config import MutableMappingBase
 
-__all__ = ['Typedkwargs','State','Stateful']
+__all__ = ['Typedkwargs','State','Stateful','Struct','OneToOneMapping']
 
 class Typedkwargs(object):
     """docstring for TypedKWArgs"""
@@ -67,6 +70,10 @@ class Stateful(object):
         """Set a state to the current time."""
         self._state[state] = time.time()
         
+    def del_state(self,state):
+        """docstring for del_state"""
+        self._state[state] = False
+        
 
 class OneToOneMapping(MutableMappingBase):
     """A mapping that goes both ways. Looking up map[k] = v and map[v] = k works."""
@@ -84,4 +91,7 @@ class OneToOneMapping(MutableMappingBase):
     def __delitem__(self, key):
         """Delete items in both directions"""
         self._store.__delitem__(self._store.pop(key))
-    
+        
+class Struct(object):
+    """A basic structure"""
+    pass

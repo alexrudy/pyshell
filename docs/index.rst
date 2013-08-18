@@ -16,7 +16,9 @@ Contents:
     base
     subcommand
     config
+    loggers
     util
+    postmortem
     pipeline
 
 

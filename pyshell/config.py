@@ -28,6 +28,16 @@ YAML configuration file reading and writing interface.
     
 .. autofunction::
     pyshell.config.reformat
+    
+.. autofunction::
+    pyshell.config.force_yaml_unicode
+
+.. autofunction::
+    pyshell.config.deepmerge
+    
+.. autofunction::
+    pyshell.config.advanceddeepmerge
+    
 
 Basic Configurations: :class:`Configuration`
 --------------------------------------------
@@ -64,13 +74,14 @@ import collections
 import abc
 import re
 import yaml
-import logging
 import warnings
+import hashlib
 from warnings import warn
 import ast
 
 # Submodules from this system
 from . import util
+from . import loggers
 
 #pylint: disable=R0904
 
@@ -92,8 +103,8 @@ def force_yaml_unicode():
         string object from a YAML key, forcing all YAML strings
         to be unicode objects."""
         return self.construct_scalar(node)
-    Loader.add_constructor(u'tag:yaml.org,2002:str', construct_yaml_str)
-    SafeLoader.add_constructor(u'tag:yaml.org,2002:str', construct_yaml_str)
+    Loader.add_constructor('tag:yaml.org,2002:str', construct_yaml_str)
+    SafeLoader.add_constructor('tag:yaml.org,2002:str', construct_yaml_str)
     
     
 def reformat(d, nt):
@@ -143,54 +154,76 @@ def flatten(d, stump="", sequence=False, separator="."):
     return o
             
     
-    
-    
-def advanceddeepmerge(d, u, s, sequence=True):
+def advanceddeepmerge(d, u, s, sequence=True, invert=False, inplace=True):
     """Merge deep collection-like structures.
     
-    This version will merge sequence structures when they are found.
+    This function will merge sequence structures when they are found. When used with ``sequence=False``, it behaves like :func:`deepmerge`.
     
-    :param d: Deep Structure
-    :param u: Updated Structure
-    :param s: Default structure to use when a new deep structure is required.
-    :param (bool) sequence: Control sequence merging
+    :param dict-like d: Deep Structure
+    :param dict-like u: Updated Structure
+    :param dict-like-type s: Default structure to use when a new deep structure is required.
+    :param bool sequence: Control sequence merging
+    :param bool invert: Whether to do an inverse merge.
+    
+    *Inverse Merge* causes ``u`` to only update missing values of ``d``, but does
+    so in a deep fashion.
     
     """
     #pylint: disable=C0103
+    if isinstance(d, collections.Mapping) and not inplace:
+        e = type(d)(**d)
+    else:
+        e = d
     if (not hasattr(u,'__len__')) or len(u)==0:
-        return d
+        return e
     for k, v in u.iteritems():
         if isinstance(v, collections.Mapping):
-            r = advanceddeepmerge(d.get(k, s()), v, s, sequence)
-            d[k] = r
+            r = advanceddeepmerge(d.get(k, s()), v, s, sequence, invert, inplace)
+            e[k] = r
         elif (sequence and isinstance(v, collections.Sequence) and
             isinstance(d.get(k, None), collections.Sequence) and not
             (isinstance(v, (str, unicode)) or 
             isinstance(d.get(k, None), (str, unicode)))):
-            d[k] = [ i for i in v ] + [ i for i in d[k] ]
+            if invert:
+                e[k] = [ i for i in v ] + [ i for i in d[k] ]
+            else:
+                e[k] = [ i for i in d[k] ] + [ i for i in v ]
+        elif invert:
+            e[k] = d.get(k,u[k])
         else:
-            d[k] = u[k]
-    return d
+            e[k] = u[k]
+    return e
 
-def deepmerge(d, u, s):
+def deepmerge(d, u, s, invert=False, inplace=True):
     """Merge deep collection-like structures.
     
-    :param d: Deep Structure
-    :param u: Updated Structure
-    :param s: Default structure to use when a new deep structure is required.
+    When this function encounters a sequence, the entire sequence from ``u`` is considered a single value which replaces any value from ``d``. To allow for merging sequences in ``u`` and ``d``, see function :func:`advanceddeepmerge`.
+    
+    :param dict-like d: Deep Structure
+    :param dict-like u: Updated Structure
+    :param dict-like-type s: Default structure to use when a new deep structure is required.
+    :param bool invert: Whether to do an inverse merge.
+    
+    *Inverse Merge* causes ``u`` to only update missing values of ``d``, but does
+    so in a deep fashion.
     
     """
     #pylint: disable=C0103
+    if isinstance(d, collections.Mapping) and not inplace:
+        e = type(d)(**d)
+    else:
+        e = d
     if (not hasattr(u,'__len__')) or len(u)==0:
-        return d
+        return e
     for k, v in u.iteritems():
         if isinstance(v, collections.Mapping):
-            r = deepmerge(d.get(k, s()), v, s)
-            d[k] = r
+            r = deepmerge(d.get(k, s()), v, s, invert=invert, inplace=inplace)
+            e[k] = r
+        elif invert:
+            e[k] = d.get(k, v)
         else:
-            d[k] = u[k]
-    return d
-    
+            e[k] = u[k]
+    return e
 
 class ConfigurationError(Exception):
     """Configuration error"""
@@ -210,20 +243,29 @@ class MutableMappingBase(collections.MutableMapping):
     """Base class for mutable mappings which store things in an internal dictionary"""
     def __init__(self, *args, **kwargs):
         super(MutableMappingBase, self).__init__()
-        self.log = logging.getLogger(self.__module__)
-        if not len(self.log.handlers):
-            self.log.addHandler(logging.NullHandler())
-        self._store = dict(*args, **kwargs)
+        self.log = loggers.getLogger(self.__module__)
+        self._store = self._dt(*args,**kwargs)
         
     __metaclass__ = abc.ABCMeta
+    
+    _dt = dict
         
-    def __repr__(self):
+    def __str__(self):
         """String representation of this object"""
         return repr(self.store)
         
-    def __str__(self):
+    def __repr__(self):
         """String for this object"""
-        return "<%s %s>" % (self.__class__.__name__, repr(self))
+        return "<%s %s>" % (self.__class__.__name__, str(self.store))
+        
+    def _repr_pretty_(self, p, cycle):
+        """Pretty representation of this object."""
+        if cycle:
+            p.text("{}(...)".format(self.__class__.__name__))
+        else:
+            from cStringIO import StringIO
+            with p.group(2,"{}(".format(self.__class__.__name__),")"):
+                p.pretty(self.store)
         
     def __getitem__(self, key):
         """Dictionary getter"""
@@ -252,8 +294,11 @@ class MutableMappingBase(collections.MutableMapping):
     @property
     def store(self):
         """Return a copy of the internal storage object."""
-        import copy
-        return copy.deepcopy(self._store)
+        return self._store.copy()
+        
+    def merge(self, item):
+        """Alias between merge and update in the basic case."""
+        return self._store.update(item)
 
 
 class Configuration(MutableMappingBase):
@@ -262,15 +307,14 @@ class Configuration(MutableMappingBase):
         super(Configuration, self).__init__(*args, **kwargs)
         self._filename = None
         self._strict = False
+        self._dn = self.__class__
+    
+    _strict = False
+    """Whether to use strict lookup controls.""" #pylint: disable=W0105
     
     _dn = DeepNestDict
     """Deep nesting dictionary setting. This class will be used to create 
     deep nesting structures for this dictionary.""" #pylint: disable=W0105
-    
-    dt = dict
-    """Exctraction nesting dictionary setting. This class will be used to 
-    create deep nesting structures when this object is 
-    extracted.""" #pylint: disable=W0105
     
     @property
     def dn(self):
@@ -280,11 +324,37 @@ class Configuration(MutableMappingBase):
     @dn.setter
     def dn(self, new_type):
         """Deep nesting type setter.""" #pylint: disable=C0103
-        if new_type != self._dn:
-            self.renest(new_type)
+        if not issubclass(new_type, collections.MutableMapping):
+            raise ValueError("Deep nesting type must be an instance of {:s}, got {:s}".format(
+                collections.MutableMapping, new_type
+            ))
+        self._dn = new_type
+    
+    _dt = dict
+    """Exctraction nesting dictionary setting. This class will be used to 
+    create deep nesting structures when this object is 
+    extracted.""" #pylint: disable=W0105
+    
+    @property
+    def dt(self):
+        """Deep storage type."""
+        return self._dt
+        
+    @dt.setter
+    def dt(self, new_type):
+        """Set the deep storage type"""
+        self.renest(new_type)
+        
     
     name = "Configuration"
     """The name/type of this configuration."""
+        
+    @property
+    def hash(self):
+        """Return the HexDigest hash"""
+        self._hash = hashlib.md5()
+        self._hash.update(str(self))
+        return self._hash.hexdigest()
         
     @property
     def filename(self):
@@ -292,9 +362,14 @@ class Configuration(MutableMappingBase):
         most recently"""
         return self._filename
     
-    def __str__(self):
-        """String for this object"""
-        return "<%s %s>" % (self.name, repr(self))
+    
+    def __getitem__(self, key):
+        """Dictionary getter"""
+        rval = self._store.__getitem__(key)
+        if isinstance(rval, collections.MutableMapping):
+            return self.dn(rval)
+        else:
+            return rval
     
     def update(self, other, deep=True): #pylint: disable=W0221
         """Update the dictionary using :meth:`merge`.
@@ -314,15 +389,35 @@ class Configuration(MutableMappingBase):
         
         :param dict-like other: The other dictionary to be merged.
         
+        See :func:`deepmerge`.
+        
         .. doctest::
             
-            >>> a = Configuration(**{'a':'b'})
+            >>> a = Configuration(**{'a':'b','c':'e'})
             >>> a.merge({'c':'d'})
             >>> a
             {'a': 'b', 'c': 'd'}
         
         """
-        deepmerge(self, other, self.dn)
+        deepmerge(self, other, self.dt)
+        
+    def imerge(self, other):
+        """Inverse :meth:`merge`, where ``other`` will be considered original, and this object will be canonical.
+        
+        :param dict-like other: The other dictionary to be merged.
+        
+        See :func:`deepmerge`.
+        
+        .. doctest::
+            
+            >>> a = Configuration(**{'a':'b','c':'e'})
+            >>> a.imerge({'c':'d'})
+            >>> a
+            {'a': 'b', 'c': 'e'}
+        
+        """
+        deepmerge(self, other, self.dt, invert=True)
+        
     
     def save(self, filename, silent=True):
         """Save this configuration as a YAML file. YAML files generally have 
@@ -335,21 +430,26 @@ class Configuration(MutableMappingBase):
         """
         if hasattr(filename,'read') and hasattr(filename,'readlines'):
             filename.write("# %s: <stream>" % self.name)
-            yaml.dump(self.store, filename, default_flow_style=False)
+            yaml.safe_dump_all(self._save_yaml_callback() + [self.store],
+                 filename, default_flow_style=False, encoding='utf-8')
         else:
             with open(filename, "w") as stream:
                 stream.write("# %s: %s\n" % (self.name, filename))
                 if re.search(r"(\.yaml|\.yml)$", filename):
-                    yaml.dump(self.store, stream, 
+                    yaml.safe_dump_all(
+                        self._save_yaml_callback() + [self.store], stream, 
                         default_flow_style=False, encoding='utf-8')
                 elif re.search(r"\.dat$", filename):
+                    for document in self._save_yaml_callback():
+                        stream.write(str(document))
+                        stream.write("\n---\n")
                     stream.write(str(self.store))
                 elif not silent:
                     raise ValueError("Filename Error, not "
                         "(.dat,.yaml,.yml): %s" % filename)
-                self._filename = filename
+            self._filename = filename
         
-    def load(self, filename, silent=True):
+    def load(self, filename, silent=True, fname=None):
         """Loads a configuration from a yaml file, and merges it into 
         the master configuration.
         
@@ -362,12 +462,14 @@ class Configuration(MutableMappingBase):
         :returns: boolean, whether the file was loaded.
         """
         loaded = False
+        isstream = False
         try:
             if hasattr(filename, 'read') and hasattr(filename, 'readlines'):
-                new = yaml.load(filename)
+                new = list(yaml.load_all(filename))
+                isstream = True
             else:
                 with open(filename, "r") as stream:
-                    new = yaml.load(stream)
+                    new = list(yaml.load_all(stream))
         except IOError:
             if silent:
                 warnings.warn("Could not load configuration "
@@ -375,10 +477,27 @@ class Configuration(MutableMappingBase):
             else:
                 raise
         else:
-            self.merge(new)
-            self._filename = filename
-            loaded = True
+            if len(new) != 0:
+                self.merge(new[-1])
+            if isstream and fname is not None:
+                self._filename = fname
+            elif isstream and hasattr(filename,'name'):
+                self._filename = filename.name
+            elif not isstream:
+                self._filename = filename
+            self._load_yaml_callback(*new[:-1])
+            loaded = bool(len(new))
         return loaded
+    
+    def _load_yaml_callback(self,*documents):
+        """Called with the extra documents that were loaded from the yaml file."""
+        if len(documents) != 0:
+            filename = self._filename if self._filename is not None else "<stream>"
+            warn("'{:s}' contained {:d} YAML documents. Ignoring all but the last one.".format(filename,len(documents)+1))
+    
+    def _save_yaml_callback(self):
+        """This function should return other yaml documents that will be prepended to the master YAML file."""
+        return []
     
     @property
     def store(self):
@@ -388,29 +507,20 @@ class Configuration(MutableMappingBase):
         """
         return reformat(self._store, self.dt)
     
-    def renest(self, deep_nest_type=None):
+    def renest(self, deep_store_type=None):
         """Re-nest this object. This method applies the 
-        :attr:`dn` deep-nesting attribute to each nesting level in the 
+        :attr:`dt` deep-storage attribute to each nesting level in the 
         configuration object.
         
-        :param deep_nest_type: mapping nesting type, will set :attr:`dn`.
+        :param deep_store_type: mapping nesting type, will set :attr:`dn`.
         
         This method does not return anything.
         """
-        if issubclass(deep_nest_type, collections.Mapping):
-            self._dn = deep_nest_type #pylint: disable=C0103
-        elif deep_nest_type is not None:
-            raise TypeError("%r is not a mapping type." % deep_nest_type)
-        self._store = reformat(self._store, self.dn)
-        
-    def extract(self):
-        """Extract the dictionary from this object.
-        
-        .. deprecated:: 0.4
-            use :attr:`store`
-        
-        """
-        return self.store
+        if deep_store_type is not None and issubclass(deep_store_type, collections.Mapping):
+            self._dt = deep_store_type #pylint: disable=C0103
+        elif deep_store_type is not None:
+            raise TypeError("%r is not a mapping type." % deep_store_type)
+        self._store = reformat(self._store, self.dt)
         
     def parse_literals(self, *literals, **kwargs):
         """Turn a list of literals into configuration items.
@@ -439,6 +549,21 @@ class Configuration(MutableMappingBase):
             except ValueError:
                 self[key] = value
         
+    def load_resource(self, module, filename, silent=True):
+        """Load from a resource filename"""
+        from pkg_resources import resource_stream
+        try:
+            with resource_stream(module, filename) as stream:
+                self.load(stream, fname=filename, silent=silent)
+        except IOError:
+            if silent:
+                warn("Resource ({},{}) does not exist.".format(
+                    module, filename
+                ))
+            else:
+                raise
+        
+        
     def configure(self, module=__name__, defaultcfg=False,
         cfg=False, supercfg=None):
         """The configuration loads (starting with a blank configuration):
@@ -465,17 +590,16 @@ class Configuration(MutableMappingBase):
             list should contian pairs of ``(module,name)`` as tuples.
         
         """
-        from pkg_resources import resource_filename
         if not defaultcfg:
             return
         if supercfg is None:
             supercfg = []
         for supermodule, superfilename in supercfg:
-            if supermodule == '__main__':
+            if supermodule is None:
                 self.load(superfilename)
             else:
-                self.load(resource_filename(supermodule, superfilename))
-        self.load(resource_filename(module, defaultcfg))
+                self.load_resource(supermodule,superfilename)
+        self.load_resource(module, defaultcfg)
         if cfg and util.check_exists("~/%s" % cfg):
             self.load(os.path.expanduser("~/%s" % cfg))
         if cfg and os.path.exists(cfg):
@@ -504,6 +628,52 @@ class Configuration(MutableMappingBase):
         config = cls()
         config.load(filename, silent=False)
         return config
+        
+    @classmethod
+    def fromresource(cls, module, filename):
+        """Create a configuration from a resource filename pair.
+        
+        :param module: The module containing the file.
+        :param filename: The filename within that module.
+        
+        """
+        config = cls()
+        config.load_resource(module, filename)
+        return config
+        
+    @classmethod
+    def make(cls,base):
+        """Make a configuration from the input object ``base``.
+        
+        Acceptable Inputs:
+        
+        - An instance of this class.
+        - Any insatance of :class:`collections.Mapping`
+        - A string filename for :meth:`fromfile`
+        - A tuple of argumments to :meth:`fromresource`
+        - A sequence of arguments to this method, which can be recursively added to this configuration.
+        
+        """
+        if base is None:
+            return cls()
+        elif isinstance(base,cls):
+            return base
+        elif isinstance(base,collections.Mapping):
+            return cls(base)        
+        elif isinstance(base,tuple) and len(base) == 2:
+            return cls.fromresource(*base)
+        elif isinstance(base,basestring):
+            config = cls.fromfile(base)
+        elif isinstance(base,collections.Sequence):
+            config = cls()
+            for item in base:
+                config.update(cls.make(item))
+            return config
+        else:
+            raise TypeError("{0} doesn't know how to make from {1}".format(
+                cls.__name__, type(base)
+            ))
+
 
 
 class DottedConfiguration(Configuration):
@@ -535,7 +705,6 @@ class DottedConfiguration(Configuration):
         """docstring for flat"""
         return flatten(self.store,sequence=sequence,separator=".")
     
-    
     def _isempty(self, item):
         """Test if the given item is empty"""
         #pylint: disable=W0703
@@ -557,20 +726,20 @@ class DottedConfiguration(Configuration):
         """Recursive getitem calling function."""
         if len(parts) == 0:
             return store
-        # elif len(parts) == 1:
-        #     return store[parts[0]]
         if not isinstance(store, collections.Mapping):
             raise KeyError
-        for i in range(len(parts)):
-            key = ".".join(parts[:i+1])
+        
+        np = len(parts)
+        for i in range(np):
+            key = ".".join(parts[:np-i])
             if key in store:
-                if self._isempty(store[key]) and self._strict:
+                if self._strict and self._isempty(store[key]):
                     raise KeyError
                 elif not self._isempty(store[key]):
-                    return self._getitem(store[key], parts[i+1:])
+                    return self._getitem(store[key], parts[np-i:])
         key = parts.pop(0)
-        if len(parts) != 0 and not self._strict:
-            store.setdefault(key, self.dn())
+        if (not self._strict) and len(parts) != 0:
+            store.setdefault(key, self.dt())
         return self._getitem(store[key], parts)
             
     def _setitem(self, store, parts, value=None):
@@ -580,35 +749,41 @@ class DottedConfiguration(Configuration):
         - Store is passed in as a variable to make the recursive mode work.
         - If there are no more parts left, then we call the store's setitem.
         - If there are parts left, then we get the value of the next key in line. When we do this, if that key has not been set, we use a default nester, the ``self.dn`` attribute, which should construct a mapping object.
-        - Recurses into the system."""
+        - Recurses into the system.
+        
+        """
         key = parts.pop(0)
         if len(parts) == 0:
             return store.__setitem__(key, value)
         elif not self._strict:
-            store.setdefault(key, self.dn())
+            store.setdefault(key, self.dt())
         return self._setitem(store[key], parts, value)
             
     def _delitem(self, store, parts):
         """Recursive delitem calling function"""
-        key = parts.pop(0)
-        if len(parts) == 0:
-            return store.__delitem__(key)
-        elif not self._strict:
-            store.setdefault(key, self.dn())
-        return self._delitem(store[key], parts)
+        if len(parts) == 1:
+            return store.__delitem__(parts[0])
+        else:
+            np = len(parts)
+            for i in range(np):
+                key = ".".join(parts[:np-i])
+                remain = parts[np-i:]
+                if key in store and remain:
+                    return self._delitem(store[key], remain)
+                elif key in store:
+                    return store.__delitem__(key)
+            raise KeyError
             
     def _contains(self, store, parts):
         """Recursive containment algorithm"""
-        key = parts.pop(0)
         if len(parts) == 0:
-            if ((isinstance(store.get(key), self.dn) 
-                and not bool(store.get(key))) 
-                and self._strict):
-                return False
-            return store.__contains__(key)
-        elif key in store:
-            return self._contains(store[key], parts)
+            return True
         else:
+            np = len(parts)
+            for i in range(np):
+                key = ".".join(parts[:np-i])
+                if key in store:
+                    return self._contains(store[key], parts[np-i:])
             return False
         
         
@@ -617,38 +792,47 @@ class DottedConfiguration(Configuration):
         keyparts = key.split(".")
         try:
             if len(keyparts) > 1:
-                return self._getitem(self, keyparts)
-            elif ((isinstance(self._store.get(key), self.dn) 
-                and not bool(self._store.get(key)))
-                and self._strict):
+                rval = self._getitem(self._store, keyparts)
+            elif (self._strict and (isinstance(self._store.get(key), self.dt) 
+                and not bool(self._store.get(key)))):
                 raise KeyError
-            return self._store[key]
+            else:
+                rval =  self._store[key]
         except KeyError:
-            # raise KeyError('%s' % key)
-            raise
+            raise KeyError('%s' % key)
+        
+        if isinstance(rval,collections.MutableMapping):
+            return self.dn(rval)
+        else:
+            return rval
+            
         
     def __setitem__(self, key, value):
         """Dictonary setter"""
         keyparts = key.split(".")
         if len(keyparts) > 1:
-            return self._setitem(self, keyparts, value)
+            return self._setitem(self._store, keyparts, value)
         return self._store.__setitem__(key, value)
         
     def __delitem__(self, key):
         """Dictionary delete"""
         keyparts = key.split(".")
-        if len(keyparts) > 1:
-            return self._delitem(self, keyparts)        
-        return self._store.__delitem__(key)
+        try:
+            if len(keyparts) > 1:
+                return self._delitem(self._store, keyparts)        
+            return self._store.__delitem__(key)
+        except KeyError:
+            # raise KeyError('%s' % key)
+            raise
+        
         
     def __contains__(self, key):
         """Dictionary in"""
         keyparts = key.split(".")
         if len(keyparts) > 1:
-            return self._contains(self, keyparts)
-        elif ((isinstance(self._store.get(key), self.dn) 
-            and not bool(self._store.get(key)))
-            and self._strict):
+            return self._contains(self._store, keyparts)
+        elif (self._strict and (isinstance(self._store.get(key), self.dt) 
+            and not bool(self._store.get(key)))):
             return False
         else:
             return self._store.__contains__(key)
@@ -685,94 +869,43 @@ class StructuredConfiguration(DottedConfiguration):
         
     """
     
-    DEFAULT_FILENAME = "--NOFILE--"
+    DEFAULT_FILENAME = '__main__'
     
     def __init__(self,  *args, **kwargs):
         super(StructuredConfiguration, self).__init__(*args, **kwargs)
-        self._files = self.dn()
-        self._files["This"] = self.DEFAULT_FILENAME
-        self._files["Loaded"] = []
-        self._files["Configurations"] = self.dn()
-        self.__set_on_load = False
-        self._lock = dict()
+        self._metadata = DottedConfiguration()
+        self._metadata["Files.This"] = self.DEFAULT_FILENAME
+        self._metadata["Files.Loaded"] = []
+        self.__set_on_load = True
+        self._dn = DottedConfiguration
+        
+    @property
+    def metadata(self):
+        """The metadata dictionary"""
+        self._metadata["Hash"] = self.hash
+        return self._metadata
         
     @property
     def files(self):
         """The set of loaded filenames"""
-        return set(self._files["Loaded"])
+        return set(self._metadata["Files.Loaded"])
         
     @property
     def _set_on_load(self):
         """True for default filenames"""
-        if self._files["This"] == self.DEFAULT_FILENAME:
+        if self._metadata["Files.This"] == self.DEFAULT_FILENAME:
             self.__set_on_load = True
         return self.__set_on_load
     
-    def __getitem__(self, key):
-        """Dictionary getter"""
-        self._getitem_hook(key)
-        return super(StructuredConfiguration, self).__getitem__(key)
-        
-    def __setitem__(self, key, value):
-        """Dictonary setter"""
-        self._setitem_hook(key, value)
-        return super(StructuredConfiguration, self).__setitem__(key, value)
-        
-    
-    def __delitem__(self, key):
-        """Dictionary delete"""
-        self._delitem_hook(key)
-        return super(StructuredConfiguration, self).__delitem__(key)
-        
-    
-    def __contains__(self, key):
-        """Dictionary in"""
-        self._contains_hook(key)
-        return super(StructuredConfiguration, self).__contains__(key)
-        
-    
-    def _contains_hook(self, key):
-        """docstring for _contains_hook"""
-        pass
-        
-    def _delitem_hook(self, key):
-        """docstring for _delitem_hook"""
-        pass
-        
-    def _setitem_hook(self, key, value):
-        """docstring for _setitem_hook"""
-        pass
-        
-    def _getitem_hook(self, key):
-        """docstring for _getitem_hook"""
-        pass
-    
-    @util.deprecatedmethod(version="0.3",replacement="set_file()")
-    def setFile(self, filename=None, name=None): #pylint: disable=C0103
-        """Depricated Method"""
-        return self.set_file(filename, name)
-    
-    def set_file(self, filename=None, name=None):
+    def set_file(self, filename=None):
         """Set the default/current configuration file for this configuration.
         
         The configuration file set by this method will be used next time :meth:`load` or :meth:`save` is called with no filename.
         
         :param string filename: The filename to load from.
-        :param string name: The name key for the file.
         
         """
-        if not filename:
-            if not name:
-                raise ValueError("Must provide name or filename")
-            if name not in  self._files["Configurations"]:
-                raise KeyError("Key %s does not represent "
-                "a configuration file." % name)
-        else:
-            if not name:
-                name = os.path.basename(filename)
-        if name not in self._files["Configurations"]:
-            self._files["Configurations"][name] = filename
-        self._files["This"] = self._files["Configurations"][name]
+        self._metadata["Files.This"] = filename
     
     def save(self, filename=None, silent=True):
         """Save the configuration to a YAML file. If ``filename`` is not 
@@ -783,11 +916,22 @@ class StructuredConfiguration(DottedConfiguration):
         Uses :meth:`Configuration.save`.
         """
         if filename == None:
-            filename = self._files["This"]
+            filename = self._metadata["Files.This"]
         return super(StructuredConfiguration, self).save(filename)
     
+    def _load_yaml_callback(self,*documents):
+        """Load the metadata"""
+        if len(documents) == 1:
+            self._metadata.update(documents[0])
+        elif len(documents) > 1:
+            self._metadata.update(documents[0])
+            warnings.warn("Too Many metadata documents found. Ignoring {:d} documents".format(len(documents)-1))
         
-    def load(self, filename=None, silent=True):
+    def _save_yaml_callback(self):
+        """Return the metadata in an array."""
+        return [ self.metadata.store ]
+    
+    def load(self, filename=None, silent=True, fname=None):
         """Load the configuration to a YAML file. If ``filename`` is 
         not provided, the configuration will use the file set by 
         :meth:`setFile`.
@@ -797,10 +941,11 @@ class StructuredConfiguration(DottedConfiguration):
         
         Uses :meth:`Configuration.load`."""
         if filename == None:
-            filename = self._files["This"]
-        loaded = super(StructuredConfiguration, self).load(filename, silent)
+            filename = self._metadata["Files.This"]
+        loaded = super(StructuredConfiguration, self).load(filename, silent, fname=fname)
         if loaded and self._set_on_load:
-            self._files["Loaded"].append(filename)
+            self._metadata["Files.Loaded"].append(self.filename)
+        
 
 
 force_yaml_unicode()

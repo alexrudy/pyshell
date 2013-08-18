@@ -9,6 +9,7 @@
 # 
 from __future__ import division
 
+import pyshell
 from pyshell.pipeline import Pipeline
 from pyshell.pipeline._oldhelp import *
 import time
@@ -17,7 +18,7 @@ import time
 class SillyPipeline(Pipeline):
     """docstring for SillyPipeline"""
         
-    supercfg = Pipeline.PYSHELL_LOGGING_STREAM
+    supercfg = pyshell.PYSHELL_LOGGING_STREAM
         
     defaultcfg = "silly_pipeline.yml"
         

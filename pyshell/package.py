@@ -6,16 +6,23 @@
 #  Created by Jaberwocky on 2012-10-16.
 #  Copyright 2012 Jaberwocky. All rights reserved.
 # 
+
+from __future__ import (absolute_import, unicode_literals, division,
+                        print_function)
+                        
 import os, os.path, sys
 import shutil
 import logging
 import datetime
 import errno
 from textwrap import fill, TextWrapper
+
 from pkg_resources import resource_filename
 from jinja2 import Environment, PackageLoader
+
 from .subcommand import SCEngine, SCController
 from .util import query_yes_no, query_string
+from . import PYSHELL_LOGGING_STREAM
 
 class PackageConfigError(Exception):
     """Package Configuration Error"""
@@ -249,7 +256,7 @@ class PyPackageEngine(SCController,PyPackageBase):
     
     defaultcfg = "Package.yml"
     
-    supercfg = SCController.PYSHELL_LOGGING_STREAM
+    supercfg = PYSHELL_LOGGING_STREAM
     
     _subEngines = [ PackageEngine, ]
     
