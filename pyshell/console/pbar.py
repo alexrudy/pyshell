@@ -68,7 +68,7 @@ class ProgressBar(progressbar.ProgressBar):
 class ColorBar(progressbar.Bar):
     'A progress bar which stretches to fill the line.'
     
-    def __init__(self, marker=u'█', left='|', right='|', fill=' ',
+    def __init__(self, marker='█', left='|', right='|', fill=' ',
                  fill_left=True, color="green"):
         '''Creates a customizable progress bar.
 

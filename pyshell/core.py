@@ -7,6 +7,9 @@
 #  Copyright 2013 Alexander Rudy. All rights reserved.
 # 
 
+from __future__ import (absolute_import, unicode_literals, division,
+                        print_function)
+
 import time
 from collections import OrderedDict
 from .config import MutableMappingBase

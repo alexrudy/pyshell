@@ -103,8 +103,8 @@ def force_yaml_unicode():
         string object from a YAML key, forcing all YAML strings
         to be unicode objects."""
         return self.construct_scalar(node)
-    Loader.add_constructor(u'tag:yaml.org,2002:str', construct_yaml_str)
-    SafeLoader.add_constructor(u'tag:yaml.org,2002:str', construct_yaml_str)
+    Loader.add_constructor('tag:yaml.org,2002:str', construct_yaml_str)
+    SafeLoader.add_constructor('tag:yaml.org,2002:str', construct_yaml_str)
     
     
 def reformat(d, nt):
@@ -226,13 +226,22 @@ class MutableMappingBase(collections.MutableMapping):
     
     _dt = dict
         
-    def __repr__(self):
+    def __str__(self):
         """String representation of this object"""
         return repr(self.store)
         
-    def __str__(self):
+    def __repr__(self):
         """String for this object"""
-        return "<%s %s>" % (self.__class__.__name__, repr(self))
+        return "<%s %s>" % (self.__class__.__name__, str(self.store))
+        
+    def _repr_pretty_(self, p, cycle):
+        """Pretty representation of this object."""
+        if cycle:
+            p.text("{}(...)".format(self.__class__.__name__))
+        else:
+            from cStringIO import StringIO
+            with p.group(2,"{}(".format(self.__class__.__name__),")"):
+                p.pretty(self.store)
         
     def __getitem__(self, key):
         """Dictionary getter"""
@@ -329,10 +338,7 @@ class Configuration(MutableMappingBase):
         most recently"""
         return self._filename
     
-    def __str__(self):
-        """String for this object"""
-        return "<%s %s>" % (self.name, repr(self))
-        
+    
     def __getitem__(self, key):
         """Dictionary getter"""
         rval = self._store.__getitem__(key)
@@ -842,8 +848,7 @@ class StructuredConfiguration(DottedConfiguration):
         self._metadata = DottedConfiguration()
         self._metadata["Files.This"] = self.DEFAULT_FILENAME
         self._metadata["Files.Loaded"] = []
-        self._metadata["Configurations"] = self._metadata.dn()
-        self.__set_on_load = False
+        self.__set_on_load = True
         self._dn = DottedConfiguration
         
     @property
