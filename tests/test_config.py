@@ -22,6 +22,7 @@ class test_config(object):
         self.test_dict_B = {"Hi":{"A":3,"C":4,"D":[3,4],"E":{"F":"G"}},}
         self.test_dict_C = {"Hi":{"A":3,"B":2,"C":4,"D":[3,4],"E":{"F":"G"}},} #Should be a merge of A and B
         self.test_dict_D = {"Hi":{"A":3,"B":2,"C":4,"D":[1,2,3,4],"E":{"F":"G"}},} #Should be a merge of A and B
+        self.test_dict_E = {"Hi.A":3,"Hi.B":2,"Hi.C":4,"Hi.D":[1,2,3,4],"Hi.E.F":"G"}
     
     def test_reformat(self):
         """reformat(d, nt)"""
@@ -81,7 +82,31 @@ class test_config(object):
         res = config.advanceddeepmerge(self.test_dict_B, self.test_dict_A, dict, invert=True, inplace=False)
         nt.assert_not_equal(self.test_dict_B, self.test_dict_D)
         nt.eq_(res, self.test_dict_D)
+        
+    def test_flatten(self):
+        """flatten(d)"""
+        res = config.flatten(self.test_dict_D)
+        nt.eq_(res, self.test_dict_E)
+        res = config.flatten(self.test_dict_E)
+        nt.eq_(res, self.test_dict_E)
+        
+    def test_expand(self):
+        """expand(d)"""
+        res = config.expand(self.test_dict_E)
+        nt.eq_(res, self.test_dict_D)
+        res = config.expand(self.test_dict_D)
+        nt.eq_(res, self.test_dict_D)
     
+    def test_flatten_and_expand(self):
+        """expand(flatten(d)) == d"""
+        res = config.expand(config.flatten(self.test_dict_D))
+        nt.eq_(res, self.test_dict_D)
+    
+    def test_expand_and_flatten(self):
+        """flatten(expand(d)) == d"""
+        res = config.flatten(config.expand(self.test_dict_E))
+        nt.eq_(res, self.test_dict_E)
+
 
 class test_Configuration(object):
     """pyshell.config.Configuration"""
@@ -199,8 +224,6 @@ class test_DottedConfiguration(test_Configuration):
         del CFG["c.d"]
         nt.ok_("c.d" not in CFG, "Found 'c.d' (not deleted) in {:s}".format(CFG))
         
-        
-        
     @nt.raises(KeyError)
     def test_sub_dotted_dictionary_fail(self):
         """Inerting a dotted sub-dictionary, KeyError"""
@@ -247,10 +270,21 @@ class test_DottedConfiguration(test_Configuration):
         nt.eq_(CFG["g"]["h.z.f.k"],'a')
         
     def test_get_deep_class(self):
-        """Test deep class transfer."""
+        """Deep class transfer."""
         CFG = self.CLASS()
         CFG.merge(self.test_dict)
         assert isinstance(CFG["c.l"],CFG.dn)
+        
+    def test_separator_change(self):
+        """Change separator"""
+        CFG = self.CLASS()
+        CFG.separator = "-"
+        CFG["A-B-C"] = 2
+        nt.eq_(CFG["A"]["B"]["C"],2)
+        CFG.merge({'A':{'B':{'D':3}}})
+        nt.eq_(CFG["A-B-D"],3)
+        del CFG["A-B-C"]
+        nt.ok_("A-B-C" not in CFG)
         
         
 class test_StructuredConfiguration(test_DottedConfiguration):

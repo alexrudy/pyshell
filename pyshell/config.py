@@ -38,6 +38,12 @@ YAML configuration file reading and writing interface.
 .. autofunction::
     pyshell.config.advanceddeepmerge
     
+.. autofunction::
+    pyshell.config.flatten
+    
+.. autofunction::
+    pyshell.config.expand
+    
 
 Basic Configurations: :class:`Configuration`
 --------------------------------------------
@@ -130,6 +136,53 @@ def reformat(d, nt):
             e[k] = v
     return e
     
+def flatten(d, stump="", sequence=False, separator=".", dt=dict):
+    """Flatten a given nested dictionary.
+    
+    :param d: Dictionary to flatten.
+    :param stump: The base stump for flattened keys. Setting this applies a universal starting value to each key.
+    :param sequence: Whether to expand sequences.
+    :param separator: The string separator to use in flat keys.
+    :param dt: The final output type for the dictionary.
+    
+    Each nested key will become a root level key in the final dictionary. The root level keys will be the set of nested keys, joined by the `separator` keyword argument.
+    
+    """
+    o = dt()
+    if ( isinstance(d, collections.Sequence)
+        and not isinstance(d, basestring) and
+        sequence):
+        for i,iv in enumerate(v):
+            o.update(flatten(iv, nk+str(i), sequence, separator))
+    elif isinstance(d, collections.Mapping):    
+        for k,v in d.iteritems():
+            nk = separator.join((stump,k)) if stump else k
+            o.update(flatten(v, nk, sequence, separator))
+    else:
+        o[stump] = d
+    return o
+    
+def expand(d, sequence=False, separator=".", dt=dict):
+    """Expand a flattened dictionary into a nested one.
+    
+    :param d: Dictionary to expand.
+    :param sequence: Whether to expand sequences.
+    :param separator: The string separator to use in flat keys.
+    :param dt: The final output type for all levels of the nested dictionary.
+    
+    Each key with the `separator` will become a nested dictionary key in the final dictionary."""
+    if isinstance(d, collections.Mapping):
+        o = dt()
+        for k,v in d.iteritems():
+            ks = k.split(separator)
+            n = o
+            for nk in ks[:-1]:
+                n = n.setdefault(nk, dt())
+            n[ks[-1]] = expand(v, sequence=sequence, separator=separator, dt=dt)
+    else:
+        o = d
+    return o
+    
 def advanceddeepmerge(d, u, s, sequence=True, invert=False, inplace=True):
     """Merge deep collection-like structures.
     
@@ -220,6 +273,8 @@ class MutableMappingBase(collections.MutableMapping):
     def __init__(self, *args, **kwargs):
         super(MutableMappingBase, self).__init__()
         self.log = loggers.getLogger(self.__module__)
+        if len(args) == 1 and isinstance(args[0],self._dt) and len(kwargs) == 0:
+            self._store = args[0]
         self._store = self._dt(*args,**kwargs)
         
     __metaclass__ = abc.ABCMeta
@@ -677,6 +732,13 @@ class DottedConfiguration(Configuration):
         
     """
     
+    separator = "."
+    """The deep nesting separator character(s)."""
+    
+    def flatten(self,sequence=False):
+        """Returns this dictionary, flattened so that all dotted names are at the root level."""
+        return flatten(self.store, sequence=sequence, separator=self.separator, dt=self.dt)
+    
     def _isempty(self, item):
         """Test if the given item is empty"""
         #pylint: disable=W0703
@@ -703,7 +765,7 @@ class DottedConfiguration(Configuration):
         
         np = len(parts)
         for i in range(np):
-            key = ".".join(parts[:np-i])
+            key = self.separator.join(parts[:np-i])
             if key in store:
                 if self._strict and self._isempty(store[key]):
                     raise KeyError
@@ -738,7 +800,7 @@ class DottedConfiguration(Configuration):
         else:
             np = len(parts)
             for i in range(np):
-                key = ".".join(parts[:np-i])
+                key = self.separator.join(parts[:np-i])
                 remain = parts[np-i:]
                 if key in store and remain:
                     return self._delitem(store[key], remain)
@@ -753,7 +815,7 @@ class DottedConfiguration(Configuration):
         else:
             np = len(parts)
             for i in range(np):
-                key = ".".join(parts[:np-i])
+                key = self.separator.join(parts[:np-i])
                 if key in store:
                     return self._contains(store[key], parts[np-i:])
             return False
@@ -761,7 +823,7 @@ class DottedConfiguration(Configuration):
         
     def __getitem__(self, key):
         """Dictionary getter"""
-        keyparts = key.split(".")
+        keyparts = key.split(self.separator)
         try:
             if len(keyparts) > 1:
                 rval = self._getitem(self._store, keyparts)
@@ -773,34 +835,32 @@ class DottedConfiguration(Configuration):
         except KeyError:
             raise KeyError('%s' % key)
         
-        if isinstance(rval,collections.MutableMapping):
-            return self.dn(rval)
-        else:
-            return rval
+        if isinstance(rval,self.dt):
+            rval = self.dn(rval)
+            rval.separator = self.separator
+        return rval
             
         
     def __setitem__(self, key, value):
         """Dictonary setter"""
-        keyparts = key.split(".")
+        keyparts = key.split(self.separator)
         if len(keyparts) > 1:
             return self._setitem(self._store, keyparts, value)
         return self._store.__setitem__(key, value)
         
     def __delitem__(self, key):
         """Dictionary delete"""
-        keyparts = key.split(".")
+        keyparts = key.split(self.separator)
         try:
             if len(keyparts) > 1:
                 return self._delitem(self._store, keyparts)        
             return self._store.__delitem__(key)
         except KeyError:
-            # raise KeyError('%s' % key)
-            raise
-        
+            raise KeyError('%s' % key)
         
     def __contains__(self, key):
         """Dictionary in"""
-        keyparts = key.split(".")
+        keyparts = key.split(self.separator)
         if len(keyparts) > 1:
             return self._contains(self._store, keyparts)
         elif (self._strict and (isinstance(self._store.get(key), self.dt) 
