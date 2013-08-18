@@ -7,6 +7,9 @@
 #  Copyright 2013 Alexander Rudy. All rights reserved.
 # 
 
+from __future__ import (absolute_import, unicode_literals, division,
+                        print_function)
+
 import shutil, os, os.path
 import pyshell.base
 import nose.tools as nt
@@ -53,7 +56,7 @@ class test_base_cliengine(object):
         nt.ok_(isinstance(IN.parser,argparse.ArgumentParser),
             "The .parser attribute must be an <type 'argparse.ArgumentParser'>")
         nt.eq_(IN.config.store,{})
-        nt.eq_(IN.description,"A command line interface.")
+        nt.eq_(IN.description,IN.__doc__)
         nt.eq_(IN.epilog,"")
         nt.eq_(IN.defaultcfg,"Config.yml")
         nt.eq_(IN.supercfg,[])
@@ -64,18 +67,18 @@ class test_base_cliengine(object):
         IN = self.CLASS()
         nt.eq_(dests_from_argparse(IN.parser),[])
         IN.init()
-        nt.eq_(dests_from_argparse(IN.parser),['config'])
+        nt.eq_(dests_from_argparse(IN.parser),['config','configure'])
         IN._add_help()
-        nt.eq_(dests_from_argparse(IN.parser),['config','help'])
+        nt.eq_(dests_from_argparse(IN.parser),['config','configure','help'])
         IN._remove_help()
-        nt.eq_(dests_from_argparse(IN.parser),['config'])
+        nt.eq_(dests_from_argparse(IN.parser),['config','configure'])
         
     def test_init(self):
         """.init()"""
         IN = self.CLASS()
         nt.eq_(dests_from_argparse(IN.parser),[])
         IN.init()
-        nt.eq_(dests_from_argparse(IN.parser),['config'])
+        nt.eq_(dests_from_argparse(IN.parser),['config','configure'])
         self.CLASS.defaultcfg = False
         IN = self.CLASS()
         nt.eq_(dests_from_argparse(IN.parser),[])
@@ -90,7 +93,7 @@ class test_base_cliengine(object):
         IN.arguments(shlex.split("--config file.yml --other value"))
         nt.eq_(IN._rargs,["--other","value"])
         nt.eq_(IN.opts.config,"file.yml")
-        nt.eq_(vars(IN.opts),{'config':'file.yml'})
+        nt.eq_(vars(IN.opts),{'config':'file.yml','configure':[]})
         
     def test_configure(self):
         """.configure()"""
@@ -101,6 +104,19 @@ class test_base_cliengine(object):
         IN.configure()
         nt.eq_(IN.config["c.d"],1,
             "Dotted configuration access failed.")
+            
+    def test_configure_literals(self):
+        """.configure() with literals"""
+        IN = self.CLASS()
+        IN.init()
+        IN.arguments(shlex.split("--configure x=1.3e5 --configure y=string --configure z=False"))
+        IN.opts.config = os.path.join(self.CWD,self.CONFIG)
+        IN.configure()
+        nt.eq_(IN.config["c.d"],1,
+            "Dotted configuration access failed.")
+        nt.eq_(IN.config["x"],1.3e5)
+        nt.eq_(IN.config["y"],"string")
+        nt.eq_(IN.config["z"],False)
         
     def test_help(self):
         """._add_help() and ._remove_help()"""

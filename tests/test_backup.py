@@ -7,6 +7,9 @@
 #  Copyright 2012 Alexander Rudy. All rights reserved.
 # 
 
+from __future__ import (absolute_import, unicode_literals, division,
+                        print_function)
+
 import shutil, os, os.path
 import pyshell.backup
 import nose.tools as nt
@@ -14,7 +17,7 @@ import warnings
 from nose.plugins.skip import Skip,SkipTest
 from subprocess import CalledProcessError, Popen, PIPE
 import shlex
-from .util import dests_from_argparse
+from .util import dests_from_argparse, on_travis_ci
 
 
 def clear_dir(tdir):
@@ -42,7 +45,7 @@ class test_BackupEngine(object):
         """BackupEngine attributes"""
         from argparse import ArgumentParser
         engine = pyshell.backup.BackupEngine()
-        nt.eq_(engine.description.splitlines()[0],u"BackUp – A simple backup utility using rsync. The utility has")
+        nt.eq_(engine.description.splitlines()[0],"BackUp – A simple backup utility using rsync. The utility has")
         nt.eq_(engine.cfgbase,'')
         nt.eq_(engine.defaultcfg,"Backup.yml")
         nt.ok_(isinstance(engine.parser,ArgumentParser),"engine.parser should be an argparse.ArgumentParser")
@@ -89,7 +92,6 @@ class test_BackupEngine(object):
         engine.init()
         engine.arguments(["main"])
         nt.eq_(engine._rargs,['main'])
-        print dir(engine.opts)
         nt.ok_(hasattr(engine.opts,'prefix'),'engine.opts.mode')
         
     def test_configure(self):
@@ -122,7 +124,7 @@ class test_BackupScript(object):
         make_files(os.path.join(self.PATH,'c/'),self.NUM_FILES)
 
         clear_dir(os.path.join(self.PATH,'d/'))
-        for i in range(self.NUM_FILES/self.SKIP_FACT):
+        for i in range(self.NUM_FILES//self.SKIP_FACT):
             shutil.copy2(os.path.join(self.PATH,'c/c.%03d.test' % (i * self.SKIP_FACT)),os.path.join(self.PATH,'d/'))
             
         self.engine = pyshell.backup.BackupEngine()
@@ -144,20 +146,20 @@ class test_BackupScript(object):
         backup_py_args = shlex.split("-q --config %s main other" % (backup_py_config))
         self.engine.arguments(backup_py_args)
         self.engine.run()
-        print os.listdir(os.path.join(self.PATH,'a/'))
-        print os.listdir(os.path.join(self.PATH,'b/'))
         nt.eq_(len(os.listdir(os.path.join(self.PATH,'a/'))), len(os.listdir(os.path.join(self.PATH,'b/'))))
         nt.eq_(len(os.listdir(os.path.join(self.PATH,'c/'))), len(os.listdir(os.path.join(self.PATH,'d/'))))
         
     def test_engine_subproc(self):
         """Test full engine as a subprocess."""
+        if on_travis_ci():
+            from nose.plugins.skip import SkipTest
+            raise SkipTest()
         assert len(os.listdir(os.path.join(self.PATH,'a/'))) != len(os.listdir(os.path.join(self.PATH,'b/')))
         assert len(os.listdir(os.path.join(self.PATH,'c/'))) != len(os.listdir(os.path.join(self.PATH,'d/')))
         backup_py_path = os.path.join(self.EXEPATH,"backup.py")
         backup_py_config = os.path.join(self.PATH,"Backup.yaml")
         backup_py_command = shlex.split("python %s " % backup_py_path)
         backup_py_args = shlex.split("-q --config %s main other" % backup_py_config)
-        print " ".join(backup_py_args)
         backup_py = Popen(backup_py_command + backup_py_args,stdin=PIPE,stdout=PIPE,stderr=PIPE)
         backup_py_retcode = backup_py.wait()
         nt.eq_(backup_py_retcode, 0)

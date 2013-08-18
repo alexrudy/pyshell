@@ -6,7 +6,10 @@
 #  Created by Alexander Rudy on 2012-11-21.
 #  Copyright 2012 Alexander Rudy. All rights reserved.
 # 
-from __future__ import division
+from __future__ import (absolute_import, unicode_literals, division,
+                        print_function)
+
+
 from datetime import datetime
 
 from .base import CLIEngine
@@ -15,6 +18,8 @@ from .util import func_lineno
 import argparse
 import re
 import logging
+
+import ipdb
 
 __version__ = "0.1"
 
@@ -81,6 +86,9 @@ class Pipeline(CLIEngine):
         self.include = []
         self.trigger = []
         self.orders = []
+        self.execution = []
+        self.execution_code = []
+        self.execution_level = []
 
         self.attempt = [] # Pipes and dependents which have been attempted.        
         self.complete = [] # Pipes and dependents which have been walked
@@ -185,7 +193,7 @@ can be customized using the 'Default' configuration variable in the configuratio
         
         # Default Macro
         self.registerPipe(None,"all",description="Run all pipes",help="Run all pipes",include=False)
-        
+        self.registerPipe(None,"none",description="Run no pipes",help="Run no pipes",include=False)
         
     #########################
     ### REGISTRATION APIs ###
@@ -424,6 +432,8 @@ can be customized using the 'Default' configuration variable in the configuratio
         
         for fk in self.config.get("Options.afterFunction",[]):
             self.functions[fk]()
+            
+
 
         self.starting = False
         self.started = True
@@ -452,6 +462,17 @@ can be customized using the 'Default' configuration variable in the configuratio
         if len(self.include) == 0:
             self.parser.error(u"No pipes triggered to run!")
         self.trigger = []
+        self.pipe_order()
+        print("Registered Pipes:")
+        for i in range(len(self.execution)):
+            print (" " * self.execution_level[i]) + (self.symbols[self.execution_code[i]] % self.execution[i])
+        print("Execution Order:")
+        execute = []
+        for i in range(len(self.execution)):
+            if self.execution_code[i] in self.called:
+                execute.append(self.execution[i])
+        execute.reverse()
+        print execute
         pipe,code = self.next_pipe(None,dependencies=True)
         while code != "F":
             self.execute(pipe,code=code)
@@ -459,20 +480,60 @@ can be customized using the 'Default' configuration variable in the configuratio
         self.running = False
         return self.complete
     
-    def next_pipe(self,parent,dependencies=False):
+    codes = {
+        'I' : "Included, Called",
+        'Id' : "Included, Satisfied",
+        'D' : "Dependency, Called",
+        'Dd' : "Dependency, Satisfied",
+        'T' : "Triggered, Called",
+        'Td' : "Triggered, Satisfied",
+        "Rd" : "Replaces, Satisfied"
+    }
+    called = {
+        'I' : "Id",
+        'D' : "Dd",
+        'T' : "Td"
+    }
+    symbols = {
+        'T' : u"┌>%s",
+        'I' : u"+>%s",
+        'D' : u"└>%s",
+        'Id' :u"- %s",
+        'Dd' :u"└ %s",
+        'Td' :u"┌ %s",
+        'Rd' :u"x %s",
+    }
+    
+    
+    def pipe_order(self):
         """Return the name of the next pipe"""
+        self.orders.reverse()
         for pipe in self.orders:
-            if pipe not in self.attempt and pipe not in self.complete:
-                if parent is not None and pipe in self.pipes[parent].dependencies:
-                    return pipe,"D"
-                elif pipe == parent:
-                    return pipe,"C"
-                elif parent is None:
-                    if pipe in self.include:
-                        return pipe,"I"
-                    if pipe in self.trigger:
-                        return pipe,"T"
-        return None,"F"
+            if pipe in self.include:
+                # ipdb.set_trace()
+                self._next_pipe("I",pipe,0)
+            
+    def _next_pipe(self,code,pipe,level):
+        """docstring for _next_pipe"""
+        if pipe in self.execution:
+            self.execution += [pipe]
+            self.execution_code += [self.called.get(code,code)]
+            self.execution_level += [level]
+        else:
+            for t in self.orders:
+                if t in self.pipes[pipe].triggers:
+                    self._next_pipe("T",t,level=level+1)
+            self.execution += [pipe]
+            self.execution_code += [code]
+            self.execution_level += [level]
+            for r in self.orders:
+                if r in self.pipes[pipe].replaces:
+                    self._next_pipe("Rd",r,level=level+1)
+            for d in self.orders:
+                if d in self.pipes[pipe].dependencies:
+                    self._next_pipe("D",d,level=level+1)
+        
+        
                     
                     
     
@@ -529,6 +590,7 @@ can be customized using the 'Default' configuration variable in the configuratio
         for dependent in self.pipes[pipe].dependencies:
             if dependent not in self.orders:
                 self.log.error("Pipe %r requested dependent %r which doesn't exist." % (pipe, dependent))
+                raise PipelineStateError("Pipe %r requested dependent %r which doesn't exist." % (pipe, dependent))
             elif dependent not in self.complete and self.pipes[dependent].optional:
                 self.log.debug(u"Pipe %r requested by %r but skipped" % (dependent,pipe))
             elif dependent not in self.complete:
@@ -538,7 +600,7 @@ can be customized using the 'Default' configuration variable in the configuratio
         
         s = self.pipes[pipe]
         self._pipe_tree += [u"%-30s : %s" % (u"  " * level + indicator % pipe,s.description)]
-        if self.config["Options.DryRun"]:
+        if self.config.get("Options.DryRun",False):
             self.trigger += self.pipes[pipe].triggers
             self.complete += [pipe] + s.replaces
             self.done += [pipe]

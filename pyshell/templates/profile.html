@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}
+Profile of {{ name }}
+{% endblock %}
+{% block header %}
+<h1>Profile of {{ name }}</h1>
+{% endblock %}
+{% block content %}
+<table border="0" cellspacing="5" cellpadding="5">
+    <tr><th></th><th>Pipe</th><th>Duration</th><th>Percentage</th></tr>
+    {% for item in sequence %}
+        <tr><td>{{ loop.index }}.</td><td>{{ item.name }}</td><td>{{ "%.1f"|format(item.profile["processing time"]) }}s</td><td>{{ "% 3d"|format((item.profile["processing time"]/total)*100) }}%</td></tr>
+    {% endfor %}
+</table>
+Total Time: {{ total|round }} seconds.
+{% endblock %}

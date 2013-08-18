@@ -19,34 +19,85 @@
     force_dir_path
     
 .. autofunction::
+    collapseuser
+    
+.. autofunction::
+    check_exists
+    
+.. autofunction::
+    warn_exists
+    
+.. autofunction::
+    is_remote_path
+    
+.. autofunction::
     semiabstractmethod
     
 .. autofunction::
+    deprecatedmethod
+    
+.. autofunction::
     func_lineno
+
+.. autofunction::
+    ipydb
+
+.. autofunction::
+    is_type_factory
 
 .. autofunction::
     query_yes_no
 
 .. autofunction::
     query_string
+    
+.. autofunction::
+    query_select
 
 """
-import os
+
+from __future__ import (absolute_import, unicode_literals, division,
+                        print_function)
+
+import os, os.path
 import sys
 import warnings
 import functools
 
+with warnings.catch_warnings():
+    warnings.simplefilter('ignore')
+    import pkg_resources # pylint: disable = unused-import
+
+def ipydb():
+    """Try to use the iPython debugger on program failures."""
+    try:
+        from IPython.core import ultratb
+    except ImportError:
+        warnings.warn("Not enabling iPython debugger because"
+            " 'ipython' isn't installed!")
+    else:
+        _file = getattr(sys.modules['__main__'], '__file__', '')
+        sys.excepthook = ultratb.ColorTB(color_scheme='Linux', call_pdb=1)
+        setattr(sys.modules['__main__'], '__file__', _file)
+
 def is_type_factory(ttype):
-    """Return a function which checks if an object can be cast as a given type."""
-    def is_type(obj):
+    """Return a function which checks if an object can be cast as a given 
+    type. Basic usage allows for checking string-casting to a specific type.
+    
+    :param ttype: Usually a ``type`` but really, any function which takes one
+        argument and which will raise a :exc:`ValueError` if that one argument can't be 
+        cast correctly.
+        
+    """
+    def is_type(obj): # pylint: disable = missing-docstring
         try:
             ttype(obj)
-        except:
+        except ValueError:
             return False
         else:
             return True
-    is_type.__doc__ = "Checks if obj can be *cast* as {type}.".format(type=repr(ttype))
-    is_type.__hlp__ = "Input must be of {!s}".format(ttype)
+    is_type.__doc__ = "Checks if obj can be *cast* as {!r}.".format(ttype)
+    is_type.__hlp__ = "Input must be an {!s}".format(ttype)
     return is_type
 
 def force_dir_path(path):
@@ -65,28 +116,40 @@ def collapseuser(path):
     """Collapse the username from a path."""
     userpath = os.path.expanduser("~")
     if path.startswith(userpath):
-        relpath = os.path.relpath(path,userpath)
-        return os.path.normpath(os.path.join("~",relpath))
+        relpath = os.path.relpath(path, userpath)
+        return os.path.normpath(os.path.join("~", relpath))
     else:
         return path
     
 def join(*args):
-    """docstring for join"""
-    args = list(args)
-    path = args.pop(0)
-    for arg in args:
-        path = os.path.join(path,arg)
-    return os.path.expanduser(path)
+    """Join and expand user."""
+    return os.path.expanduser(os.path.join(*args))
     
 def check_exists(path):
     """Check whether the given directory exists."""
     return os.path.exists(os.path.expanduser(path))
     
-def warn_exists(path,name="path",exists=True):
-    """docstring for warn_exists"""
+def warn_exists(path, name="path", exists=True):
+    """Warn if the file path does or does not exist.
+    
+    :param path: The path to search for.
+    :param name: The textual name to use in output.
+    :param exists: Whether the filepath **should** exist or not.
+    
+    """
     if check_exists(path) != exists:
-        warnings.warn("{name} '{path}' does{exist} exist".format(name=name.capitalize(),path=path,
-            exist=" not" if exists else ""),warnings.RuntimeWarning)
+        warnings.warn("{name} '{path}' does{exist} exist!".format(
+            name=name.capitalize(), path=path,
+            exist=" not" if exists else ""), RuntimeWarning)
+            
+def remove(path, warn=False, name='path'):
+    """docstring for remove"""
+    if os.path.exists(path):
+        os.remove(path)
+    elif warn:
+        warnings.warn("{name} '{path}' does not exist!".format(
+            name=name.capitalize(), path=path
+        ))
     
 def is_remote_path(path):
     """Path looks like an SSH or other URL compatible path?"""
@@ -118,43 +181,54 @@ def semiabstractmethod(txt):
         NotImplementedError
     
     """
-    def decorator(func):
-        @functools.wraps(func)
-        def raiser(*args, **kwargs):
+    def decorator(func): # pylint: disable= missing-docstring
+        @functools.wraps(func) # pylint: disable = unused-argument
+        def raiser(*args, **kwargs): # pylint: disable= missing-docstring
             name = func.__name__
-            if hasattr(func,'im_class'):
-                name = ".".join([func.im_class.__name__,name])
+            if hasattr(func, 'im_class'):
+                name = ".".join([func.im_class.__name__, name])
             msg = txt % (name)
             raise NotImplementedError(msg)
         return raiser
     if callable(txt):
         func = txt
-        txt = u"Abstract method %s() cannot be called."
+        txt = "Abstract method %s() cannot be called."
         return decorator(func)
     return decorator
 
-def depricatedmethod(message=None,version=None,replacement=None):
-    """Mark a method as depricated"""
-    def decorator(func):
+def deprecatedmethod(message=None, version=None, replacement=None):
+    """Mark a method as deprecated.
+    
+    :param message: The warning message to display, or None.
+    :param version: The deprication version. Will be appended to the message.
+    :param replacement: A string describing the text to replace.
+    
+    The final :exc:`DepricationWarning` message is formatted as follows::
+        
+        "Method {method} will be depricated in version {version}, please use {replacement} instead."
+    
+    Setting the `message` argument replaces the string ``"Method {method} will be depricated"``.
+    """
+    def decorator(func): # pylint: disable = missing-docstring
         try:
             txt.format(method=func.__name__)
         except KeyError:
             pass
         @functools.wraps(func)
-        def warner(*args, **kwargs):
-            warnings.warn(txt,warnings.DepricationWarning)
-            return func(*args,**kwargs)
+        def warner(*args, **kwargs): # pylint: disable = missing-docstring
+            warnings.warn(txt, DeprecationWarning)
+            return func(*args, **kwargs)
         return warner
     if callable(message) or message is None:
-        txt = "Method {method} will be depricated"
+        txt = "Method {method} will be deprecated"
     else:
         txt = message
     if version is not None:
-        txt += "in version {version}".format(version=version)
+        txt += " in version {}".format(version)
     else:
-        txt += "soon"
+        txt += " soon"
     if replacement is not None:
-        txt += "please use {replacement} instead".format(replacement=replacement)
+        txt += " please use {} instead".format(replacement)
     txt += "."
     if callable(message):
         return decorator(message)
@@ -169,11 +243,12 @@ def query_yes_no(question, default="yes"):
     :param default: The answer if the user hits <Enter> with no input.
         It must be "yes" (the default), "no" or None (meaning
         an answer is required of the user).
+    :param output: The output stream.
     :return: `True` or `False` for "yes" or "no" respectively.
     
     """
-    valid = {"yes":True,   "y":True,  "ye":True,
-             "no":False,     "n":False}
+    valid = {"yes":True, "y":True, "ye":True,
+             "no":False, "n":False}
     if default == None:
         prompt = " [y/n] "
     elif default == "yes":
@@ -184,42 +259,85 @@ def query_yes_no(question, default="yes"):
         raise ValueError("invalid default answer: '%s'" % default)
 
     while True:
-        sys.stdout.write(question + prompt)
-        choice = raw_input().lower()
+        choice = raw_input(question + prompt).lower()
         if default is not None and choice == '':
             return valid[default]
         elif choice in valid:
             return valid[choice]
         else:
-            sys.stdout.write("Please respond with 'yes' or 'no' "\
+            sys.stdout.write("Please respond with 'yes' or 'no' "
                              "(or 'y' or 'n').\n")
                              
-def query_string(question, default=None, validate=None):
+def query_string(question, default=None, validate=None, output=sys.stdout):
     """Ask a question via raw_input, and return the answer as a string.
     
     :param question: A string presented to the user
     :param default: The answer if the user hits <Enter> with no input.
+    :param validate: A function to validate responses. To validate that the answer is a specific type, use :func:`is_type_factory`.
+    :param output: The output stream.
     :return: A string with the user's answer or the default if no answer.
     
     """
     
     if default is None:
-        prompt = " : "
+        prompt = ": "
     else:
-        prompt = " (%s): " % default
+        prompt = " ({:s}): ".format(default)
     
     
     while True:
-        sys.stdout.write(question + prompt)
-        answer = raw_input()
+        answer = raw_input(question + prompt)
         if default is not None and answer == '':
             answer = default
         if validate is None or validate(answer):
             return answer
         else:
-            if hasattr(validate,'__hlp__'):
-                sys.stdout.write(validate.__hlp__+"\n")
-            elif hasattr(validate,'__doc__'):
-                sys.stdout.write("Invalid input, the validation function has the following documentaion:\n"+validate.__doc__+"\n")
-            sys.stdout.write("Invalid input. Please try again.\n")
+            if hasattr(validate, '__hlp__'):
+                output.write(validate.__hlp__+"\n")
+            elif hasattr(validate, '__doc__'):
+                output.write("Invalid input, the validation function"
+                " has the following documentaion:\n"+validate.__doc__+"\n")
+            output.write("Invalid input. Please try again.\n")
+            
+def query_select(iterable, labels=None, default=None, 
+    before="Select from:", question="Select an item", output=sys.stdout):
+    """A simple CLI UI to let the user choose an item from a list of items.
+    
+    :param iterable: The list from which to choose.
+    :param labels: The labels for the list from which to choose.
+    :param default: The index of the default item in `iterable`
+    :param before: The string to print before the choice list.
+    :param question: The question to use as the prompt.
+    :param output: The output stream.
+    """
+    
+    if labels is None:
+        labels = iterable
+    elif len(labels) != len(iterable):
+        raise ValueError("Labels must be the same length as the iterable.")
+    
+    def validate(answer):
+        valid = is_type_factory(int)(answer)
+        if valid:
+            valid &= int(answer) <= len(iterable)
+            valid &= int(answer) >= 1
+        return valid
+    
+    validate.__hlp__ = "Selection must be an integer between {:d} and {:d}".format(1,len(iterable))
+    
+    # String Formatting Tools
+    line_template = "{number:{indent:d}d}) {text:s}"
+    indent = len("{:d}".format(len(iterable)))
+    
+    output.write(before)
+    output.write("\n")
+    
+    for i,item in enumerate(labels):
+        line = line_template.format(number=i+1, indent=indent, text=item)
+        output.write(line)
+        output.write("\n")
+    
+    answer = query_string(question, default=default, validate=validate)
+    index = int(answer) - 1
+    return iterable[index]
             
