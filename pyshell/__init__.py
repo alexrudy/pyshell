@@ -17,7 +17,7 @@ from __future__ import (absolute_import, unicode_literals, division,
 
 # pylint: disable = invalid-name
 
-version = "0.3.2"
+version = "0.4.0"
 __all__ = []
 
 from .base import *

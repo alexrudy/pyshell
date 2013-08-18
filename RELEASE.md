@@ -33,3 +33,7 @@
 **0.3.2**
 - Fixes for the internal structure in `config` module. Specifically, delete, set and contains.
 - Tweaks to warning logs.
+
+**0.4.0**
+- Postmortem Plugin for nosetests
+- Travis-CI support & better support for ``python3``.
