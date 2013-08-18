@@ -36,3 +36,4 @@
 
 **0.4.0**
 - Postmortem Plugin for nosetests
+- Travis-CI support & better support for ``python3``.
