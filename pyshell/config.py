@@ -130,7 +130,7 @@ def reformat(d, nt):
             e[k] = v
     return e
     
-def flatten(d, stump="", sequence=False, separator="."):
+def flatten(d, stump="", sequence=False, separator=".", dt=dict):
     """Flatten a given nested dictionary.
     
     :param d: Dictionary to flatten.
@@ -139,7 +139,7 @@ def flatten(d, stump="", sequence=False, separator="."):
     :param separator: The string separator to use in flat keys.
     
     """
-    o = {}
+    o = dt()
     if ( isinstance(d, collections.Sequence)
         and not isinstance(d, basestring) and
         sequence):
@@ -147,12 +147,25 @@ def flatten(d, stump="", sequence=False, separator="."):
             o.update(flatten(iv, nk+str(i), sequence, separator))
     elif isinstance(d, collections.Mapping):    
         for k,v in d.iteritems():
-            nk = separator.join((stump,k))
+            nk = separator.join((stump,k)) if stump else k
             o.update(flatten(v, nk, sequence, separator))
     else:
         o[stump] = d
     return o
-            
+    
+def expand(d, sequence=False, separator=".", dt=dict):
+    """Expand the items"""
+    if isinstance(d, collections.Mapping):
+        o = dt()
+        for k,v in d.iteritems():
+            ks = k.split(separator)
+            n = o
+            for nk in ks[:-1]:
+                n = n.setdefault(nk, dt())
+            n[ks[-1]] = expand(v, sequence=sequence, separator=separator, dt=dt)
+    else:
+        o = d
+    return o
     
 def advanceddeepmerge(d, u, s, sequence=True, invert=False, inplace=True):
     """Merge deep collection-like structures.
