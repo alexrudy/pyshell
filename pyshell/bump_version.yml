@@ -1,0 +1,9 @@
+regex:
+  find: | 
+    (?P<prefix>|"?)([\d]+\.[\d]+(\.[\d]+)+?)(?P<postfix>|"?)
+  
+  replace: | 
+    \g<prefix>{version}\g<postfix>
+
+glob:
+  files: "*.py"
