@@ -37,3 +37,7 @@
 **0.4.0**
 - Postmortem Plugin for nosetests
 - Travis-CI support & better support for ``python3``.
+
+**0.4.1**
+- `flatten` and `expand` for nested configurations.
+- `BumpVersion` script for bumping file versions
