@@ -290,7 +290,7 @@ class CLIEngine(object):
     loaded before the default configuration is loaded. Each tuple contains the 
     module name and filename pair that should be passed to 
     :func:`~pkg_resources.resource_filename`. To specify a super-configuration 
-    in the current direction, use ``__main__`` as the module name."""
+    in the current directory, use ``__main__`` as the module name."""
     
     def __init__(self, prefix_chars="-".encode('utf-8'), 
         conflict_handler='error'):

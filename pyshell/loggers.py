@@ -283,7 +283,7 @@ class ColorStreamFormatter(logging.Formatter):
     
     def format(self, record):
         """Format a record with colors from the terminal module."""
-        if record.levelno <= logging.DEBUG:
+        if record.levelno < logging.DEBUG:
             record.color = ""
         elif record.levelno < logging.INFO:
             record.color = get_color(self.color[logging.DEBUG])
@@ -315,7 +315,7 @@ class ManyTargetHandler(handlers.MemoryHandler):
 
     def setTarget(self,target):
         """Add another target to the handler"""
-        if isinstance(target,logging.Handler):
+        if hasattr(target,"handle"):
             self.targets.add(target)
                 
     def flush(self):

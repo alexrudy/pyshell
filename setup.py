@@ -31,7 +31,8 @@ setup(
     zip_safe = True,
     entry_points = {
         'console_scripts' : ["BackUp = pyshell.backup:BackupEngine.script",
-                            "PyPackage = pyshell.package:PyPackageEngine.script"],
+                            "PyPackage = pyshell.package:PyPackageEngine.script",
+                            "BumpVersion = pyshell.bump_version:VersionBumper.script"],
         'nose.plugins.0.10': [
                     'postmortem = pyshell.nosetests.postmortem:PostMortemPlugin',
                     ]
