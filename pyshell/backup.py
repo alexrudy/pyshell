@@ -19,6 +19,7 @@ from subprocess import Popen
 import subprocess
 import os, os.path
 import sys
+import argparse
 from textwrap import fill
 from warnings import warn
 
@@ -194,6 +195,11 @@ class BackupEngine(CLIEngine):
         + "\n\n" + fill("Using {version}".format(version=self._cmd_version))
         
         
+    @property
+    def epilog(self):
+        """A text epilog"""
+        return fill("Any arguments not parsed by this tool will be passed to {cmd}".format(cmd=self._cmd))
+        
     cfgbase = ""
     
     defaultcfg = "Backup.yml"
@@ -241,7 +247,7 @@ class BackupEngine(CLIEngine):
             action='store_true',dest='reversedel',
             help="Use --del flag even when reversed.")
         self.parser.usage = "%(prog)s [-nqdvpr] [--config file.yml] [--prefix "\
-        "origin [destination] | --root ]\n            target [target ...]"
+        "origin [destination] | --root ]\n            target [target ...] {{{cmd} args}}".format(cmd=self._cmd)
         
     @property
     def backup_config(self):
@@ -294,6 +300,9 @@ class BackupEngine(CLIEngine):
             self._pargs += ['-v']
         if not self.opts.run:
             self._pargs += ['-n']
+        
+        if self.opts.args:
+            self._pargs += self.opts.args
     
     def start(self):
         """Run all the given stored processes"""
@@ -366,9 +375,10 @@ class BackupEngine(CLIEngine):
         self.parser.add_argument('--version', action='version',
             version="%(prog)s version {version}\n{cmd_version}".format(
                 version=version, cmd_version=self._cmd_version))
-        self.parser.add_argument('modes', metavar='target', nargs='+', 
-            default=[], help="The %(prog)s target's name.")
-        self.parser.epilog = "\n".join(self._help)
+        self.parser.add_argument('modes', metavar='target', nargs="+", 
+            choices=self._destinations.keys() ,default=[], help="The %(prog)s target's name.")
+        self.parser.add_argument('args', nargs=argparse.REMAINDER, help=argparse.SUPPRESS)
+        self.parser.epilog += "\n".join(self._help)
         
     
 if __name__ == '__main__':
