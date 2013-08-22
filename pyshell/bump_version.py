@@ -53,7 +53,7 @@ class VersionBumper(CLIEngine):
                         write = outstream.write
                         sub = re.sub
                         for num, line in enumerate(filestream):
-                            result, = sub(version_find,version_replace,line),
+                            result = sub(version_find,version_replace,line)
                             write(result)
         except Exception as e:
             raise
