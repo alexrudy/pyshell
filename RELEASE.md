@@ -41,3 +41,7 @@
 **0.4.1**
 - `flatten` and `expand` for nested configurations.
 - `BumpVersion` script for bumping file versions
+
+**0.5.0**
+- `BumpVersion`
+- Improvements to `BackUp` script

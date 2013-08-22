@@ -277,6 +277,9 @@ class CLIEngine(object):
         set as the description of the parser from :mod:`argparse`."""
         return self.__doc__
         
+    debug = __debug__
+    """Whether this tool will show stack traces."""
+        
     epilog = ""
     """The text that comes at the end of the :mod:`argparse` 
     help text."""
@@ -480,12 +483,12 @@ class CLIEngine(object):
         except SystemExit as exc:
             if not getattr(exc, 'code', 0):
                 self.kill()
-            if __debug__:
+            if self.debug:
                 raise
             self.exitcode = getattr(exc, 'code', self.exitcode)
         except KeyboardInterrupt as exc:
             self.kill()
-            if __debug__:
+            if self.debug:
                 raise
         return self.exitcode
     

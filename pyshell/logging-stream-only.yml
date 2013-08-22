@@ -15,7 +15,12 @@ logging:
       class: logging.StreamHandler
       formatter: stdout
       level: INFO
-  loggers: {}
+  loggers: 
+    py.warnings:
+      level: WARNING
+      handlers:
+        - console
+      propagate: no
   root:
     level: DEBUG
     handlers:
