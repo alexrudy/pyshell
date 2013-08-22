@@ -159,7 +159,8 @@ class _BackupDestination(object):
     def kill(self):
         """Kill this command's process"""
         if self.running:
-            self._returncode = self._process.terminate()
+            self._process.terminate()
+            self._returncode = self._process.wait()
             if self.returncode != 0:
                 warn("Mode {mode} terminated with code "\
                     "{code}".format(mode=self.name, code=self.returncode), RuntimeWarning)
