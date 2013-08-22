@@ -22,7 +22,9 @@ from .util import dests_from_argparse
 class test_base_cliengine(object):
     """pyshell.base.CLIEngine"""
     
-    CLASS = pyshell.base.CLIEngine
+    
+    
+    BASE_CLASS = pyshell.base.CLIEngine
     
     CONFIG = os.path.join("test_base","config.yml")
     
@@ -30,6 +32,15 @@ class test_base_cliengine(object):
     
     def setup(self):
         """Setup configuration"""
+        
+        class test_engine(self.BASE_CLASS):
+            """A do nothing CLI Engine"""
+            def do(self):
+                """A do nothing CLI Engine"""
+                pass
+        
+        self.CLASS = test_engine
+        
         import yaml
         cfg = {'a':'b','c':{'d':1}}
         filename = os.path.join(self.CWD,self.CONFIG)

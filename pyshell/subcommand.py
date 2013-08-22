@@ -190,15 +190,9 @@ class SCController(CLIEngine):
         """The active subcommand."""
         return self._subcommand[self.mode]
         
-    def start(self):
-        self.subcommand.start()
-        
     def do(self):
         """Call the subcommand :meth:`~SCEngine.do` method."""
         self.subcommand.do()
-        
-    def end(self):
-        self.subcommand.end()
         
     def kill(self):
         """Killing mid-command, calls the active subcommand :meth:`~SCEngine.kill` method."""

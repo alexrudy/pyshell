@@ -258,7 +258,8 @@ root logger at the lowest level!"""
 class CLIEngine(object):
     """A base class for Command Line Inteface facing tools. :class:`CLIEnigne` 
     provides the basic structure to set up a simple command-line interface,
-    based on the :mod:`argparse` framework.
+    based on the :mod:`argparse` framework. The only required implementation 
+    below is the :meth:`do` method. All other settings are optional.
     
     :param str prefix_chars: Sets the prefix characters to command line arguments. 
         by default this is set to "-", reqiuring that all command line argumetns begin 
@@ -422,40 +423,12 @@ class CLIEngine(object):
         self._opts = self.parser.parse_args(self._rargs, self._opts)
         self.configure_logging()
         
-    @deprecatedmethod(version="0.3",replacement=".do()")
-    @semiabstractmethod("Method .start() will be deprecated after version 0.3")
-    def start(self):
-        """This function is called at the start of the :class:`CLIEngine` 
-        operation. It should contain any process spawning that needs to 
-        occur.
-        
-        .. deprecated:: 0.2
-            Use :meth:`do` instead.
-        """
-        pass
-        
-    
+    @abc.abstractmethod
     def do(self): # pylint: disable= invalid-name
         """This method should handle the main operations for the command 
         line tool. The user should overwrite this method in Engine subclasses
         for thier own use. The :exc:`KeyboardInterrupt` or :exc:`SystemExit` 
         errors will be caught by :meth:`kill`"""
-        try:
-            self.start()
-            self.end()
-        except NotImplementedError:
-            raise NotImplementedError("Command line tools must overwrite the"
-            " method do() with their desired actions.")
-        
-    @deprecatedmethod(version="0.3",replacement=".do()")
-    @semiabstractmethod("Method .end() will be deprecated after version 0.3")
-    def end(self):
-        """This function is called at the end of the :class:`CLIEngine` 
-        operation and should ensure that all subprocesses have ended.
-        
-        .. deprecated:: 0.2
-            Use :meth:`do` instead.
-        """
         pass
         
     def kill(self):

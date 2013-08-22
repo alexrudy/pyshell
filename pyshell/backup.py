@@ -318,10 +318,12 @@ class BackupEngine(CLIEngine):
         if self.opts.args:
             self._pargs += self.opts.args
     
-    def start(self):
+    def do(self):
         """Run all the given stored processes"""
         for mode in self.opts.modes:
             self._start_mode(mode)
+        for mode in self._destinations.keys():
+            self._end_mode(mode)
             
     def _start_mode(self,mode):
         """Start a single mode"""
@@ -333,11 +335,6 @@ class BackupEngine(CLIEngine):
         """Wait for a particular process to end."""
         if self._destinations[mode].running:
             self._destinations[mode].wait()
-        
-    def end(self):
-        """End all processes"""
-        for mode in self._destinations.keys():
-            self._end_mode(mode)
         
     def _kill_mode(self, mode):
         """Kill a particular subprocess"""

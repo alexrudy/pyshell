@@ -23,13 +23,12 @@ from .test_base import test_base_cliengine
 class test_subcommand_scengine(test_base_cliengine):
     """pyshell.subcommand.SCEngine"""
     
-    CLASS = pyshell.subcommand.SCEngine
+    BASE_CLASS = pyshell.subcommand.SCEngine
     
     def setup(self):
         """Fix DEFAULTCFG in SCEngine"""
-        self.CLASS.defaultcfg = "Config.yml"
         super(test_subcommand_scengine, self).setup()
-        
+        self.CLASS.defaultcfg = "Config.yml"
 
 # class test_subcommand_sccontroller(test_base_cliengine):
 #     """pyshell.subcommand.SCController"""
