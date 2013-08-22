@@ -24,10 +24,10 @@ from textwrap import fill
 from warnings import warn
 
 try:
-    from . import version, CLIEngine
+    from . import version, CLIEngine, PYSHELL_LOGGING_STREAM
     from .util import force_dir_path, is_remote_path
 except ValueError:
-    from pyshell import version, CLIEngine
+    from pyshell import version, CLIEngine, PYSHELL_LOGGING_STREAM
     from pyshell.util import force_dir_path, is_remote_path
 
 __all__ = ['BackupEngine']
@@ -178,8 +178,8 @@ class _BackupDestination(object):
                 % dict(mode=self.name,triggers=",".join(self.triggers))
         else:
             helpstring = "  %(mode)-18s Copy files using the '%(mode)s' target "\
-                "%(delete)s\n%(s)-20s  from %(origin)r\n%(s)-20s  to   "\
-                "%(destination)r\n" % dict(s=" ", mode=self.name, origin=self.origin,
+                "%(delete)s\n%(s)-20s  from '%(origin)s'\n%(s)-20s  to   "\
+                "'%(destination)s'\n" % dict(s=" ", mode=self.name, origin=self.origin,
                     destination=self.destination,
                     delete="removing old files" if self.delete else "")
         return helpstring
@@ -197,7 +197,7 @@ class BackupEngine(CLIEngine):
         Implemented as a property to allow the text description to include
         infomration about the underlying command, usually `rsync`.
         """
-        return fill(u"BackUp – A simple backup utility using {cmd}. The "\
+        return fill("BackUp – A simple backup utility using {cmd}. The "\
         "utility has configurable targets, and can spawn multiple "\
         "simultaneous {cmd} processes for efficiency.".format(cmd=self._cmd))\
         + "\n\n" + fill("Using {version}".format(version=self._cmd_version))
@@ -212,8 +212,9 @@ class BackupEngine(CLIEngine):
     
     defaultcfg = "Backup.yml"
     
-    module = __name__
-    # This sets the module name for this engine
+    debug = False
+    
+    supercfg = PYSHELL_LOGGING_STREAM
     
     def __init__(self, cmd="rsync"):
         # - Initialization of Command Variables
@@ -360,7 +361,7 @@ class BackupEngine(CLIEngine):
             self.parser.error("Cannot specificy more than two prefixes."\
                 " Usage: --prefix [origin] destination")
         
-        self._help += [ 'Configured from \'%s\'' % self.opts.config,
+        self._help += [ '','', 'Configured from \'%s\'' % self.opts.config,
             '', 'targets:' ]
         
         dest_prefix = self.backup_config.pop('destination',"")
