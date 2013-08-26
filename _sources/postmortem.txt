@@ -1,0 +1,1 @@
+.. automodule:: pyshell.nosetests.postmortem

@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pipeline – Event Chaining &mdash; PyShell 0.3.2 documentation</title>
+    <title>pipeline – Event Chaining &mdash; PyShell 0.5.0 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.3.2',
+        VERSION:     '0.5.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,9 +26,9 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="PyShell 0.3.2 documentation" href="index.html" />
+    <link rel="top" title="PyShell 0.5.0 documentation" href="index.html" />
     <link rel="next" title="CLIEngine Examples" href="examples/cliengine.html" />
-    <link rel="prev" title="util - Utilities" href="util.html" /> 
+    <link rel="prev" title="postmortem – A postmortem debugging tool for nosetests." href="postmortem.html" /> 
   </head>
   <body>
     <div class="related">
@@ -44,9 +44,9 @@
           <a href="examples/cliengine.html" title="CLIEngine Examples"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="util.html" title="util - Utilities"
+          <a href="postmortem.html" title="postmortem – A postmortem debugging tool for nosetests."
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">PyShell 0.3.2 documentation</a> &raquo;</li> 
+        <li><a href="index.html">PyShell 0.5.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -221,7 +221,7 @@
 
 <dl class="method">
 <dt id="pyshell.pipeline.core.Pipeline.collect">
-<tt class="descname">collect</tt><big>(</big><em>matching='^(?!\_)'</em>, <em>genericClasses=()</em>, <em>collectionObjects=()</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/pyshell/pipeline/core.html#Pipeline.collect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.pipeline.core.Pipeline.collect" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">collect</tt><big>(</big><em>matching=u'^(?!\_)'</em>, <em>genericClasses=()</em>, <em>collectionObjects=()</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/pyshell/pipeline/core.html#Pipeline.collect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.pipeline.core.Pipeline.collect" title="Permalink to this definition">¶</a></dt>
 <dd><p>Collect class methods for inclusion as pipeline pipes. Instance methods are collected if they do not belong to the parent <a class="reference internal" href="#pyshell.pipeline.core.Pipeline" title="pyshell.pipeline.core.Pipeline"><tt class="xref py py-class docutils literal"><span class="pre">Pipeline</span></tt></a> class (i.e. this method, and others like <tt class="xref py py-meth docutils literal"><span class="pre">registerPipe()</span></tt> will not be collected.). Registered pipes will default to having no dependents, to be named similar to thier own methods (<tt class="docutils literal"><span class="pre">collected_pipe</span></tt> becomes <tt class="docutils literal"><span class="pre">*collected-pipe</span></tt> on the command line) and will use thier doc-string as the pipe description. The way in which these pipes are collected can be adjusted using the decorators provided in this module.</p>
 <p>To define a method as a pipe with a dependent, help string, and by default inclusion, use:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="nd">@collect</span>
@@ -452,8 +452,8 @@ occur.</p>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
-  <p class="topless"><a href="util.html"
-                        title="previous chapter"><tt class="docutils literal"><span class="pre">util</span></tt> - Utilities</a></p>
+  <p class="topless"><a href="postmortem.html"
+                        title="previous chapter"><tt class="docutils literal"><span class="pre">postmortem</span></tt> – A postmortem debugging tool for nosetests.</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="examples/cliengine.html"
                         title="next chapter"><tt class="docutils literal"><span class="pre">CLIEngine</span></tt> Examples</a></p>
@@ -492,9 +492,9 @@ occur.</p>
           <a href="examples/cliengine.html" title="CLIEngine Examples"
              >next</a> |</li>
         <li class="right" >
-          <a href="util.html" title="util - Utilities"
+          <a href="postmortem.html" title="postmortem – A postmortem debugging tool for nosetests."
              >previous</a> |</li>
-        <li><a href="index.html">PyShell 0.3.2 documentation</a> &raquo;</li> 
+        <li><a href="index.html">PyShell 0.5.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

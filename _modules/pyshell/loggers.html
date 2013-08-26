@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pyshell.loggers &mdash; PyShell 0.3.2 documentation</title>
+    <title>pyshell.loggers &mdash; PyShell 0.5.0 documentation</title>
     
     <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.3.2',
+        VERSION:     '0.5.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,7 +26,7 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="PyShell 0.3.2 documentation" href="../../index.html" />
+    <link rel="top" title="PyShell 0.5.0 documentation" href="../../index.html" />
     <link rel="up" title="Module code" href="../index.html" /> 
   </head>
   <body>
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">PyShell 0.3.2 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">PyShell 0.5.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -181,7 +181,7 @@
     </div>
 <span class="n">_simpleConfig</span> <span class="o">=</span> <span class="bp">None</span>
 <div class="viewcode-block" id="getSimpleLogger"><a class="viewcode-back" href="../../loggers.html#pyshell.loggers.getSimpleLogger">[docs]</a><span class="k">def</span> <span class="nf">getSimpleLogger</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">level</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Retrieves a lgoger with a simple logging configuration setup,</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves a logger with a simple logging configuration setup,</span>
 <span class="sd">    which writes colorful logging output to the console using the configuration</span>
 <span class="sd">    provided by ``logging-stream-all.yml``. Only the root logger is configured with</span>
 <span class="sd">    the console handler, all others have only a level set.</span>
@@ -335,7 +335,7 @@
     
 <div class="viewcode-block" id="ColorStreamFormatter.format"><a class="viewcode-back" href="../../loggers.html#pyshell.loggers.ColorStreamFormatter.format">[docs]</a>    <span class="k">def</span> <span class="nf">format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Format a record with colors from the terminal module.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">record</span><span class="o">.</span><span class="n">levelno</span> <span class="o">&lt;=</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">record</span><span class="o">.</span><span class="n">levelno</span> <span class="o">&lt;</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">:</span>
             <span class="n">record</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
         <span class="k">elif</span> <span class="n">record</span><span class="o">.</span><span class="n">levelno</span> <span class="o">&lt;</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">:</span>
             <span class="n">record</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="n">get_color</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">color</span><span class="p">[</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">])</span>
@@ -367,7 +367,7 @@
 
 <div class="viewcode-block" id="ManyTargetHandler.setTarget"><a class="viewcode-back" href="../../loggers.html#pyshell.loggers.ManyTargetHandler.setTarget">[docs]</a>    <span class="k">def</span> <span class="nf">setTarget</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">target</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Add another target to the handler&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">,</span><span class="n">logging</span><span class="o">.</span><span class="n">Handler</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">target</span><span class="p">,</span><span class="s">&quot;handle&quot;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
                 </div>
 <div class="viewcode-block" id="ManyTargetHandler.flush"><a class="viewcode-back" href="../../loggers.html#pyshell.loggers.ManyTargetHandler.flush">[docs]</a>    <span class="k">def</span> <span class="nf">flush</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -463,7 +463,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">PyShell 0.3.2 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">PyShell 0.5.0 documentation</a> &raquo;</li>
           <li><a href="../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

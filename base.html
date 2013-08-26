@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>CLIEngine – a base for Command Line Interfaces &mdash; PyShell 0.3.2 documentation</title>
+    <title>CLIEngine – a base for Command Line Interfaces &mdash; PyShell 0.5.0 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.3.2',
+        VERSION:     '0.5.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,7 +26,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="PyShell 0.3.2 documentation" href="index.html" />
+    <link rel="top" title="PyShell 0.5.0 documentation" href="index.html" />
     <link rel="next" title="subcommand – Creating commands with Subcommands" href="subcommand.html" />
     <link rel="prev" title="PyShell - Command Line Classes for Python" href="index.html" /> 
   </head>
@@ -46,7 +46,7 @@
         <li class="right" >
           <a href="index.html" title="PyShell - Command Line Classes for Python"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">PyShell 0.3.2 documentation</a> &raquo;</li> 
+        <li><a href="index.html">PyShell 0.5.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -249,6 +249,12 @@ set as the description of the parser from <a class="reference external" href="ht
 </dd></dl>
 
 <dl class="attribute">
+<dt id="pyshell.base.CLIEngine.debug">
+<tt class="descname">debug</tt><em class="property"> = True</em><a class="headerlink" href="#pyshell.base.CLIEngine.debug" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether this tool will show stack traces.</p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="pyshell.base.CLIEngine.epilog">
 <tt class="descname">epilog</tt><em class="property"> = u''</em><a class="headerlink" href="#pyshell.base.CLIEngine.epilog" title="Permalink to this definition">¶</a></dt>
 <dd><p>The text that comes at the end of the <a class="reference external" href="http://docs.python.org/2/library/argparse.html#argparse" title="(in Python v2.7)"><tt class="xref py py-mod docutils literal"><span class="pre">argparse</span></tt></a>
@@ -269,7 +275,7 @@ help text.</p>
 loaded before the default configuration is loaded. Each tuple contains the
 module name and filename pair that should be passed to
 <tt class="xref py py-func docutils literal"><span class="pre">resource_filename()</span></tt>. To specify a super-configuration
-in the current direction, use <tt class="docutils literal"><span class="pre">__main__</span></tt> as the module name.</p>
+in the current directory, use <tt class="docutils literal"><span class="pre">__main__</span></tt> as the module name.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -521,12 +527,12 @@ run a subclass of <a class="reference internal" href="#pyshell.base.CLIEngine" t
         <span class="k">except</span> <span class="ne">SystemExit</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">exc</span><span class="p">,</span> <span class="s">&#39;code&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">kill</span><span class="p">()</span>
-            <span class="k">if</span> <span class="n">__debug__</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
                 <span class="k">raise</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">exitcode</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">exc</span><span class="p">,</span> <span class="s">&#39;code&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exitcode</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">KeyboardInterrupt</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">kill</span><span class="p">()</span>
-            <span class="k">if</span> <span class="n">__debug__</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
                 <span class="k">raise</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">exitcode</span>
     
@@ -603,7 +609,7 @@ run a subclass of <a class="reference internal" href="#pyshell.base.CLIEngine" t
         <li class="right" >
           <a href="index.html" title="PyShell - Command Line Classes for Python"
              >previous</a> |</li>
-        <li><a href="index.html">PyShell 0.3.2 documentation</a> &raquo;</li> 
+        <li><a href="index.html">PyShell 0.5.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

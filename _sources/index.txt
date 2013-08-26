@@ -18,6 +18,7 @@ Contents:
     config
     loggers
     util
+    postmortem
     pipeline
 
 

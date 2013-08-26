@@ -1,0 +1,241 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>postmortem – A postmortem debugging tool for nosetests. &mdash; PyShell 0.5.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PyShell 0.5.0 documentation" href="index.html" />
+    <link rel="next" title="pipeline – Event Chaining" href="pipeline.html" />
+    <link rel="prev" title="util - Utilities" href="util.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="pipeline.html" title="pipeline – Event Chaining"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="util.html" title="util - Utilities"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">PyShell 0.5.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <span class="target" id="module-pyshell.nosetests.postmortem"></span><div class="section" id="postmortem-a-postmortem-debugging-tool-for-nosetests">
+<h1><tt class="xref py py-mod docutils literal"><span class="pre">postmortem</span></tt> – A postmortem debugging tool for nosetests.<a class="headerlink" href="#postmortem-a-postmortem-debugging-tool-for-nosetests" title="Permalink to this headline">¶</a></h1>
+<p>This plugin provides a simple way to save data files (specifically .npy files) after a test has failed in nosetests, and to delete those files when the test passes. I use it for simple debugging, to save data from failing tests.</p>
+<p>To use the postmortem plugin, you must enable it with the command-line option <tt class="docutils literal"><span class="pre">--with-postmortem</span></tt>. Then, it will inspect test instances for a <tt class="docutils literal"><span class="pre">POST_SAVE</span></tt> variable. The plugin uses class isntances as a way to save the variables after the test function has finished. It does nothing for non-class instance.</p>
+<p>The <tt class="docutils literal"><span class="pre">POST_SAVE</span></tt> variable should be a list containing tuples. The tuples are pairs of <cite>(data, filename)</cite> which will be saved. Filenames which end with <tt class="docutils literal"><span class="pre">.npy</span></tt> will be saved using <tt class="docutils literal"><span class="pre">np.save()</span></tt>. <tt class="docutils literal"><span class="pre">.dat</span></tt> will be saved with <tt class="docutils literal"><span class="pre">np.savetxt()</span></tt>. Other extensions will be written as strings to text files.</p>
+<p>A list of all the files saved will be saved using the format <tt class="docutils literal"><span class="pre">&lt;test_id&gt;.txt</span></tt> in the same folder. This list is used by <a class="reference internal" href="#pyshell.nosetests.postmortem.PostMortemScript" title="pyshell.nosetests.postmortem.PostMortemScript"><tt class="xref py py-class docutils literal"><span class="pre">PostMortemScript</span></tt></a> to load saved files.</p>
+<div class="section" id="postmortemscript-a-cli-for-inspecting-post-mortem-data">
+<h2><a class="reference internal" href="#pyshell.nosetests.postmortem.PostMortemScript" title="pyshell.nosetests.postmortem.PostMortemScript"><tt class="xref py py-class docutils literal"><span class="pre">PostMortemScript</span></tt></a> - A CLI for inspecting post-mortem data<a class="headerlink" href="#postmortemscript-a-cli-for-inspecting-post-mortem-data" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pyshell.nosetests.postmortem.PostMortemScript">
+<em class="property">class </em><tt class="descclassname">pyshell.nosetests.postmortem.</tt><tt class="descname">PostMortemScript</tt><big>(</big><em>prefix_chars='-'</em>, <em>conflict_handler=u'error'</em><big>)</big><a class="reference internal" href="_modules/pyshell/nosetests/postmortem.html#PostMortemScript"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.nosetests.postmortem.PostMortemScript" title="Permalink to this definition">¶</a></dt>
+<dd><p>A script for managing post-mortem data.</p>
+<p>Set the class variables <tt class="docutils literal"><span class="pre">test_ids</span></tt> or <tt class="docutils literal"><span class="pre">module_ids</span></tt> to load test data. Then access test data during the <tt class="xref py py-func docutils literal"><span class="pre">do()</span></tt> method using the <tt class="docutils literal"><span class="pre">test_data</span></tt> configuration object.</p>
+<dl class="attribute">
+<dt id="pyshell.nosetests.postmortem.PostMortemScript.test_ids">
+<tt class="descname">test_ids</tt><em class="property"> = []</em><a class="headerlink" href="#pyshell.nosetests.postmortem.PostMortemScript.test_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>The test IDs to search for in the postmortem area.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyshell.nosetests.postmortem.PostMortemScript.module_ids">
+<tt class="descname">module_ids</tt><em class="property"> = []</em><a class="headerlink" href="#pyshell.nosetests.postmortem.PostMortemScript.module_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>The module IDs to search for in the postmortem area. Module IDs search for any test which matches <tt class="docutils literal"><span class="pre">&lt;module&gt;.*.txt</span></tt> .</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyshell.nosetests.postmortem.PostMortemScript.test_data">
+<tt class="descname">test_data</tt><em class="property"> = None</em><a class="headerlink" href="#pyshell.nosetests.postmortem.PostMortemScript.test_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>The data loaded for this test. A dictionary mapping file ids to data. The file id is just <tt class="docutils literal"><span class="pre">test_id</span> <span class="pre">+</span> <span class="pre">filename</span></tt></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.nosetests.postmortem.PostMortemScript.init">
+<tt class="descname">init</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pyshell/nosetests/postmortem.html#PostMortemScript.init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.nosetests.postmortem.PostMortemScript.init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize variables!</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.nosetests.postmortem.PostMortemScript.after_configure">
+<tt class="descname">after_configure</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pyshell/nosetests/postmortem.html#PostMortemScript.after_configure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.nosetests.postmortem.PostMortemScript.after_configure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find and ready all of the relevant filenames.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.nosetests.postmortem.PostMortemScript.find_tests">
+<tt class="descname">find_tests</tt><big>(</big><em>modulename</em><big>)</big><a class="reference internal" href="_modules/pyshell/nosetests/postmortem.html#PostMortemScript.find_tests"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.nosetests.postmortem.PostMortemScript.find_tests" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find tests</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.nosetests.postmortem.PostMortemScript.file_id">
+<tt class="descname">file_id</tt><big>(</big><em>test_id</em>, <em>filename</em><big>)</big><a class="reference internal" href="_modules/pyshell/nosetests/postmortem.html#PostMortemScript.file_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.nosetests.postmortem.PostMortemScript.file_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a file ID from a test ID and a filename.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.nosetests.postmortem.PostMortemScript.load_by_test_id">
+<tt class="descname">load_by_test_id</tt><big>(</big><em>test_id</em><big>)</big><a class="reference internal" href="_modules/pyshell/nosetests/postmortem.html#PostMortemScript.load_by_test_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.nosetests.postmortem.PostMortemScript.load_by_test_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load the relevant files by test id.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.nosetests.postmortem.PostMortemScript.load">
+<tt class="descname">load</tt><big>(</big><em>test_id</em>, <em>file</em><big>)</big><a class="reference internal" href="_modules/pyshell/nosetests/postmortem.html#PostMortemScript.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.nosetests.postmortem.PostMortemScript.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a single test file.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="postmortemplugin-implementation-of-the-nose-plugin">
+<h2><a class="reference internal" href="#pyshell.nosetests.postmortem.PostMortemPlugin" title="pyshell.nosetests.postmortem.PostMortemPlugin"><tt class="xref py py-class docutils literal"><span class="pre">PostMortemPlugin</span></tt></a> - Implementation of the <tt class="xref py py-mod docutils literal"><span class="pre">nose</span></tt> plugin<a class="headerlink" href="#postmortemplugin-implementation-of-the-nose-plugin" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pyshell.nosetests.postmortem.PostMortemPlugin">
+<em class="property">class </em><tt class="descclassname">pyshell.nosetests.postmortem.</tt><tt class="descname">PostMortemPlugin</tt><a class="reference internal" href="_modules/pyshell/nosetests/postmortem.html#PostMortemPlugin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.nosetests.postmortem.PostMortemPlugin" title="Permalink to this definition">¶</a></dt>
+<dd><p>A plugin to perform actions after a test has failed, usually saving failures.</p>
+<dl class="method">
+<dt id="pyshell.nosetests.postmortem.PostMortemPlugin.options">
+<tt class="descname">options</tt><big>(</big><em>parser</em>, <em>env=None</em><big>)</big><a class="reference internal" href="_modules/pyshell/nosetests/postmortem.html#PostMortemPlugin.options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.nosetests.postmortem.PostMortemPlugin.options" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set up plugin options</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.nosetests.postmortem.PostMortemPlugin.configure">
+<tt class="descname">configure</tt><big>(</big><em>options</em>, <em>conf</em><big>)</big><a class="reference internal" href="_modules/pyshell/nosetests/postmortem.html#PostMortemPlugin.configure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.nosetests.postmortem.PostMortemPlugin.configure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set up configuration</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.nosetests.postmortem.PostMortemPlugin.addFailure">
+<tt class="descname">addFailure</tt><big>(</big><em>test</em>, <em>err</em><big>)</big><a class="reference internal" href="_modules/pyshell/nosetests/postmortem.html#PostMortemPlugin.addFailure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.nosetests.postmortem.PostMortemPlugin.addFailure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Post Mortem Failure information</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.nosetests.postmortem.PostMortemPlugin.addSuccess">
+<tt class="descname">addSuccess</tt><big>(</big><em>test</em><big>)</big><a class="reference internal" href="_modules/pyshell/nosetests/postmortem.html#PostMortemPlugin.addSuccess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.nosetests.postmortem.PostMortemPlugin.addSuccess" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clean up PostMortem Failure information</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.nosetests.postmortem.PostMortemPlugin.save">
+<tt class="descname">save</tt><big>(</big><em>item</em>, <em>filename</em><big>)</big><a class="reference internal" href="_modules/pyshell/nosetests/postmortem.html#PostMortemPlugin.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.nosetests.postmortem.PostMortemPlugin.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save a particular item.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.nosetests.postmortem.PostMortemPlugin.clean">
+<tt class="descname">clean</tt><big>(</big><em>item</em>, <em>filename</em><big>)</big><a class="reference internal" href="_modules/pyshell/nosetests/postmortem.html#PostMortemPlugin.clean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.nosetests.postmortem.PostMortemPlugin.clean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clean up postmortem files</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#"><tt class="docutils literal"><span class="pre">postmortem</span></tt> – A postmortem debugging tool for nosetests.</a><ul>
+<li><a class="reference internal" href="#postmortemscript-a-cli-for-inspecting-post-mortem-data"><tt class="docutils literal"><span class="pre">PostMortemScript</span></tt> - A CLI for inspecting post-mortem data</a></li>
+<li><a class="reference internal" href="#postmortemplugin-implementation-of-the-nose-plugin"><tt class="docutils literal"><span class="pre">PostMortemPlugin</span></tt> - Implementation of the <tt class="docutils literal"><span class="pre">nose</span></tt> plugin</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="util.html"
+                        title="previous chapter"><tt class="docutils literal"><span class="pre">util</span></tt> - Utilities</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="pipeline.html"
+                        title="next chapter"><tt class="docutils literal"><span class="pre">pipeline</span></tt> – Event Chaining</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/postmortem.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="pipeline.html" title="pipeline – Event Chaining"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="util.html" title="util - Utilities"
+             >previous</a> |</li>
+        <li><a href="index.html">PyShell 0.5.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Alexander Rudy.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

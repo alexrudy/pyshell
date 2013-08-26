@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>config — YAML-based Configuration Dictionaries &mdash; PyShell 0.3.2 documentation</title>
+    <title>config — YAML-based Configuration Dictionaries &mdash; PyShell 0.5.0 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.3.2',
+        VERSION:     '0.5.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,7 +26,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="PyShell 0.3.2 documentation" href="index.html" />
+    <link rel="top" title="PyShell 0.5.0 documentation" href="index.html" />
     <link rel="next" title="loggers - Logging made Easy" href="loggers.html" />
     <link rel="prev" title="subcommand – Creating commands with Subcommands" href="subcommand.html" /> 
   </head>
@@ -46,7 +46,7 @@
         <li class="right" >
           <a href="subcommand.html" title="subcommand – Creating commands with Subcommands"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">PyShell 0.3.2 documentation</a> &raquo;</li> 
+        <li><a href="index.html">PyShell 0.5.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -63,11 +63,11 @@ behavior by default. They act otherwise like dictionaries, and handle thier
 internal operation using a storage dictionary. The objects also provide a 
 YAML configuration file reading and writing interface.</p>
 <p class="graphviz">
-<img src="_images/inheritance-c3ed0e64833962f21ec4a57c9f707c0e2322fd65.png" alt="Inheritance diagram of pyshell.config.Configuration, pyshell.config.StructuredConfiguration" usemap="#inheritance3a653054bf" class="inheritance"/>
+<img src="_images/inheritance-ede89593db3ea065defbd0e54dde985c202c54ed.png" alt="Inheritance diagram of pyshell.config.Configuration, pyshell.config.StructuredConfiguration" usemap="#inheritance3a653054bf" class="inheritance"/>
 <map id="inheritance3a653054bf" name="inheritance3a653054bf">
-<area shape="rect" id="node10" href="#pyshell.config.StructuredConfiguration" title="StructuredConfiguration" alt="" coords="651,35,764,51"/>
-<area shape="rect" id="node11" href="#pyshell.config.DottedConfiguration" title="DottedConfiguration" alt="" coords="521,35,619,51"/>
-<area shape="rect" id="node13" href="#pyshell.config.Configuration" title="Configuration" alt="" coords="420,35,490,51"/>
+<area shape="rect" id="node8" href="#pyshell.config.Configuration" title="Configuration" alt="" coords="420,35,490,51"/>
+<area shape="rect" id="node14" href="#pyshell.config.DottedConfiguration" title="DottedConfiguration" alt="" coords="521,35,619,51"/>
+<area shape="rect" id="node16" href="#pyshell.config.StructuredConfiguration" title="StructuredConfiguration" alt="" coords="651,35,764,51"/>
 </map>
 </p>
 <dl class="function">
@@ -143,6 +143,49 @@ so in a deep fashion.</p>
 </table>
 <p><em>Inverse Merge</em> causes <tt class="docutils literal"><span class="pre">u</span></tt> to only update missing values of <tt class="docutils literal"><span class="pre">d</span></tt>, but does
 so in a deep fashion.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyshell.config.flatten">
+<tt class="descclassname">pyshell.config.</tt><tt class="descname">flatten</tt><big>(</big><em>d</em>, <em>stump=u''</em>, <em>sequence=False</em>, <em>separator=u'.'</em>, <em>dt=&lt;type 'dict'&gt;</em><big>)</big><a class="reference internal" href="_modules/pyshell/config.html#flatten"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.flatten" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flatten a given nested dictionary.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>d</strong> &#8211; Dictionary to flatten.</li>
+<li><strong>stump</strong> &#8211; The base stump for flattened keys. Setting this applies a universal starting value to each key.</li>
+<li><strong>sequence</strong> &#8211; Whether to expand sequences.</li>
+<li><strong>separator</strong> &#8211; The string separator to use in flat keys.</li>
+<li><strong>dt</strong> &#8211; The final output type for the dictionary.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Each nested key will become a root level key in the final dictionary. The root level keys will be the set of nested keys, joined by the <cite>separator</cite> keyword argument.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyshell.config.expand">
+<tt class="descclassname">pyshell.config.</tt><tt class="descname">expand</tt><big>(</big><em>d</em>, <em>sequence=False</em>, <em>separator=u'.'</em>, <em>dt=&lt;type 'dict'&gt;</em><big>)</big><a class="reference internal" href="_modules/pyshell/config.html#expand"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.expand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Expand a flattened dictionary into a nested one.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>d</strong> &#8211; Dictionary to expand.</li>
+<li><strong>sequence</strong> &#8211; Whether to expand sequences.</li>
+<li><strong>separator</strong> &#8211; The string separator to use in flat keys.</li>
+<li><strong>dt</strong> &#8211; The final output type for all levels of the nested dictionary.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Each key with the <cite>separator</cite> will become a nested dictionary key in the final dictionary.</p>
 </dd></dl>
 
 <div class="section" id="basic-configurations-configuration">
@@ -461,6 +504,18 @@ resolution order of configuration files for this method.</p>
 <span class="go">10</span>
 </pre></div>
 </div>
+<dl class="attribute">
+<dt id="pyshell.config.DottedConfiguration.separator">
+<tt class="descname">separator</tt><em class="property"> = u'.'</em><a class="headerlink" href="#pyshell.config.DottedConfiguration.separator" title="Permalink to this definition">¶</a></dt>
+<dd><p>The deep nesting separator character(s).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.config.DottedConfiguration.flatten">
+<tt class="descname">flatten</tt><big>(</big><em>sequence=False</em><big>)</big><a class="reference internal" href="_modules/pyshell/config.html#DottedConfiguration.flatten"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.DottedConfiguration.flatten" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns this dictionary, flattened so that all dotted names are at the root level.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="pyshell.config.DottedConfiguration.clear">
 <tt class="descname">clear</tt><big>(</big><big>)</big> &rarr; None.  Remove all items from D.<a class="headerlink" href="#pyshell.config.DottedConfiguration.clear" title="Permalink to this definition">¶</a></dt>
@@ -899,6 +954,12 @@ resolution order of configuration files for this method.</p>
 most recently</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="pyshell.config.StructuredConfiguration.flatten">
+<tt class="descname">flatten</tt><big>(</big><em>sequence=False</em><big>)</big><a class="headerlink" href="#pyshell.config.StructuredConfiguration.flatten" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns this dictionary, flattened so that all dotted names are at the root level.</p>
+</dd></dl>
+
 <dl class="classmethod">
 <dt id="pyshell.config.StructuredConfiguration.fromfile">
 <em class="property">classmethod </em><tt class="descname">fromfile</tt><big>(</big><em>filename</em><big>)</big><a class="headerlink" href="#pyshell.config.StructuredConfiguration.fromfile" title="Permalink to this definition">¶</a></dt>
@@ -1021,12 +1082,6 @@ most recently</p>
 </div>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="pyshell.config.StructuredConfiguration.metadata">
-<tt class="descname">metadata</tt><a class="reference internal" href="_modules/pyshell/config.html#StructuredConfiguration.metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.StructuredConfiguration.metadata" title="Permalink to this definition">¶</a></dt>
-<dd><p>The metadata dictionary</p>
-</dd></dl>
-
 <dl class="method">
 <dt id="pyshell.config.StructuredConfiguration.parse_literals">
 <tt class="descname">parse_literals</tt><big>(</big><em>*literals</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pyshell.config.StructuredConfiguration.parse_literals" title="Permalink to this definition">¶</a></dt>
@@ -1118,6 +1173,12 @@ shallow update.</li>
 <dt id="pyshell.config.StructuredConfiguration.values">
 <tt class="descname">values</tt><big>(</big><big>)</big> &rarr; list of D's values<a class="headerlink" href="#pyshell.config.StructuredConfiguration.values" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pyshell.config.StructuredConfiguration.metadata">
+<tt class="descname">metadata</tt><a class="reference internal" href="_modules/pyshell/config.html#StructuredConfiguration.metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.config.StructuredConfiguration.metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>The metadata dictionary</p>
+</dd></dl>
 
 <dl class="attribute">
 <dt id="pyshell.config.StructuredConfiguration.files">
@@ -1255,7 +1316,7 @@ not provided, the configuration will use the file set by
         <li class="right" >
           <a href="subcommand.html" title="subcommand – Creating commands with Subcommands"
              >previous</a> |</li>
-        <li><a href="index.html">PyShell 0.3.2 documentation</a> &raquo;</li> 
+        <li><a href="index.html">PyShell 0.5.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

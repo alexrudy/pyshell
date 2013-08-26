@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>util - Utilities &mdash; PyShell 0.3.2 documentation</title>
+    <title>util - Utilities &mdash; PyShell 0.5.0 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.3.2',
+        VERSION:     '0.5.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,8 +26,8 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="PyShell 0.3.2 documentation" href="index.html" />
-    <link rel="next" title="pipeline – Event Chaining" href="pipeline.html" />
+    <link rel="top" title="PyShell 0.5.0 documentation" href="index.html" />
+    <link rel="next" title="postmortem – A postmortem debugging tool for nosetests." href="postmortem.html" />
     <link rel="prev" title="loggers - Logging made Easy" href="loggers.html" /> 
   </head>
   <body>
@@ -41,12 +41,12 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="pipeline.html" title="pipeline – Event Chaining"
+          <a href="postmortem.html" title="postmortem – A postmortem debugging tool for nosetests."
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="loggers.html" title="loggers - Logging made Easy"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">PyShell 0.3.2 documentation</a> &raquo;</li> 
+        <li><a href="index.html">PyShell 0.5.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -68,6 +68,43 @@ path ends with a <cite>/</cite>.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="pyshell.util.collapseuser">
+<tt class="descclassname">pyshell.util.</tt><tt class="descname">collapseuser</tt><big>(</big><em>path</em><big>)</big><a class="reference internal" href="_modules/pyshell/util.html#collapseuser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.util.collapseuser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collapse the username from a path.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyshell.util.check_exists">
+<tt class="descclassname">pyshell.util.</tt><tt class="descname">check_exists</tt><big>(</big><em>path</em><big>)</big><a class="reference internal" href="_modules/pyshell/util.html#check_exists"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.util.check_exists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether the given directory exists.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyshell.util.warn_exists">
+<tt class="descclassname">pyshell.util.</tt><tt class="descname">warn_exists</tt><big>(</big><em>path</em>, <em>name=u'path'</em>, <em>exists=True</em><big>)</big><a class="reference internal" href="_modules/pyshell/util.html#warn_exists"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.util.warn_exists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Warn if the file path does or does not exist.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>path</strong> &#8211; The path to search for.</li>
+<li><strong>name</strong> &#8211; The textual name to use in output.</li>
+<li><strong>exists</strong> &#8211; Whether the filepath <strong>should</strong> exist or not.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyshell.util.is_remote_path">
+<tt class="descclassname">pyshell.util.</tt><tt class="descname">is_remote_path</tt><big>(</big><em>path</em><big>)</big><a class="reference internal" href="_modules/pyshell/util.html#is_remote_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.util.is_remote_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Path looks like an SSH or other URL compatible path?</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="pyshell.util.semiabstractmethod">
 <tt class="descclassname">pyshell.util.</tt><tt class="descname">semiabstractmethod</tt><big>(</big><em>txt</em><big>)</big><a class="reference internal" href="_modules/pyshell/util.html#semiabstractmethod"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.util.semiabstractmethod" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert semi-abstract-methods into raisers for NotImplementedErrors</p>
@@ -81,6 +118,30 @@ path ends with a <cite>/</cite>.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="pyshell.util.deprecatedmethod">
+<tt class="descclassname">pyshell.util.</tt><tt class="descname">deprecatedmethod</tt><big>(</big><em>message=None</em>, <em>version=None</em>, <em>replacement=None</em><big>)</big><a class="reference internal" href="_modules/pyshell/util.html#deprecatedmethod"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.util.deprecatedmethod" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mark a method as deprecated.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>message</strong> &#8211; The warning message to display, or None.</li>
+<li><strong>version</strong> &#8211; The deprication version. Will be appended to the message.</li>
+<li><strong>replacement</strong> &#8211; A string describing the text to replace.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>The final <tt class="xref py py-exc docutils literal"><span class="pre">DepricationWarning</span></tt> message is formatted as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;Method {method} will be depricated in version {version}, please use {replacement} instead.&quot;</span>
+</pre></div>
+</div>
+<p>Setting the <cite>message</cite> argument replaces the string <tt class="docutils literal"><span class="pre">&quot;Method</span> <span class="pre">{method}</span> <span class="pre">will</span> <span class="pre">be</span> <span class="pre">depricated&quot;</span></tt>.</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="pyshell.util.func_lineno">
 <tt class="descclassname">pyshell.util.</tt><tt class="descname">func_lineno</tt><big>(</big><em>func</em><big>)</big><a class="reference internal" href="_modules/pyshell/util.html#func_lineno"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.util.func_lineno" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the line number of a function. First looks for
@@ -88,8 +149,31 @@ compat_co_firstlineno, then func_code.co_first_lineno.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="pyshell.util.ipydb">
+<tt class="descclassname">pyshell.util.</tt><tt class="descname">ipydb</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pyshell/util.html#ipydb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.util.ipydb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Try to use the iPython debugger on program failures.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyshell.util.is_type_factory">
+<tt class="descclassname">pyshell.util.</tt><tt class="descname">is_type_factory</tt><big>(</big><em>ttype</em><big>)</big><a class="reference internal" href="_modules/pyshell/util.html#is_type_factory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.util.is_type_factory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a function which checks if an object can be cast as a given 
+type. Basic usage allows for checking string-casting to a specific type.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ttype</strong> &#8211; Usually a <tt class="docutils literal"><span class="pre">type</span></tt> but really, any function which takes one
+argument and which will raise a <tt class="xref py py-exc docutils literal"><span class="pre">ValueError</span></tt> if that one argument can&#8217;t be 
+cast correctly.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="pyshell.util.query_yes_no">
-<tt class="descclassname">pyshell.util.</tt><tt class="descname">query_yes_no</tt><big>(</big><em>question</em>, <em>default='yes'</em><big>)</big><a class="reference internal" href="_modules/pyshell/util.html#query_yes_no"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.util.query_yes_no" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pyshell.util.</tt><tt class="descname">query_yes_no</tt><big>(</big><em>question</em>, <em>default=u'yes'</em><big>)</big><a class="reference internal" href="_modules/pyshell/util.html#query_yes_no"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.util.query_yes_no" title="Permalink to this definition">¶</a></dt>
 <dd><p>Ask a yes/no question via raw_input() and return their answer.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -100,6 +184,7 @@ compat_co_firstlineno, then func_code.co_first_lineno.</p>
 <li><strong>default</strong> &#8211; The answer if the user hits &lt;Enter&gt; with no input.
 It must be &#8220;yes&#8221; (the default), &#8220;no&#8221; or None (meaning
 an answer is required of the user).</li>
+<li><strong>output</strong> &#8211; The output stream.</li>
 </ul>
 </td>
 </tr>
@@ -112,7 +197,7 @@ an answer is required of the user).</li>
 
 <dl class="function">
 <dt id="pyshell.util.query_string">
-<tt class="descclassname">pyshell.util.</tt><tt class="descname">query_string</tt><big>(</big><em>question</em>, <em>default=None</em>, <em>validate=None</em><big>)</big><a class="reference internal" href="_modules/pyshell/util.html#query_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.util.query_string" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pyshell.util.</tt><tt class="descname">query_string</tt><big>(</big><em>question</em>, <em>default=None</em>, <em>validate=None</em>, <em>output=&lt;open file '&lt;stdout&gt;'</em>, <em>mode 'w' at 0x104f5b150&gt;</em><big>)</big><a class="reference internal" href="_modules/pyshell/util.html#query_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.util.query_string" title="Permalink to this definition">¶</a></dt>
 <dd><p>Ask a question via raw_input, and return the answer as a string.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -121,10 +206,34 @@ an answer is required of the user).</li>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>question</strong> &#8211; A string presented to the user</li>
 <li><strong>default</strong> &#8211; The answer if the user hits &lt;Enter&gt; with no input.</li>
+<li><strong>validate</strong> &#8211; A function to validate responses. To validate that the answer is a specific type, use <a class="reference internal" href="#pyshell.util.is_type_factory" title="pyshell.util.is_type_factory"><tt class="xref py py-func docutils literal"><span class="pre">is_type_factory()</span></tt></a>.</li>
+<li><strong>output</strong> &#8211; The output stream.</li>
 </ul>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A string with the user&#8217;s answer or the default if no answer.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyshell.util.query_select">
+<tt class="descclassname">pyshell.util.</tt><tt class="descname">query_select</tt><big>(</big><em>iterable</em>, <em>labels=None</em>, <em>default=None</em>, <em>before=u'Select from:'</em>, <em>question=u'Select an item'</em>, <em>output=&lt;open file '&lt;stdout&gt;'</em>, <em>mode 'w' at 0x104f5b150&gt;</em><big>)</big><a class="reference internal" href="_modules/pyshell/util.html#query_select"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.util.query_select" title="Permalink to this definition">¶</a></dt>
+<dd><p>A simple CLI UI to let the user choose an item from a list of items.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>iterable</strong> &#8211; The list from which to choose.</li>
+<li><strong>labels</strong> &#8211; The labels for the list from which to choose.</li>
+<li><strong>default</strong> &#8211; The index of the default item in <cite>iterable</cite></li>
+<li><strong>before</strong> &#8211; The string to print before the choice list.</li>
+<li><strong>question</strong> &#8211; The question to use as the prompt.</li>
+<li><strong>output</strong> &#8211; The output stream.</li>
+</ul>
 </td>
 </tr>
 </tbody>
@@ -143,8 +252,8 @@ an answer is required of the user).</li>
   <p class="topless"><a href="loggers.html"
                         title="previous chapter"><tt class="docutils literal"><span class="pre">loggers</span></tt> - Logging made Easy</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="pipeline.html"
-                        title="next chapter"><tt class="docutils literal"><span class="pre">pipeline</span></tt> – Event Chaining</a></p>
+  <p class="topless"><a href="postmortem.html"
+                        title="next chapter"><tt class="docutils literal"><span class="pre">postmortem</span></tt> – A postmortem debugging tool for nosetests.</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/util.txt"
@@ -177,12 +286,12 @@ an answer is required of the user).</li>
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="pipeline.html" title="pipeline – Event Chaining"
+          <a href="postmortem.html" title="postmortem – A postmortem debugging tool for nosetests."
              >next</a> |</li>
         <li class="right" >
           <a href="loggers.html" title="loggers - Logging made Easy"
              >previous</a> |</li>
-        <li><a href="index.html">PyShell 0.3.2 documentation</a> &raquo;</li> 
+        <li><a href="index.html">PyShell 0.5.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
