@@ -9,10 +9,13 @@
 """
 bump_version -- Increase version numbers!
 """
-from __future__ import division
+from __future__ import (absolute_import, unicode_literals, division,
+                        print_function)
+
 from .base import CLIEngine
 import glob, os, os.path, shutil, tempfile
 import re
+import six
 
 class VersionBumper(CLIEngine):
     """Bump the version of your source code!"""
@@ -22,18 +25,18 @@ class VersionBumper(CLIEngine):
     def init(self):
         """docstring for init"""
         super(VersionBumper, self).init()
-        self.parser.add_argument('-C','--cwd',type=unicode,dest='cwd',help="Set path",default=os.getcwd())
+        self.parser.add_argument('-C','--cwd',type=six.text_type,dest='cwd',help="Set path",default=os.getcwd())
         self.parser.add_argument('--no-tmp',action="store_false", dest='tmp', help="Use temporary files or backups?")
     
     def after_configure(self):
         """Setup init"""
         super(VersionBumper, self).after_configure()
-        self.parser.add_argument('version',type=unicode,help="New version string to use.")
-        self.parser.add_argument('--glob',type=unicode,help="File pattern glob for changing versions.",
+        self.parser.add_argument('version',type=six.text_type,help="New version string to use.")
+        self.parser.add_argument('--glob',type=six.text_type,help="File pattern glob for changing versions.",
             default=self.config["glob.files"])
-        self.parser.add_argument('--match',type=unicode,help="Match Regex",default=self.config["regex.find"],
+        self.parser.add_argument('--match',type=six.text_type,help="Match Regex",default=self.config["regex.find"],
             metavar="regexp")
-        self.parser.add_argument('--replace',type=unicode,help="Replace Regex",default=self.config["regex.replace"],
+        self.parser.add_argument('--replace',type=six.text_type,help="Replace Regex",default=self.config["regex.replace"],
             metavar="\"{version}\"")
             
         
