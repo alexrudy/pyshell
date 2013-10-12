@@ -234,6 +234,7 @@ from .config import StructuredConfiguration
 from .util import semiabstractmethod, deprecatedmethod
 from .loggers import configure_logging, getLogger
 from six import with_metaclass
+import six
 
 __all__ = [ 'CLIEngine',
     'PYSHELL_LOGGING','PYSHELL_LOGGING_STREAM','PYSHELL_LOGGING_STREAM_ALL']
@@ -295,7 +296,7 @@ class CLIEngine(with_metaclass(abc.ABCMeta, object)):
     :func:`~pkg_resources.resource_filename`. To specify a super-configuration 
     in the current directory, use ``__main__`` as the module name."""
     
-    def __init__(self, prefix_chars="-".encode('utf-8'), 
+    def __init__(self, prefix_chars=str("-"), 
         conflict_handler='error'):
         super(CLIEngine, self).__init__()
         self._log = getLogger(self.__module__)
