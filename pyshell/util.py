@@ -63,6 +63,13 @@ import os, os.path
 import sys
 import warnings
 import functools
+import inspect
+import six
+
+try:
+    input = raw_input
+except NameError:
+    pass
 
 with warnings.catch_warnings():
     warnings.simplefilter('ignore')
@@ -161,11 +168,7 @@ def func_lineno(func):
     compat_co_firstlineno, then func_code.co_first_lineno.
     """
     try:
-        return func.compat_co_firstlineno
-    except AttributeError:
-        pass
-    try:
-        return func.func_code.co_firstlineno
+        return six.get_function_code(func).co_firstlineno
     except AttributeError:
         return -1
 
@@ -185,8 +188,8 @@ def semiabstractmethod(txt):
         @functools.wraps(func) # pylint: disable = unused-argument
         def raiser(*args, **kwargs): # pylint: disable= missing-docstring
             name = func.__name__
-            if hasattr(func, 'im_class'):
-                name = ".".join([func.im_class.__name__, name])
+            if inspect.ismethod(func):
+                name = ".".join([six.get_method_self(func).__class__.__name__, name])
             msg = txt % (name)
             raise NotImplementedError(msg)
         return raiser
@@ -259,7 +262,7 @@ def query_yes_no(question, default="yes"):
         raise ValueError("invalid default answer: '%s'" % default)
 
     while True:
-        choice = raw_input(question + prompt).lower()
+        choice = input(question + prompt).lower()
         if default is not None and choice == '':
             return valid[default]
         elif choice in valid:
@@ -286,7 +289,7 @@ def query_string(question, default=None, validate=None, output=sys.stdout):
     
     
     while True:
-        answer = raw_input(question + prompt)
+        answer = input(question + prompt)
         if default is not None and answer == '':
             answer = default
         if validate is None or validate(answer):
