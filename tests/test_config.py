@@ -14,6 +14,7 @@ import pyshell.config as config
 from pkg_resources import resource_filename
 import nose.tools as nt
 import os
+from six.moves import cStringIO as StringIO
 
 class test_config(object):
     """pyshell.config"""
@@ -179,7 +180,6 @@ class test_Configuration(object):
         cfg = self.CLASS(a="a")
         cfg.load("Test.yaml")
         assert cfg.store == {'a':'a'}
-        from StringIO import StringIO
         cfg.load(StringIO(""))
         assert cfg.store == {'a':'a'}
         
