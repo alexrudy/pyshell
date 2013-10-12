@@ -294,7 +294,6 @@ class MutableMappingBase(collections.MutableMapping):
         if cycle:
             p.text("{}(...)".format(self.__class__.__name__))
         else:
-            from cStringIO import StringIO
             with p.group(2,"{}(".format(self.__class__.__name__),")"):
                 p.pretty(self.store)
         
@@ -678,6 +677,7 @@ class Configuration(MutableMappingBase):
         
         Acceptable Inputs:
         
+        - None
         - An instance of this class.
         - Any insatance of :class:`collections.Mapping`
         - A string filename for :meth:`fromfile`
