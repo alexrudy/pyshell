@@ -230,7 +230,7 @@ class GrowlHandler(logging.Handler):
             self.disable = False
             self.notifier = self.gntp.notifier.GrowlNotifier(
                 applicationName=self.name,
-                notifications=self.mapping.values(),
+                notifications=list(self.mapping.values()),
                 defaultNotifications=[ v for k,v in self.mapping.items() if k >= logging.INFO ],
             )
             self.notifier.register()
