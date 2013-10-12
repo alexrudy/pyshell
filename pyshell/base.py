@@ -233,6 +233,7 @@ from warnings import warn
 from .config import StructuredConfiguration
 from .util import semiabstractmethod, deprecatedmethod
 from .loggers import configure_logging, getLogger
+from six import with_metaclass
 
 __all__ = [ 'CLIEngine',
     'PYSHELL_LOGGING','PYSHELL_LOGGING_STREAM','PYSHELL_LOGGING_STREAM_ALL']
@@ -255,7 +256,7 @@ should probably be added first, so that your own code will override it.
 It only provides stream loggers, not file handlers. Its logger is just a 
 root logger at the lowest level!"""
 
-class CLIEngine(object):
+class CLIEngine(with_metaclass(abc.ABCMeta, object)):
     """A base class for Command Line Inteface facing tools. :class:`CLIEnigne` 
     provides the basic structure to set up a simple command-line interface,
     based on the :mod:`argparse` framework. The only required implementation 
@@ -269,9 +270,7 @@ class CLIEngine(object):
     :attr:`parser` will be availabe for use.
     """
     # pylint: disable= too-many-instance-attributes
-    
-    __metaclass__ = abc.ABCMeta
-    
+        
     @property
     def description(self):
         """The textual description of the command line interface, 
