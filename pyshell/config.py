@@ -84,6 +84,7 @@ import warnings
 import hashlib
 from warnings import warn
 import ast
+import six
 
 # Submodules from this system
 from . import util
@@ -130,7 +131,7 @@ def reformat(d, nt):
         if isinstance(v, collections.Mapping):
             e[k] = reformat(v, nt)
         elif ( isinstance(v, collections.Sequence) 
-            and not isinstance(v, (str, unicode)) ):
+            and not isinstance(v, six.string_types) ):
             e[k] = [ reformat(i, nt) for i in v ]
         else:
             e[k] = v
@@ -150,12 +151,12 @@ def flatten(d, stump="", sequence=False, separator=".", dt=dict):
     """
     o = dt()
     if ( isinstance(d, collections.Sequence)
-        and not isinstance(d, basestring) and
+        and not isinstance(d, six.string_types) and
         sequence):
         for i,iv in enumerate(v):
             o.update(flatten(iv, nk+str(i), sequence, separator))
     elif isinstance(d, collections.Mapping):    
-        for k,v in d.iteritems():
+        for k,v in d.items():
             nk = separator.join((stump,k)) if stump else k
             o.update(flatten(v, nk, sequence, separator))
     else:
@@ -173,7 +174,7 @@ def expand(d, sequence=False, separator=".", dt=dict):
     Each key with the `separator` will become a nested dictionary key in the final dictionary."""
     if isinstance(d, collections.Mapping):
         o = dt()
-        for k,v in d.iteritems():
+        for k,v in d.items():
             ks = k.split(separator)
             n = o
             for nk in ks[:-1]:
@@ -205,14 +206,14 @@ def advanceddeepmerge(d, u, s, sequence=True, invert=False, inplace=True):
         e = d
     if (not hasattr(u,'__len__')) or len(u)==0:
         return e
-    for k, v in u.iteritems():
+    for k, v in u.items():
         if isinstance(v, collections.Mapping):
             r = advanceddeepmerge(d.get(k, s()), v, s, sequence, invert, inplace)
             e[k] = r
         elif (sequence and isinstance(v, collections.Sequence) and
             isinstance(d.get(k, None), collections.Sequence) and not
-            (isinstance(v, (str, unicode)) or 
-            isinstance(d.get(k, None), (str, unicode)))):
+            (isinstance(v, six.string_types) or 
+            isinstance(d.get(k, None), six.string_types))):
             if invert:
                 e[k] = [ i for i in v ] + [ i for i in d[k] ]
             else:
@@ -244,7 +245,7 @@ def deepmerge(d, u, s, invert=False, inplace=True):
         e = d
     if (not hasattr(u,'__len__')) or len(u)==0:
         return e
-    for k, v in u.iteritems():
+    for k, v in u.items():
         if isinstance(v, collections.Mapping):
             r = deepmerge(d.get(k, s()), v, s, invert=invert, inplace=inplace)
             e[k] = r
@@ -268,6 +269,7 @@ class DeepNestDict(dict):
     pass
         
 
+six.add_metaclass(abc.ABCMeta)
 class MutableMappingBase(collections.MutableMapping):
     """Base class for mutable mappings which store things in an internal dictionary"""
     def __init__(self, *args, **kwargs):
@@ -277,8 +279,6 @@ class MutableMappingBase(collections.MutableMapping):
             self._store = args[0]
         self._store = self._dt(*args,**kwargs)
         
-    __metaclass__ = abc.ABCMeta
-    
     _dt = dict
         
     def __str__(self):
@@ -383,7 +383,7 @@ class Configuration(MutableMappingBase):
     def hash(self):
         """Return the HexDigest hash"""
         self._hash = hashlib.md5()
-        self._hash.update(str(self))
+        self._hash.update(six.b(str(self)))
         return self._hash.hexdigest()
         
     @property
@@ -693,7 +693,7 @@ class Configuration(MutableMappingBase):
             return cls(base)        
         elif isinstance(base,tuple) and len(base) == 2:
             return cls.fromresource(*base)
-        elif isinstance(base,basestring):
+        elif isinstance(base,six.string_types):
             config = cls.fromfile(base)
         elif isinstance(base,collections.Sequence):
             config = cls()
@@ -745,7 +745,7 @@ class DottedConfiguration(Configuration):
         try:
             if isinstance(item, collections.Mapping):
                 return all([self._isempty(value) 
-                    for value in item.itervalues()])
+                    for value in item.values()])
             elif isinstance(item, collections.Sized):
                 return len(item) == 0
             else:
