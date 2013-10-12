@@ -87,7 +87,7 @@ class Pipe(Stateful,Typedkwargs):
     def help(self):
         """Return the help string for this function"""
         if self._help is None:
-            return u"pipe {:s}".format(self.name)
+            return "pipe {:s}".format(self.name)
         elif self._help is False:
             return argparse.SUPPRESS
         elif isinstance(self._help,unicode):
@@ -113,20 +113,20 @@ class Pipe(Stateful,Typedkwargs):
     def tree(self,pipes,level=0,dup=False):
         """Return the tree line."""
         if self.state["replaced"]:
-            arrow = u"╎  "
-            space = u" "
+            arrow = "╎  "
+            space = " "
         elif self.state["triggered"] and self.state["primed"]:
-            arrow = u"┌─>" if not dup else u"┌  "
-            space = u" "
+            arrow = "┌─>" if not dup else "┌  "
+            space = " "
         elif self.state["included"]:
-            arrow = u"┼─>" if not dup else u"┼  "
-            space = u" "
+            arrow = "┼─>" if not dup else "┼  "
+            space = " "
         elif self.state["excluded"]:
-            arrow = u"╶  "
-            space = u" "
+            arrow = "╶  "
+            space = " "
         elif self.state["primed"]:
-            arrow = u"└─>" if not dup else u"└  "
-            space = u" "
+            arrow = "└─>" if not dup else "└  "
+            space = " "
             
         lines = []
         for pipe in reversed(pipes):
@@ -136,7 +136,7 @@ class Pipe(Stateful,Typedkwargs):
                 else:
                     lines += pipe.tree(pipes,level+1,True)
             if pipe.name == self.name:
-                lines += [u"{left:30s}{desc:s}".format(
+                lines += ["{left:30s}{desc:s}".format(
                             left = (space * level) + arrow + self.name,
                             desc = self.description,
                         )]

@@ -49,8 +49,8 @@ class Pipeline(CLIEngine,Stateful):
         
     @property
     def description(self):
-        HelpDict = { 'command': u"%(prog)s",'name': self.name }
-        ShortHelp = u"""
+        HelpDict = { 'command': "%(prog)s",'name': self.name }
+        ShortHelp = """
         Command Line Interface for %(name)s.
         The pipeline is set up in pipes, which are listed below. 
         By default, the *all pipe should run the important parts of the pipeline.
@@ -64,7 +64,7 @@ class Pipeline(CLIEngine,Stateful):
     
     @property
     def epilog(self):
-        return u"""This is a multi-function dynamic command line interface to a complex program. 
+        return """This is a multi-function dynamic command line interface to a complex program. 
 The base unit, pipes, are individual functions which should be able to run independtly of each other. 
 Pipes can declare dependencies if they are not independent of each other. The command line interface
 can be customized using the 'Default' configuration variable in the configuration file.
@@ -390,8 +390,8 @@ can be customized using the 'Default' configuration variable in the configuratio
             pipe.run(dry=self.config.get("System.DryRun",False))
         except (SystemExit,KeyboardInterrupt):
             print(" ...killed... ") #This accounts for the User's ^C in the stdout stream.
-            self.log.critical(u"Keyboard Interrupt during %(pipe)s... ending simulator." % { 'pipe': pipe.name })
-            self.log.critical(u"Last completed pipe: %(pipe)s" % { 'pipe': self.completed[-1] })
-            self.log.debug(u"Pipes completed: %s" % ", ".join(self.completed))
+            self.log.critical("Keyboard Interrupt during %(pipe)s... ending simulator." % { 'pipe': pipe.name })
+            self.log.critical("Last completed pipe: %(pipe)s" % { 'pipe': self.completed[-1] })
+            self.log.debug("Pipes completed: %s" % ", ".join(self.completed))
             raise
             
