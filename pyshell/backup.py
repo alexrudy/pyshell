@@ -22,6 +22,7 @@ import sys
 import argparse
 from textwrap import fill
 from warnings import warn
+import six
 
 try:
     from . import version, CLIEngine, PYSHELL_LOGGING_STREAM
@@ -97,7 +98,7 @@ class _BackupDestination(object):
         if self.pseudo:
             return True
         
-        if not isinstance(self.origin,basestring) or not isinstance(self.destination,basestring) \
+        if not isinstance(self.origin,six.string_types) or not isinstance(self.destination,six.string_types) \
             or not isinstance(self.delete,bool):
             raise ValueError("Mode {mode} is incomplete.".format(mode=self.name))
         
@@ -224,11 +225,10 @@ class BackupEngine(CLIEngine):
         # variable is also set when the `super` call asks for the description,
         # the description property can correctly incorporate information about
         # the name and version of the command in use.
-        self._cmd = cmd
+        self._cmd = str(cmd)
         self._cmd_version = subprocess.check_output(
-            [self._cmd,'--version'],
-            stderr=subprocess.STDOUT,
-            ).split("\n")[0] # We take only the first line
+            [self._cmd, str('--version')],
+            ).splitlines()[0] # We take only the first line
         # - End initialization of Command Variables
         super(BackupEngine, self).__init__()
         
@@ -328,9 +328,9 @@ class BackupEngine(CLIEngine):
     def _start_mode(self,mode):
         """Start a single mode"""
         if self._destinations[mode].launch(self._pargs,prints=self.opts.prints):
-            # Run any post-dependent commands.
-            map(self._start_mode,self._destinations[mode].triggers)            
-        
+            for trigger in self._destinations[mode].triggers:
+                self._start_mode(trigger)
+    
     def _end_mode(self, mode):
         """Wait for a particular process to end."""
         if self._destinations[mode].running:
@@ -387,7 +387,7 @@ class BackupEngine(CLIEngine):
             version="%(prog)s version {version}\n{cmd_version}".format(
                 version=version, cmd_version=self._cmd_version))
         self.parser.add_argument('modes', metavar='target', nargs="+", 
-            choices=self._destinations.keys() ,default=[], help="The %(prog)s target's name.")
+            choices=list(self._destinations.keys()) ,default=[], help="The %(prog)s target's name.")
         self.parser.add_argument('args', nargs=argparse.REMAINDER, help=argparse.SUPPRESS)
         self.parser.epilog += "\n".join(self._help)
         

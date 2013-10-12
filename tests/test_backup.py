@@ -83,7 +83,7 @@ class test_BackupEngine(object):
             warnings.simplefilter("always")
             engine.set_destination('test1','a/','b/','test2')
             engine.set_destination('test1','a/','c/','test3')
-        nt.eq_(warned[0].message.message, "Mode test1 will be overwritten.")
+        nt.eq_(warned[0].message.args[0], "Mode test1 will be overwritten.")
         nt.eq_(engine._destinations['test1'].destination, 'c/')
         
     def test_arguments(self):
