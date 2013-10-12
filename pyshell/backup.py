@@ -234,7 +234,7 @@ class BackupEngine(CLIEngine):
         
         self._destinations = {}
         self._help  = [    ]
-        self._pargs = ['-a','--partial']
+        self._pargs = ['-a','--partial', '-u']
     
     def init(self):
         """Initialize the command line arguments"""
@@ -251,12 +251,12 @@ class BackupEngine(CLIEngine):
             help="Use the root ('/') directory as origin base")
         self.parser.add_argument('-r','--reverse',
             action='store_true',
-            help="Flip destination and origin flags." \
+            help="Flip destination and origin flags."
             "Will disable any --del flag.")
         self.parser.add_argument('--reverse-delete',
             action='store_true',dest='reversedel',
             help="Use --del flag even when reversed.")
-        self.parser.usage = "%(prog)s [-nqdvpr] [--config file.yml] [--prefix "\
+        self.parser.usage = "%(prog)s [-nqdvpr] [--config file.yml] [--prefix "
         "origin [destination] | --root ]\n            target [target ...] {{{cmd} args}}".format(cmd=self._cmd)
         
     @property
