@@ -123,7 +123,6 @@ def force_dir_path(path):
 def collapseuser(path):
     """Collapse the username from a path."""
     userpath = os.path.abspath(os.path.expanduser("~"))
-    path = os.path.abspath(path)
     if path.startswith(userpath):
         relpath = os.path.relpath(path, userpath)
         return os.path.normpath(os.path.join("~", relpath))
