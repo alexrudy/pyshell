@@ -127,6 +127,7 @@ class test_BackupScript(object):
         for i in range(self.NUM_FILES//self.SKIP_FACT):
             shutil.copy2(os.path.join(self.PATH,'c/c.%03d.test' % (i * self.SKIP_FACT)),os.path.join(self.PATH,'d/'))
             
+        self.make_cfg()
         self.engine = pyshell.backup.BackupEngine()
         self.engine.init()
     
@@ -136,6 +137,19 @@ class test_BackupScript(object):
         clear_dir(os.path.join(self.PATH,'b/'))
         clear_dir(os.path.join(self.PATH,'c/'))
         clear_dir(os.path.join(self.PATH,'d/'))
+        try:
+            os.remove(os.path.join(self.PATH,"Backup.yaml"))
+        except:
+            pass
+        
+    @nt.nottest
+    def make_cfg(self):
+        """Make the backup configuration"""
+        from pyshell.config import Configuration
+        cfg = Configuration.fromfile(os.path.join(self.PATH,"_Backup.yaml"))
+        cfg["origin"] = self.PATH
+        cfg["destination"] = self.PATH
+        cfg.save(os.path.join(self.PATH,"Backup.yaml"))
         
     
     def test_engine_full(self):
