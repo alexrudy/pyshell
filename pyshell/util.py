@@ -117,11 +117,13 @@ def force_dir_path(path):
     `/some//path/here//` to `/some/path/here/`
     """
     path = os.path.normpath(path)
-    return path.rstrip("/") + "/"
+    dirpath = path.rstrip(os.path.sep) + os.path.sep
+    return dirpath
     
 def collapseuser(path):
     """Collapse the username from a path."""
-    userpath = os.path.expanduser("~")
+    userpath = os.path.abspath(os.path.expanduser("~"))
+    path = os.path.abspath(path)
     if path.startswith(userpath):
         relpath = os.path.relpath(path, userpath)
         return os.path.normpath(os.path.join("~", relpath))
@@ -160,7 +162,7 @@ def remove(path, warn=False, name='path'):
     
 def is_remote_path(path):
     """Path looks like an SSH or other URL compatible path?"""
-    base = path.split("/")[0]
+    base = path.split(os.path.sep)[0]
     return ":" in base
     
 def func_lineno(func):
