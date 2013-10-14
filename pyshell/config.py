@@ -694,11 +694,11 @@ class Configuration(MutableMappingBase):
         elif isinstance(base,tuple) and len(base) == 2:
             return cls.fromresource(*base)
         elif isinstance(base,six.string_types):
-            config = cls.fromfile(base)
+            return cls.fromfile(base)
         elif isinstance(base,collections.Sequence):
             config = cls()
             for item in base:
-                config.update(cls.make(item))
+                config.merge(cls.make(item))
             return config
         else:
             raise TypeError("{0} doesn't know how to make from {1}".format(
