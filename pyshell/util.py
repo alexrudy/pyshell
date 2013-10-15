@@ -344,4 +344,17 @@ def query_select(iterable, labels=None, default=None,
     answer = query_string(question, default=default, validate=validate)
     index = int(answer) - 1
     return iterable[index]
+    
+def setup_kwargs(func, *source_kwargs):
+    """Set up keyword arguments, pulling from each dictionary successively."""
+    argspec = inspect.getargspec(func)
+    args, varargs, keywords, defaults = argspec
+    kwargs = {}
+    for i,arg in enumerate(args[-len(defaults):]):
+        for skw in source_kwargs:
+            if arg in skw:
+                kwargs[arg] = skw[arg]
+                break
+        kwargs.setdefault(arg,defaults[i])
+    return kwargs
             
