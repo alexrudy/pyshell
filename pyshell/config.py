@@ -269,7 +269,7 @@ class DeepNestDict(dict):
     pass
         
 
-six.add_metaclass(abc.ABCMeta)
+@six.add_metaclass(abc.ABCMeta)
 class MutableMappingBase(collections.MutableMapping):
     """Base class for mutable mappings which store things in an internal dictionary"""
     def __init__(self, *args, **kwargs):
@@ -429,7 +429,9 @@ class Configuration(MutableMappingBase):
             {'a': 'b', 'c': 'd'}
         
         """
-        deepmerge(self, other, self.dt)
+        if isinstance(other, MutableMappingBase):
+            other = other.store
+        self._store = deepmerge(self.store, other, self.dt)
         
     def imerge(self, other):
         """Inverse :meth:`merge`, where ``other`` will be considered original, and this object will be canonical.
@@ -446,7 +448,9 @@ class Configuration(MutableMappingBase):
             {'a': 'b', 'c': 'e'}
         
         """
-        deepmerge(self, other, self.dt, invert=True)
+        if isinstance(other, MutableMappingBase):
+            other = other.store
+        self._store = deepmerge(self.store, other, self.dt, invert=True)
         
     
     def save(self, filename, silent=True):

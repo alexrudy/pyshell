@@ -19,11 +19,12 @@ from six.moves import cStringIO as StringIO
 class test_config(object):
     """pyshell.config"""
     def setup(self):
-        self.test_dict_A = {"Hi":{"A":1,"B":2,"D":[1,2],"E":{"F":"G"}},}
-        self.test_dict_B = {"Hi":{"A":3,"C":4,"D":[3,4],"E":{"F":"G"}},}
-        self.test_dict_C = {"Hi":{"A":3,"B":2,"C":4,"D":[3,4],"E":{"F":"G"}},} #Should be a merge of A and B
-        self.test_dict_D = {"Hi":{"A":3,"B":2,"C":4,"D":[1,2,3,4],"E":{"F":"G"}},} #Should be a merge of A and B
-        self.test_dict_E = {"Hi.A":3,"Hi.B":2,"Hi.C":4,"Hi.D":[1,2,3,4],"Hi.E.F":"G"}
+        self.test_dict_A = {"Hi":{"A.py.p":1,"B":2,"D":[1,2],"E.py.p":{"F":"G"}},}
+        self.test_dict_B = {"Hi":{"A.py.p":3,"C":4,"D":[3,4],"E.py.p":{"F":"G"}},}
+        self.test_dict_C = {"Hi":{"A.py.p":3,"B":2,"C":4,"D":[3,4],"E.py.p":{"F":"G"}},} # Should be a merge of A and B
+        self.test_dict_D = {"Hi":{"A.py.p":3,"B":2,"C":4,"D":[1,2,3,4],"E.py.p":{"F":"G"}},} # Should be a merge of A and B with a sequence
+        self.test_dict_E = {"Hi.A.py.p":3,"Hi.B":2,"Hi.C":4,"Hi.D":[1,2,3,4],"Hi.E.py.p.F":"G"} # Should be a flattening of D
+        self.test_dict_F = {"Hi":{"A":{"py":{"p":3}},"B":2,"C":4,"D":[1,2,3,4],"E":{"py":{"p":{"F":"G"}}}},} # Should be an expansion of D
     
     def test_reformat(self):
         """reformat(d, nt)"""
@@ -33,7 +34,7 @@ class test_config(object):
         rft = config.reformat(self.test_dict_C, nft)
         nt.ok_(isinstance(rft, nft))
         nt.ok_(isinstance(rft["Hi"], nft))
-        nt.ok_(isinstance(rft["Hi"]["E"], nft))
+        nt.ok_(isinstance(rft["Hi"]["E.py.p"], nft))
         nt.assert_false(isinstance(self.test_dict_C, nft))
     
     def test_deepmerge(self):
@@ -94,14 +95,16 @@ class test_config(object):
     def test_expand(self):
         """expand(d)"""
         res = config.expand(self.test_dict_E)
-        nt.eq_(res, self.test_dict_D)
+        nt.eq_(res, self.test_dict_F)
         res = config.expand(self.test_dict_D)
-        nt.eq_(res, self.test_dict_D)
+        nt.eq_(res, self.test_dict_F)
+        res = config.expand(self.test_dict_F)
+        nt.eq_(res, self.test_dict_F)        
     
     def test_flatten_and_expand(self):
         """expand(flatten(d)) == d"""
-        res = config.expand(config.flatten(self.test_dict_D))
-        nt.eq_(res, self.test_dict_D)
+        res = config.expand(config.flatten(self.test_dict_F))
+        nt.eq_(res, self.test_dict_F)
     
     def test_expand_and_flatten(self):
         """flatten(expand(d)) == d"""
@@ -118,10 +121,12 @@ class test_Configuration(object):
         filename = resource_filename(__name__,"test_config/test_config.yml")
         with open(filename,'r') as stream:
             self.test_dict = yaml.load(stream)
-        self.test_dict_A = {"Hi":{"A":1,"B":2,"D":[1,2],"E":{"F":"G"}},}
-        self.test_dict_B = {"Hi":{"A":3,"C":4,"D":[3,4],"E":{"F":"G"}},}
-        self.test_dict_C = {"Hi":{"A":3,"B":2,"C":4,"D":[3,4],"E":{"F":"G"}},} #Should be a merge of A and B
-        self.test_dict_D = {"Hi":{"A":3,"B":2,"C":4,"D":[1,2,3,4],"E":{"F":"G"}},} #Should be a merge of A and B
+        self.test_dict_A = {"Hi":{"A.py.p":1,"B":2,"D":[1,2],"E.py.p":{"F":"G"}},}
+        self.test_dict_B = {"Hi":{"A.py.p":3,"C":4,"D":[3,4],"E.py.p":{"F":"G"}},}
+        self.test_dict_C = {"Hi":{"A.py.p":3,"B":2,"C":4,"D":[3,4],"E.py.p":{"F":"G"}},} # Should be a merge of A and B
+        self.test_dict_D = {"Hi":{"A.py.p":3,"B":2,"C":4,"D":[1,2,3,4],"E.py.p":{"F":"G"}},} # Should be a merge of A and B with a sequence
+        self.test_dict_E = {"Hi.A.py.p":3,"Hi.B":2,"Hi.C":4,"Hi.D":[1,2,3,4],"Hi.E.py.p.F":"G"} # Should be a flattening of D
+        self.test_dict_F = {"Hi":{"A":{"py":{"p":3}},"B":2,"C":4,"D":[1,2,3,4],"E":{"py":{"p":{"F":"G"}}}},} # Should be an expansion of D
 
         
     def teardown(self):
