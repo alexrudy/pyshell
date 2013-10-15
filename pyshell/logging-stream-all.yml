@@ -2,7 +2,7 @@
 # It can easily be used by setting the script's supercfg attribute properly:
 #  supercfg = [('pyshell','logging-stream-only.yml')]
 # or
-#  supercfg = PYSHELL_LOGGING_STREAM
+#  supercfg = PYSHELL_LOGGING_STREAM_ALL
 logging:
   disable_existing_loggers: false
   version: 1
@@ -14,14 +14,9 @@ logging:
     console:
       class: logging.StreamHandler
       formatter: stdout
-      level: INFO
-  loggers: 
-    py.warnings:
-      level: WARNING
-      handlers:
-        - console
-      propagate: no
+      level: 1
+  loggers: {}
   root:
-    level: DEBUG
+    level: 1
     handlers:
       - console

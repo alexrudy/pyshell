@@ -6,16 +6,23 @@
 #  Created by Jaberwocky on 2012-10-16.
 #  Copyright 2012 Jaberwocky. All rights reserved.
 # 
+
+from __future__ import (absolute_import, unicode_literals, division,
+                        print_function)
+                        
 import os, os.path, sys
 import shutil
 import logging
 import datetime
 import errno
 from textwrap import fill, TextWrapper
+
 from pkg_resources import resource_filename
 from jinja2 import Environment, PackageLoader
-from .base import CLIEngine
+
+from .subcommand import SCEngine, SCController
 from .util import query_yes_no, query_string
+from . import PYSHELL_LOGGING_STREAM
 
 class PackageConfigError(Exception):
     """Package Configuration Error"""
@@ -31,15 +38,8 @@ class PackageConfigError(Exception):
 class PyPackageBase(object):
     """docstring for PyPackageBase"""
     
-    module = __name__
-    
     _desc = """Create new python packages using the setup.py convention with distutils. This tool will help you set up your python package."""
-    
-    @property
-    def config(self):
-        """Configuration"""
-        return self._config
-    
+        
     @property
     def description(self):
         return fill(self._desc)
@@ -55,12 +55,10 @@ class PyPackageBase(object):
         return self.config["distname"]
         
 
-class BaseSubEngine(PyPackageBase):
+class BaseSubEngine(PyPackageBase,SCEngine):
     """A base engine for use as a subcommand to PyPackageEngine"""
-    def __init__(self, command, **kwargs):
-        super(BaseSubEngine, self).__init__()
-        self.log = logging.getLogger(__name__)
-        self.command = command
+    def __init__(self, **kwargs):
+        super(BaseSubEngine, self).__init__(**kwargs)
         self._kwargs = kwargs
         self._cwd = os.getcwd()
         self._templates = Environment(loader=PackageLoader('pyshell', 'templates'))
@@ -77,7 +75,7 @@ class BaseSubEngine(PyPackageBase):
         if os.path.exists(directory) and os.path.isdir(directory):
             self.log.debug("Directory '%s' already exists" % directory)
         elif os.path.exists(directory):
-            raise PackageConfigError, "Path '%s' does not appear to be a directory!" % directory
+            raise PackageConfigError("Path '%s' does not appear to be a directory!" % directory)
         else:
             os.mkdir(directory)
             self.log.debug("Created directory '%s'" % (directory))
@@ -91,42 +89,20 @@ class BaseSubEngine(PyPackageBase):
             return False
         return True
         
-    def parser(self,subparsers):
-        """docstring for parser"""
-        self._parser = subparsers.add_parser(self.command,**self._kwargs)
-        
-    def parse(self,opts):
-        """docstring for parse"""
-        self._opts = opts
-        
-    def configure(self,config, opts):
-        """Configure this object."""
-        self._config = config
-        self._opts = opts
-        
-    def start(self):
-        """docstring for start"""
-        pass
-        
-    def end(self):
-        """docstring for end"""
-        pass
-        
-    def kill(self):
-        """docstring for kill"""
-        pass
         
 class PackageEngine(BaseSubEngine):
     """An engine for creating new pacakges"""
     
     _help = "Create a new pacakge"
     
-    def __init__(self, command="dist"):
-        super(PackageEngine, self).__init__(command=command,help=self._help)
+    command = "dist"
+    
+    def __init__(self):
+        super(PackageEngine, self).__init__(help=self._help)
         
-    def parser(self,subparsers):
+    def init(self):
         """Set up the parsing for this command."""
-        super(PackageEngine, self).parser(subparsers)
+        super(PackageEngine, self).init()
         self._parser.add_argument('--no-distribute',action='store_false',dest='distribute',help="Skip the distribute_setup.py file")
         self._parser.add_argument('--no-setup',action='store_false',dest='setup',help="Skip the setup.py file (NOT RECOMMENDED)")
         self._parser.add_argument('--no-test-module',action='store_false',dest='use_test_module',help="Do not include a nosetests module")
@@ -134,11 +110,11 @@ class PackageEngine(BaseSubEngine):
         self._parser.add_argument('--requirements',nargs='+',default='',metavar='PyPackage>=0.3',help="Requirements to be added to setup.py")
         self._parser.add_argument('--no-data-directory',action='store_false',dest='use_datadir',help="Skip the data directories")
         self._parser.add_argument('--data-directory',nargs=1,default='data/',metavar='data/',dest='datadir',help="Set the directory module name")
-        self._parser.add_argument('packages',nargs='+',metavar='package',help="Packages to create")
         
-    def configure(self, config, opts):
+    def configure(self):
         """Configure this subengine"""
-        super(PackageEngine, self).configure(config, opts)
+        super(PackageEngine, self).configure()
+        self._parser.add_argument('packages',nargs='+',metavar='package',help="Packages to create")
         self._config["tests"] = self._opts.test_module
         self._config["path"] = os.path.normpath(self._opts.destination)
         self._config["distname"] = self._config["path"].split("/")[-1]
@@ -146,7 +122,7 @@ class PackageEngine(BaseSubEngine):
         self._config["template.date"] = datetime.date.today().isoformat()
         self._config["template.exclude"] = self.config.get("template.exclude",[])
         
-    def start(self):
+    def do(self):
         """Start the package creation process"""
         self.make_distribution()
         self.get_metadata()
@@ -170,7 +146,7 @@ class PackageEngine(BaseSubEngine):
             sys.exit(0)
         self.create_dir(self.path)
         if not os.path.isdir(self.path) or not os.access(self.path,os.X_OK):
-            raise PackageConfigError, "Can't access distribution directory '%s'" % self.path
+            raise PackageConfigError("Can't access distribution directory '%s'" % self.path)
         self.log.info("Created distribution '%(distname)s'" % self.config)
         
     def get_metadata(self):
@@ -275,12 +251,12 @@ class PackageEngine(BaseSubEngine):
                 os.mkdir(data_dir)
             self._config["template.package_data"][package] = [data_dir_short]
 
-class PyPackageEngine(CLIEngine,PyPackageBase):
+class PyPackageEngine(SCController,PyPackageBase):
     """An engine for the creation of python packages"""
     
-    module = __name__
-    
     defaultcfg = "Package.yml"
+    
+    supercfg = PYSHELL_LOGGING_STREAM
     
     _subEngines = [ PackageEngine, ]
     
@@ -288,48 +264,21 @@ class PyPackageEngine(CLIEngine,PyPackageBase):
         super(PyPackageEngine, self).__init__()
         logging.addLevelName(5,'HELP')
         logging.HELP = 5
-        self.log = logging.getLogger(__name__)
-        streamHandler = logging.StreamHandler()
-        streamHandler.setFormatter(logging.Formatter(fmt="--> %(message)s"))
-        self.log.addHandler(streamHandler)
         self._cwd = os.getcwd()
-        self._subcommand = {}
-        for subEngine in self._subEngines:
-            subCommand = subEngine()
-            self._subcommand[subCommand.command] = subCommand
+        
+    def init(self):
+        """docstring for init"""
+        super(PyPackageEngine, self).init()
         self._parser.add_argument('-n','--dry-run',action='store_false',dest='run',help="Print what would be done, but don't copy")
         self._parser.add_argument('--destination',metavar='/path/to/',nargs=1,default=self._cwd,help='Set the destination for this module. Defaults to here.')
         self._parser.add_argument('-v','--verbose',action='store_true',help="Print help messages along the way.")
         
-    def start(self):
-        """docstring for start"""
-
-        self._subcommand[self._opts.mode].start()
         
-    def end(self):
-        """docstring for end"""
-        self._subcommand[self._opts.mode].end()
         
-    def kill(self):
-        """Killing mid-command"""
-        self._subcommand[self._opts.mode].kill()
-        sys.exit(1)
-        
-    def parse(self):
-        """Parse command line args"""
-        for subEngine in self._subcommand:
-            self._subcommand[subEngine].parser(self._subparsers)
-        super(PyPackageEngine, self).parse()
-        for subEngine in self._subcommand:
-            self._subcommand[subEngine].configure(self.config,self._opts)
-            self._subcommand[subEngine].parse(self._opts)
-
-            
     def configure(self):
         """Configure the package creator"""
         self._config["template.author"] = os.environ['LOGNAME']
-        self.log.setLevel(logging.HELP if self._opts.verbose else logging.WARNING)
         super(PyPackageEngine, self).configure()
-        self._subparsers = self._parser.add_subparsers(dest='mode')
+        self.log.setLevel(logging.HELP if self._opts.verbose else logging.WARNING)
 
         
