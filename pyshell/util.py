@@ -65,6 +65,7 @@ import warnings
 import functools
 import inspect
 import six
+import collections
 
 try:
     input = raw_input
@@ -124,6 +125,20 @@ def resolve(name):
             __import__(used)
             found = getattr(found, n)
     return found
+
+def configure_class(configuration):
+    """Resolve and configure a class."""
+    if isinstance(configuration, six.string_types):
+        class_obj = resolve(configuration)()
+    elif isinstance(configuration, collections.MutableMapping):
+        if "()" in configuration:
+            class_type = resolve(configuration.pop("()"))
+            class_obj = class_type(**configuration)
+        else:
+            raise ValueError("Must provide class name in key '()'")
+    else:
+        raise ValueError("Can't understand {}".format(configuration))
+    return class_obj
 
 def is_type_factory(ttype):
     """Return a function which checks if an object can be cast as a given 
