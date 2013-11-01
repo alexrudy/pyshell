@@ -87,6 +87,30 @@ def ipydb():
         sys.excepthook = ultratb.ColorTB(color_scheme='Linux', call_pdb=1)
         setattr(sys.modules['__main__'], '__file__', _file)
 
+def askip(pylab=False, enter="Launch iPython?", exit="Continuing...", default="no"):
+    """Ask for ipython, returning a callable to start the shell, or do nothing.
+    
+    To ensure that this method is run in the correct scope, it should be called like this::
+        
+        >>> a = 10
+        >>> askip()()
+        >>> b = 20 + a
+        
+    :param bool pylab: Whether to set up interactive pylab plotting.
+    :param str enter: Message used as the question to the user.
+    :param str exit: Message used when the user exits the shell.
+    :param str default: The default answer ("yes" or "no")
+    :returns: A function which either does nothing, or starts an iPython shell.
+    """
+    from IPython.terminal.embed import InteractiveShellEmbed
+    if query_yes_no(enter,default=default):
+        if pylab:
+            import matplotlib.pyplot as plt
+            plt.ion()
+        return InteractiveShellEmbed(exit_msg=exit)
+    else:
+        return lambda : None #No-op callable.
+        
 def is_type_factory(ttype):
     """Return a function which checks if an object can be cast as a given 
     type. Basic usage allows for checking string-casting to a specific type.
