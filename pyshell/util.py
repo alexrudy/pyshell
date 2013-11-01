@@ -160,6 +160,10 @@ def is_type_factory(ttype):
     is_type.__hlp__ = "Input must be an {!s}".format(ttype)
     return is_type
 
+def is_type(instance, ttype):
+    """Tests whether an instance is of a current type."""
+    return is_type_factory(ttype)(instance)
+
 def force_dir_path(path):
     """Force the input path to be a directory.
     
