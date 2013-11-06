@@ -14,15 +14,22 @@ This module complements the python :mod:`logging` module. It is designed to seam
 
 Logger Functions
 ----------------
-
-.. autofunction::
-    configure_logging
     
 .. autofunction::
     getLogger
 
 .. autofunction::
     getSimpleLogger
+
+
+.. autofunction::
+    configure_logging
+    
+.. autofunction::
+    activateSimpleLogging
+        
+Automatic Logger Buffering
+--------------------------
         
 .. autofunction::
     debuffer_logger
@@ -30,6 +37,8 @@ Logger Functions
 .. autofunction::
     buffer_logger
     
+Custom Handlers and Formatters
+-------------------------------
 
 .. autoclass::
     ManyTargetHandler
