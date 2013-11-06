@@ -127,25 +127,7 @@ def getLogger(name=None):
         logger.addHandler(BufferHandler(1e7))
     return logger
     
-def buffer_logger(name=None):
-    """Buffer named logger.
-    
-    :param name: The name of the logger to debuffer.
-    
-    This method will add a :class:`BufferHandler` to the
-    named logger, and will remove the other handlers.
-    """
-    _log = logging.getLogger(name)
-    _buffer = None
-    for handler in _log.handlers[:]:
-        if isinstance(handler,BufferHandler):
-            _buffer = handler
-        _log.removeHandler(handler)
-    _log.setLevel(1)
-    if not _buffer:
-        _buffer = BufferHandler(1e7)
-    _log.addHandler(_buffer)
-    
+
 _simpleConfig = None
 def getSimpleLogger(name=None,level=None):
     """Retrieves a logger with a simple logging configuration setup,
@@ -185,6 +167,25 @@ def _prepare_config(name=None):
             break
     _buffers[name] = debuffer
     
+def buffer_logger(name=None):
+    """Buffer named logger.
+
+    :param name: The name of the logger to buffer.
+
+    This method will add a :class:`BufferHandler` to the
+    named logger, and will remove the other handlers.
+    """
+    _log = logging.getLogger(name)
+    _buffer = False
+    for handler in _log.handlers[:]:
+        if isinstance(handler,BufferHandler):
+            _buffer = handler
+        _log.removeHandler(handler)
+    _log.setLevel(1)
+    if not _buffer:
+        _buffer = BufferHandler(1e7)
+    _log.addHandler(_buffer)
+    _buffers[name] = _buffer
     
 def debuffer_logger(name=None):
     """Debuffer a given logger.
