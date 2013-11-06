@@ -232,30 +232,12 @@ import abc
 from warnings import warn
 from .config import StructuredConfiguration
 from .util import semiabstractmethod, deprecatedmethod
-from .loggers import configure_logging, getLogger
+from .loggers import configure_logging, getLogger, PYSHELL_LOGGING, PYSHELL_LOGGING_STREAM, PYSHELL_LOGGING_STREAM_ALL
 from six import with_metaclass
 import six
 
 __all__ = [ 'CLIEngine',
     'PYSHELL_LOGGING','PYSHELL_LOGGING_STREAM','PYSHELL_LOGGING_STREAM_ALL']
-
-PYSHELL_LOGGING = [('pyshell','logging.yml')]
-"""This constant item can be added to the superconfiguration 
-:attr:`supercfg` to enable a default logging configuration setup. It should
-probably be added first, so that your own code will override it."""
-
-PYSHELL_LOGGING_STREAM = [('pyshell','logging-stream-only.yml')]
-"""This constant item can be added to the superconfiguration 
-:attr:`supercfg` to enable a default logging configuration setup. It 
-should probably be added first, so that your own code will override it. 
-It only provides stream loggers, not file handlers."""
-
-PYSHELL_LOGGING_STREAM_ALL = [('pyshell','logging-stream-all.yml')]
-"""This constant item can be added to the superconfiguration
-:attr:`supercfg` to enable a default logging configuration setup. It 
-should probably be added first, so that your own code will override it. 
-It only provides stream loggers, not file handlers. Its logger is just a 
-root logger at the lowest level!"""
 
 class CLIEngine(with_metaclass(abc.ABCMeta, object)):
     """A base class for Command Line Inteface facing tools. :class:`CLIEnigne` 

@@ -65,7 +65,26 @@ from .console import get_color
 
 __all__ = ['configure_logging','debuffer_logger','GrowlHandler',
     'ManyTargetHandler','BufferHandler','getLogger','buffer_root','status',
-    'getSimpleLogger']
+    'getSimpleLogger',
+    'PYSHELL_LOGGING','PYSHELL_LOGGING_STREAM','PYSHELL_LOGGING_STREAM_ALL']
+
+PYSHELL_LOGGING = [('pyshell','logging.yml')]
+"""This constant item can be added to the superconfiguration 
+:attr:`supercfg` to enable a default logging configuration setup. It should
+probably be added first, so that your own code will override it."""
+
+PYSHELL_LOGGING_STREAM = [('pyshell','logging-stream-only.yml')]
+"""This constant item can be added to the superconfiguration 
+:attr:`supercfg` to enable a default logging configuration setup. It 
+should probably be added first, so that your own code will override it. 
+It only provides stream loggers, not file handlers."""
+
+PYSHELL_LOGGING_STREAM_ALL = [('pyshell','logging-stream-all.yml')]
+"""This constant item can be added to the superconfiguration
+:attr:`supercfg` to enable a default logging configuration setup. It 
+should probably be added first, so that your own code will override it. 
+It only provides stream loggers, not file handlers. Its logger is just a 
+root logger at the lowest level!"""
 
 def configure_logging(configuration):
     """Setup logging from a configuration object. Configuration should meet Python's :mod:`logging.config` configuration
