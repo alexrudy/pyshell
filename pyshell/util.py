@@ -15,45 +15,6 @@
 .. testsetup::
     from pyshell.util import *
 
-.. autofunction::
-    force_dir_path
-    
-.. autofunction::
-    collapseuser
-    
-.. autofunction::
-    check_exists
-    
-.. autofunction::
-    warn_exists
-    
-.. autofunction::
-    is_remote_path
-    
-.. autofunction::
-    semiabstractmethod
-    
-.. autofunction::
-    deprecatedmethod
-    
-.. autofunction::
-    func_lineno
-
-.. autofunction::
-    ipydb
-
-.. autofunction::
-    is_type_factory
-
-.. autofunction::
-    query_yes_no
-
-.. autofunction::
-    query_string
-    
-.. autofunction::
-    query_select
-
 """
 
 from __future__ import (absolute_import, unicode_literals, division,
@@ -403,9 +364,17 @@ def query_select(iterable, labels=None, default=None,
     return iterable[index]
     
 def setup_kwargs(func, *source_kwargs):
-    """Set up keyword arguments, pulling from each dictionary successively."""
-    argspec = inspect.getargspec(func)
-    args, varargs, keywords, defaults = argspec
+    """Set up keyword arguments, pulling from each dictionary successively.
+    
+    This function uses introspection to build up a set of keyword arguments. Using introspection, it finds the available keyword
+    arguments, and gathers values for them from any member in `*source_kwargs`. This function is designed to populate default-valued
+    arguments from a list of dictionaries. It does not modify any ``**`` arguments.
+    
+    :param func: The function to inspect for arguments.
+    :param *source_kwargs: Any number of dictionaries to be used to populate the keyword arguments.
+    :returns: A dictionary for use with the ``**`` operator as a set of keyword arguments.
+    """
+    args, varargs, keywords, defaults = inspect.getargspec(func)
     kwargs = {}
     for i,arg in enumerate(args[-len(defaults):]):
         for skw in source_kwargs:

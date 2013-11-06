@@ -1,2 +1,3 @@
 .. automodule::
     pyshell.util
+    :members:
