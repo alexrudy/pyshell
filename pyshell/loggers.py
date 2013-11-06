@@ -129,6 +129,13 @@ def getLogger(name=None):
     
 
 _simpleConfig = None
+def _getSimpleConfig():
+    """Retrieve the _SimpleConfig object, populating it if it doesn't exist."""
+    from .config import DottedConfiguration
+    global _simpleConfig
+    if _simpleConfig is None:
+        _simpleConfig = DottedConfiguration.fromresource('pyshell','logging-stream-all.yml')
+
 def getSimpleLogger(name=None,level=None):
     """Retrieves a logger with a simple logging configuration setup,
     which writes colorful logging output to the console using the configuration
@@ -139,10 +146,7 @@ def getSimpleLogger(name=None,level=None):
     :param level: The level of the configured logger.
     
     Configurations are cumulative, so :func:`getSimpleLogger` can be called multiple times."""
-    from .config import DottedConfiguration
-    global _simpleConfig
-    if _simpleConfig is None:
-        _simpleConfig = DottedConfiguration.fromresource('pyshell','logging-stream-all.yml')
+    _simpleConfig = _getSimpleConfig()
     logger = getLogger(name)
     if level is not None and name is not None:
         _simpleConfig["logging.loggers."+name+".level"] = level
@@ -150,6 +154,18 @@ def getSimpleLogger(name=None,level=None):
         _simpleConfig["logging.root.level"] = level
     configure_logging(_simpleConfig)
     return logger
+    
+def activateSimpleLogging(ltype='simple'):
+    """Activate simple logging using a logging configuration built in to PyShell."""
+    _configurations = {
+        'all' : PYSHELL_LOGGING_STREAM_ALL,
+        'stream' : PYSHELL_LOGGING_STREAM,
+        'basic' : PYSHELL_LOGGING,
+        'simple' : _getSimpleConfig(),
+    }
+    if ltype not in _configurations:
+        raise ValueError("Logging Type must be in {!r}".format(_configurations.keys()))
+    configure_logging(_configurations[ltype])
 
 _buffers = {}
 def _prepare_config(name=None):
