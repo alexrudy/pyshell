@@ -239,7 +239,10 @@ import six
 __all__ = [ 'CLIEngine',
     'PYSHELL_LOGGING','PYSHELL_LOGGING_STREAM','PYSHELL_LOGGING_STREAM_ALL']
 
-class CLIEngine(with_metaclass(abc.ABCMeta, object)):
+
+
+@six.add_metaclass(abc.ABCMeta)
+class CLIEngine(object):
     """A base class for Command Line Inteface facing tools. :class:`CLIEnigne` 
     provides the basic structure to set up a simple command-line interface,
     based on the :mod:`argparse` framework. The only required implementation 
