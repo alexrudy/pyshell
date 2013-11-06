@@ -176,12 +176,12 @@ def _prepare_config(name=None):
     """
     logger = logging.getLogger(name)
     name = "__root__" if name is None else name
-    debuffer = False
+    _buffer = False
     for handler in logger.handlers:
         if isinstance(handler,BufferHandler):
-            debuffer = handler
+            _buffer = handler
             break
-    _buffers[name] = debuffer
+    _buffers[name] = _buffer
     
 def buffer_logger(name=None):
     """Buffer named logger.
