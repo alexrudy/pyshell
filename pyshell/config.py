@@ -85,6 +85,7 @@ import hashlib
 from warnings import warn
 import ast
 import six
+import argparse
 
 # Submodules from this system
 from . import util
@@ -127,12 +128,24 @@ class DeepNestDict(dict):
     pass
         
 
+class ConfigureAction(argparse.Action):
+    """An argument parser for use with a configuration."""
+    def __init__(self, config=None, **kwargs):
+        """Read keyword arguments."""
+        self.config = config
+        kwargs.setdefault(kwargs['default'], self.config[self.dest])
+        super(ConfigureAction, self).__init__(**kwargs)
         
+    def __call__(self, parser, namespace, values, option_string):
+        """Call this action, parsing it."""
+        self.config[self.dest] = values
+        setattr(namespace, self.dest, values)        
 
 class Configuration(MutableMappingBase):
     """Adds extra methods to dictionary for configuration"""
     def __init__(self, *args, **kwargs):
         super(Configuration, self).__init__(*args, **kwargs)
+        self.log = loggers.getLogger(self.__module__)
         self._filename = None
         self._strict = False
         self._dn = self.__class__
