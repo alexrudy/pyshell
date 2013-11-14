@@ -7,20 +7,15 @@
 #  Copyright 2012 Alexander Rudy. All rights reserved.
 # 
 """
-.. currentmodule: pyshell.subcommand
 
-:mod:`subcommand` – Creating commands with Subcommands
-======================================================
-
-This module provides scaffolding for subcommand classes. Individual subcommands are defined in :class:`SCEngine`. :class:`SCEngine` is a drop-in replacement for :class:`~pyshell.base.CLIEngine`. Then add each class to the :attr:`SCController.subEngines` list on a subclass of :class:`SCController`. :class:`SCController` can be run the same way :class:`~pyshell.base.CLIEngine` works. Both :class:`SCController` and :class:`SCEngine` are subclasses of :class:`~pyshell.base.CLIEngine` and should behave naturally with a :class:`~pyshell.base.CLIEngine`-style configuration.
+The two classes in :mod:`pyshell.subcommand` are for the creation of sub-commands (:class:`SCEngine`),
+and controllering those subcommands (:class:`SCController`). The API for both is based on :class:`~pyshell.CLIEngine`.
 
 .. inheritance-diagram::
     pyshell.subcommand.SCEngine
     pyshell.subcommand.SCController
     :parts: 1
 
-Base Class API Documentation
-----------------------------
 
 .. autoclass::
     SCEngine
@@ -145,7 +140,15 @@ class _LimitedHelpAction(Action):
     
 
 class SCController(CLIEngine):
-    """An engine for the creation of python packages"""
+    """A controller for a set of :class:`SCEngine` objects. This class provides the
+    controller for individual subcommand objects.
+    
+    THe initialization of this class takes keyword arguments that can be passed through to
+    :class:`pyshell.CLIEngine`. This class can be used as an engine in-and-of itself. To access
+    the currently active subcommand, you can use the :attr:`SCController.subcommand`. If you wish
+    to replace the :meth:`SCController.do` method, you can either use the python :func:`suepr`
+    method, or call ``self.subcommand.do()`` at the appropriate point.
+    """
     
     subEngines = []
     """A list of :class:`SCEngine` subclasses which define the subcommands

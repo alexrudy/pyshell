@@ -180,7 +180,7 @@ def remove(path, warn=False, name='path'):
 def is_remote_path(path):
     """Path looks like an SSH or other URL compatible path?"""
     base = path.split(os.path.sep)[0]
-    return ":" in base
+    return (":" in base)
     
 def func_lineno(func):
     """Get the line number of a function. First looks for

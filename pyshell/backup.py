@@ -93,6 +93,12 @@ class _BackupDestination(object):
         else:
             return [self.origin, self.destination]
         
+    def _pathcheck(self, path):
+        """Check the path."""
+        if is_remote_path(path):
+            return True
+        return os.path.isdir(os.path.dirname(path))
+        
     def launch(self,args,delete=False,prints=False,reverse=None):
         """Launch this process with the sequence of arguments."""
         if self.pseudo:
@@ -111,12 +117,12 @@ class _BackupDestination(object):
             warn("Mode '{mode}' already running.".format(mode=self.name),
                 RuntimeWarning)
             return False
-        elif not (os.path.isdir(self.origin) or self.remote[0]):
+        elif not self._pathcheck(self.origin):
             warn("Skipping '{mode}' backup. Origin '{origin}' does not "\
                 "exist.".format(mode=self.name,origin=self.origin),
                 RuntimeWarning)
             return False
-        elif not (os.path.isdir(self.destination) or self.remote[1]):
+        elif not self._pathcheck(self.destination):
             warn("Skipping '{mode}' backup. Destination '{destination}' "\
                 "does not exist.".format(mode=self.name,
                     destination=self.destination),
