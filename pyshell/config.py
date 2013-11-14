@@ -89,11 +89,10 @@ import six
 # Submodules from this system
 from . import util
 from . import loggers
-
+from .mapping import reformat, advanceddeepmerge, deepmerge, flatten, expand, MutableMappingBase
 #pylint: disable=R0904
 
-__all__ = ['reformat', 'advanceddeepmerge', 'deepmerge',
-    'ConfigurationError',
+__all__ = ['ConfigurationError',
     'Configuration', 'DottedConfiguration', 'StructuredConfiguration']
 
 def force_yaml_unicode():
@@ -113,147 +112,6 @@ def force_yaml_unicode():
     Loader.add_constructor('tag:yaml.org,2002:str', construct_yaml_str)
     SafeLoader.add_constructor('tag:yaml.org,2002:str', construct_yaml_str)
     
-    
-def reformat(d, nt):
-    """Recursive extraction method for changing the type of 
-    nested dictionary objects.
-    
-    :param mapping d: The dictionary to re-type.
-    :param mapping-type nt: The new mapping type to use.
-    
-    """
-    #pylint: disable=C0103
-    if not isinstance(d, collections.Mapping):
-        return d
-    e = nt()
-    for k in d:
-        v = d.get(k)
-        if isinstance(v, collections.Mapping):
-            e[k] = reformat(v, nt)
-        elif ( isinstance(v, collections.Sequence) 
-            and not isinstance(v, six.string_types) ):
-            e[k] = [ reformat(i, nt) for i in v ]
-        else:
-            e[k] = v
-    return e
-    
-def flatten(d, stump="", sequence=False, separator=".", dt=dict):
-    """Flatten a given nested dictionary.
-    
-    :param d: Dictionary to flatten.
-    :param stump: The base stump for flattened keys. Setting this applies a universal starting value to each key.
-    :param sequence: Whether to expand sequences.
-    :param separator: The string separator to use in flat keys.
-    :param dt: The final output type for the dictionary.
-    
-    Each nested key will become a root level key in the final dictionary. The root level keys will be the set of nested keys, joined by the `separator` keyword argument.
-    
-    """
-    o = dt()
-    if ( isinstance(d, collections.Sequence)
-        and not isinstance(d, six.string_types) and
-        sequence):
-        for i,iv in enumerate(v):
-            o.update(flatten(iv, nk+str(i), sequence, separator))
-    elif isinstance(d, collections.Mapping):    
-        for k,v in d.items():
-            nk = separator.join((stump,k)) if stump else k
-            o.update(flatten(v, nk, sequence, separator))
-    else:
-        o[stump] = d
-    return o
-    
-def expand(d, sequence=False, separator=".", dt=dict):
-    """Expand a flattened dictionary into a nested one.
-    
-    :param d: Dictionary to expand.
-    :param sequence: Whether to expand sequences.
-    :param separator: The string separator to use in flat keys.
-    :param dt: The final output type for all levels of the nested dictionary.
-    
-    Each key with the `separator` will become a nested dictionary key in the final dictionary."""
-    if isinstance(d, collections.Mapping):
-        o = dt()
-        for k,v in d.items():
-            ks = k.split(separator)
-            n = o
-            for nk in ks[:-1]:
-                n = n.setdefault(nk, dt())
-            n[ks[-1]] = expand(v, sequence=sequence, separator=separator, dt=dt)
-    else:
-        o = d
-    return o
-    
-def advanceddeepmerge(d, u, s, sequence=True, invert=False, inplace=True):
-    """Merge deep collection-like structures.
-    
-    This function will merge sequence structures when they are found. When used with ``sequence=False``, it behaves like :func:`deepmerge`.
-    
-    :param dict-like d: Deep Structure
-    :param dict-like u: Updated Structure
-    :param dict-like-type s: Default structure to use when a new deep structure is required.
-    :param bool sequence: Control sequence merging
-    :param bool invert: Whether to do an inverse merge.
-    
-    *Inverse Merge* causes ``u`` to only update missing values of ``d``, but does
-    so in a deep fashion.
-    
-    """
-    #pylint: disable=C0103
-    if isinstance(d, collections.Mapping) and not inplace:
-        e = type(d)(**d)
-    else:
-        e = d
-    if (not hasattr(u,'__len__')) or len(u)==0:
-        return e
-    for k, v in u.items():
-        if isinstance(v, collections.Mapping):
-            r = advanceddeepmerge(d.get(k, s()), v, s, sequence, invert, inplace)
-            e[k] = r
-        elif (sequence and isinstance(v, collections.Sequence) and
-            isinstance(d.get(k, None), collections.Sequence) and not
-            (isinstance(v, six.string_types) or 
-            isinstance(d.get(k, None), six.string_types))):
-            if invert:
-                e[k] = [ i for i in v ] + [ i for i in d[k] ]
-            else:
-                e[k] = [ i for i in d[k] ] + [ i for i in v ]
-        elif invert:
-            e[k] = d.get(k,u[k])
-        else:
-            e[k] = u[k]
-    return e
-
-def deepmerge(d, u, s, invert=False, inplace=True):
-    """Merge deep collection-like structures.
-    
-    When this function encounters a sequence, the entire sequence from ``u`` is considered a single value which replaces any value from ``d``. To allow for merging sequences in ``u`` and ``d``, see function :func:`advanceddeepmerge`.
-    
-    :param dict-like d: Deep Structure
-    :param dict-like u: Updated Structure
-    :param dict-like-type s: Default structure to use when a new deep structure is required.
-    :param bool invert: Whether to do an inverse merge.
-    
-    *Inverse Merge* causes ``u`` to only update missing values of ``d``, but does
-    so in a deep fashion.
-    
-    """
-    #pylint: disable=C0103
-    if isinstance(d, collections.Mapping) and not inplace:
-        e = type(d)(**d)
-    else:
-        e = d
-    if (not hasattr(u,'__len__')) or len(u)==0:
-        return e
-    for k, v in u.items():
-        if isinstance(v, collections.Mapping):
-            r = deepmerge(d.get(k, s()), v, s, invert=invert, inplace=inplace)
-            e[k] = r
-        elif invert:
-            e[k] = d.get(k, v)
-        else:
-            e[k] = u[k]
-    return e
 
 class ConfigurationError(Exception):
     """Configuration error"""
