@@ -179,7 +179,6 @@ class MutableMappingBase(collections.MutableMapping):
     """Base class for mutable mappings which store things in an internal dictionary"""
     def __init__(self, *args, **kwargs):
         super(MutableMappingBase, self).__init__()
-        self.log = loggers.getLogger(self.__module__)
         if len(args) == 1 and isinstance(args[0],self._dt) and len(kwargs) == 0:
             self._store = args[0]
         self._store = self._dt(*args,**kwargs)
@@ -234,3 +233,28 @@ class MutableMappingBase(collections.MutableMapping):
     def merge(self, item):
         """Alias between merge and update in the basic case."""
         return self._store.update(item)
+        
+class FallbackDictionary(MutableMappingBase):
+    """An abstract base class for dictionaries which might not contain all of their desired objects.
+    
+    Contains abstract methods for accessing missing items.
+    """
+    
+    def __getitem__(self, key):
+        """Dictionary getter"""
+        try:
+            out = super(FallbackDictionary, self).__getitem__(key)
+        except KeyError as error:
+            try:
+                out = self.build_key(key)
+            except KeyError as buildkeyerror:
+                error.msg += " Could not construct the key from the base class: {}".format(buildkeyerror.msg)
+                raise error
+        return out
+        
+    @abc.abstractmethod
+    def build_key(self, key):
+        """A custom method to build missing keys for this dictionary."""
+        raise KeyError("Fallback undefined!")
+        
+    
