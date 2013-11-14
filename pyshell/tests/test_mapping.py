@@ -103,11 +103,11 @@ class test_config(object):
     
     def test_flatten_and_expand(self):
         """expand(flatten(d)) == d"""
-        res = mapping.expand(config.flatten(self.test_dict_F))
+        res = mapping.expand(mapping.flatten(self.test_dict_F))
         nt.eq_(res, self.test_dict_F)
     
     def test_expand_and_flatten(self):
         """flatten(expand(d)) == d"""
-        res = mapping.flatten(config.expand(self.test_dict_E))
+        res = mapping.flatten(mapping.expand(self.test_dict_E))
         nt.eq_(res, self.test_dict_E)
 
