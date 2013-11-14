@@ -127,67 +127,7 @@ class DeepNestDict(dict):
     pass
         
 
-@six.add_metaclass(abc.ABCMeta)
-class MutableMappingBase(collections.MutableMapping):
-    """Base class for mutable mappings which store things in an internal dictionary"""
-    def __init__(self, *args, **kwargs):
-        super(MutableMappingBase, self).__init__()
-        self.log = loggers.getLogger(self.__module__)
-        if len(args) == 1 and isinstance(args[0],self._dt) and len(kwargs) == 0:
-            self._store = args[0]
-        self._store = self._dt(*args,**kwargs)
         
-    _dt = dict
-        
-    def __str__(self):
-        """String representation of this object"""
-        return repr(self.store)
-        
-    def __repr__(self):
-        """String for this object"""
-        return "<%s %s>" % (self.__class__.__name__, str(self.store))
-        
-    def _repr_pretty_(self, p, cycle):
-        """Pretty representation of this object."""
-        if cycle:
-            p.text("{}(...)".format(self.__class__.__name__))
-        else:
-            with p.group(2,"{}(".format(self.__class__.__name__),")"):
-                p.pretty(self.store)
-        
-    def __getitem__(self, key):
-        """Dictionary getter"""
-        return self._store.__getitem__(key)
-        
-    def __setitem__(self, key, value):
-        """Dictonary setter"""
-        return self._store.__setitem__(key, value)
-        
-    def __delitem__(self, key):
-        """Dictionary delete"""
-        return self._store.__delitem__(key)
-        
-    def __iter__(self):
-        """Return an iterator for this dictionary"""
-        return self._store.__iter__()
-        
-    def __contains__(self, key):
-        """Return the contains boolean"""
-        return self._store.__contains__(key)
-    
-    def __len__(self):
-        """Length"""
-        return self._store.__len__()
-        
-    @property
-    def store(self):
-        """Return a copy of the internal storage object."""
-        return self._store.copy()
-        
-    def merge(self, item):
-        """Alias between merge and update in the basic case."""
-        return self._store.update(item)
-
 
 class Configuration(MutableMappingBase):
     """Adds extra methods to dictionary for configuration"""
