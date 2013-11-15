@@ -258,7 +258,8 @@ class MutableMappingBase(collections.MutableMapping):
         """Alias between merge and update in the basic case."""
         return self._store.update(item)
         
-class FallbackDictionary(MutableMappingBase):
+@six.add_metaclass(abc.ABCMeta)
+class FallbackDictionary(object):
     """An abstract base class for dictionaries which might not contain all of their desired objects.
     
     Contains abstract methods for accessing missing items.
@@ -266,15 +267,9 @@ class FallbackDictionary(MutableMappingBase):
     
     def __getitem__(self, key):
         """Dictionary getter"""
-        try:
-            out = super(FallbackDictionary, self).__getitem__(key)
-        except KeyError as error:
-            try:
-                out = self.build_key(key)
-            except KeyError as buildkeyerror:
-                error.msg += " Could not construct the key from the base class: {}".format(buildkeyerror.msg)
-                raise error
-        return out
+        if key not in self:
+            self.build_key(key)
+        return super(FallbackDictionary, self).__getitem__(key)
         
     @abc.abstractmethod
     def build_key(self, key):
@@ -282,3 +277,41 @@ class FallbackDictionary(MutableMappingBase):
         raise KeyError("Fallback undefined!")
         
     
+_RECLASS = re.compile("")
+
+class RegexDictionary(object):
+    """A dictionary which allows indexing with regular expression objects."""
+    
+    def find_keys(self, regex):
+        """Find a set of keys"""
+        return self[re.compile(regex)]
+    
+    def _matching_keys(self, rexp):
+        """Return the keys which match a given regular expression."""
+        return tuple([ key for key in self.keys() if rexp.search(key) is not None ])
+    
+    def __getitem__(self, key):
+        """Get an item."""
+        if isinstance(key, type(_RECLASS)):
+            return tuple([ super(RegexDictionary, self).__getitem__(rkey) for rkey in self._matching_keys(key) ])
+        else:
+            return super(RegexDictionary, self).__getitem__(key)
+        
+    def __setitem__(self, key, value):
+        """Set an item."""
+        if isinstance(key, type(_RECLASS)):
+            raise TypeError("Key cannot be a instance of {}".format(type(_RECLASS)))
+        else:
+            super(RegexDictionary, self).__setitem__(key, value)
+        
+    def __delitem__(self, key):
+        """Delete an item, or a regular expression match of items."""
+        if isinstance(key, type(_RECLASS)):
+            for rkey in self._matching_keys(key):
+                super(RegexDictionary, self).__delitem__(rkey)
+        else:
+            super(RegexDictionary, self).__delitem__(key)
+            
+        
+    
+
