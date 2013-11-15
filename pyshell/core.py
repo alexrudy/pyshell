@@ -7,6 +7,14 @@
 #  Copyright 2013 Alexander Rudy. All rights reserved.
 # 
 
+"""
+:mod:`core` – Certain 'core' functions
+======================================
+
+.. note:: These functions should probably all live elsewhere.
+
+"""
+
 from __future__ import (absolute_import, unicode_literals, division,
                         print_function)
 
