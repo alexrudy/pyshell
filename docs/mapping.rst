@@ -1,0 +1,2 @@
+.. automodule:: pyshell.mapping
+    :members:

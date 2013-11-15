@@ -6,9 +6,28 @@
 #  Created by Alexander Rudy on 2013-11-13.
 #  Copyright 2013 Alexander Rudy. All rights reserved.
 # 
+"""
+:mod:`mapping` – Mutable Mapping Tools
+======================================
 
-from __future__ import (absolute_import, unicode_literals, division,
-                        print_function)
+This module contains functions and base classes for mutable mappings in Python.
+
+
+Mapping Base Classes
+--------------------
+
+.. autoclass::
+    pyshell.mapping.MutableMappingBase
+    :members:
+
+.. autoclass::
+    pyshell.mapping.FallbackDictionary
+    :members:
+
+
+Mapping Functions
+-----------------
+"""
 from __future__ import (absolute_import, unicode_literals, division,
                         print_function)
 
@@ -176,7 +195,12 @@ def deepmerge(d, u, s, invert=False, inplace=True):
 
 @six.add_metaclass(abc.ABCMeta)
 class MutableMappingBase(collections.MutableMapping):
-    """Base class for mutable mappings which store things in an internal dictionary"""
+    """Base class for mutable mappings which store things in an internal dictionary.
+    
+    This class implements a full dictionary interface, including pretty-printing,
+    containment, setting, deleting and getting of items. The interface works via
+    :class:`collections.MutableMapping`. Internally, values are stored in an 'inner'
+    mapping object, which is set by the attribute :attr:`_dt`."""
     def __init__(self, *args, **kwargs):
         super(MutableMappingBase, self).__init__()
         if len(args) == 1 and isinstance(args[0],self._dt) and len(kwargs) == 0:

@@ -26,24 +26,6 @@ YAML configuration file reading and writing interface.
     pyshell.config.StructuredConfiguration
     :parts: 1
     
-.. autofunction::
-    pyshell.config.reformat
-    
-.. autofunction::
-    pyshell.config.force_yaml_unicode
-
-.. autofunction::
-    pyshell.config.deepmerge
-    
-.. autofunction::
-    pyshell.config.advanceddeepmerge
-    
-.. autofunction::
-    pyshell.config.flatten
-    
-.. autofunction::
-    pyshell.config.expand
-    
 
 Basic Configurations: :class:`Configuration`
 --------------------------------------------
@@ -69,6 +51,11 @@ Structured Configurations: :class:`StructuredConfiguration`
     :members:
     :inherited-members:
 
+Argparse Action for Configurations: :class:`ConfigureAction`
+------------------------------------------------------------
+
+.. autoclass::
+    pyshell.config.ConfigureAction
 
 """
 from __future__ import (absolute_import, unicode_literals, division,
@@ -129,15 +116,24 @@ class DeepNestDict(dict):
         
 
 class ConfigureAction(argparse.Action):
-    """An argument parser for use with a configuration."""
+    """An argument parser action for use with a configuration.
+    
+    This action applies an argparse argument to a configuration destination. The `dest`
+    keyword is used as the destination key.
+    
+    :keyword config: The configuration to be updated.
+    :keyword dest: The destination key in the configuration.
+    :keyword default: The default configuration value.
+    
+    This action class can be passed as the ``action=`` keyword in :meth:`argparse.ArgumentParser.add_argument`.
+    """
     def __init__(self, config=None, **kwargs):
-        """Read keyword arguments."""
         self.config = config
-        kwargs.setdefault(kwargs['default'], self.config[self.dest])
+        kwargs.setdefault('default', self.config[kwargs['dest']])
         super(ConfigureAction, self).__init__(**kwargs)
         
     def __call__(self, parser, namespace, values, option_string):
-        """Call this action, parsing it."""
+        """Parse this action. The value is applied to both the namespace and the configuration."""
         self.config[self.dest] = values
         setattr(namespace, self.dest, values)        
 
