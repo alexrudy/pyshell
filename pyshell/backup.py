@@ -24,12 +24,8 @@ from textwrap import fill
 from warnings import warn
 import six
 
-try:
-    from . import version, CLIEngine, PYSHELL_LOGGING_STREAM
-    from .util import force_dir_path, is_remote_path
-except ValueError:
-    from pyshell import version, CLIEngine, PYSHELL_LOGGING_STREAM
-    from pyshell.util import force_dir_path, is_remote_path
+from . import version, CLIEngine, PYSHELL_LOGGING_STREAM
+from .util import force_dir_path, is_remote_path
 
 __all__ = ['BackupEngine']
 
@@ -398,7 +394,4 @@ class BackupEngine(CLIEngine):
         self.parser.epilog += "\n".join(self._help)
         
     
-if __name__ == '__main__':
-    print("Running from file: {arg}".format(arg=sys.argv[0]))
-    BackupEngine.script()
-    
+

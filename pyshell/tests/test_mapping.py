@@ -18,6 +18,7 @@ from six.moves import cStringIO as StringIO
 
 class test_config(object):
     """pyshell.config"""
+    
     def setup(self):
         self.test_dict_A = {"Hi":{"A.py.p":1,"B":2,"D":[1,2],"E.py.p":{"F":"G"}},}
         self.test_dict_B = {"Hi":{"A.py.p":3,"C":4,"D":[3,4],"E.py.p":{"F":"G"}},}

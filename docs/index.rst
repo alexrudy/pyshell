@@ -17,9 +17,10 @@ Contents:
     base
     subcommand
     mapping
-    core
-    config
+    yaml
     loggers
+    config
+    core
     util
     postmortem
 

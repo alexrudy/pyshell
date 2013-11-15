@@ -78,28 +78,12 @@ import argparse
 from . import util
 from . import loggers
 from .mapping import reformat, advanceddeepmerge, deepmerge, flatten, expand, MutableMappingBase
+from .yaml import PyshellLoader, PyshellDumper
 #pylint: disable=R0904
 
 __all__ = ['ConfigurationError',
     'Configuration', 'DottedConfiguration', 'StructuredConfiguration']
 
-def force_yaml_unicode():
-    """This method forces the PyYAML library to construct unicode objects when
-     reading YAML instead of producing regular strings.
-    
-    It is designed to imporove compatibility in Python2.x using unicode 
-    objects.
-    """
-    from yaml import Loader, SafeLoader
-
-    def construct_yaml_str(self, node):
-        """Constructs a regular scalar instead of a python
-        string object from a YAML key, forcing all YAML strings
-        to be unicode objects."""
-        return self.construct_scalar(node)
-    Loader.add_constructor('tag:yaml.org,2002:str', construct_yaml_str)
-    SafeLoader.add_constructor('tag:yaml.org,2002:str', construct_yaml_str)
-    
 
 class ConfigurationError(Exception):
     """Configuration error"""
@@ -110,8 +94,8 @@ class ConfigurationError(Exception):
             key=self.expected, config=self.config)
         super(ConfigurationError, self).__init__(self.message)
         
-class DeepNestDict(dict):
-    """Class for deep nestinging emptiness"""
+class DeepNestDict(collections.OrderedDict):
+    """Class for deep nesting emptiness"""
     pass
         
 
@@ -152,6 +136,8 @@ class Configuration(MutableMappingBase):
     _dn = DeepNestDict
     """Deep nesting dictionary setting. This class will be used to create 
     deep nesting structures for this dictionary.""" #pylint: disable=W0105
+    
+    _dt = collections.OrderedDict
     
     @property
     def dn(self):
@@ -271,15 +257,15 @@ class Configuration(MutableMappingBase):
         """
         if hasattr(filename,'read') and hasattr(filename,'readlines'):
             filename.write("# %s: <stream>" % self.name)
-            yaml.safe_dump_all(self._save_yaml_callback() + [self.store],
-                 filename, default_flow_style=False, encoding='utf-8')
+            yaml.dump_all(self._save_yaml_callback() + [self.store],
+                 filename, default_flow_style=False, encoding='utf-8', Dumper=PyshellDumper)
         else:
             with open(filename, "w") as stream:
                 stream.write("# %s: %s\n" % (self.name, filename))
                 if re.search(r"(\.yaml|\.yml)$", filename):
-                    yaml.safe_dump_all(
+                    yaml.dump_all(
                         self._save_yaml_callback() + [self.store], stream, 
-                        default_flow_style=False, encoding='utf-8')
+                        default_flow_style=False, encoding='utf-8', Dumper=PyshellDumper)
                 elif re.search(r"\.dat$", filename):
                     for document in self._save_yaml_callback():
                         stream.write(str(document))
@@ -306,11 +292,11 @@ class Configuration(MutableMappingBase):
         isstream = False
         try:
             if hasattr(filename, 'read') and hasattr(filename, 'readlines'):
-                new = list(yaml.load_all(filename))
+                new = list(yaml.load_all(filename, Loader=PyshellLoader))
                 isstream = True
             else:
                 with open(filename, "r") as stream:
-                    new = list(yaml.load_all(stream))
+                    new = list(yaml.load_all(stream, Loader=PyshellLoader))
         except IOError:
             if silent:
                 warnings.warn("Could not load configuration "
@@ -701,15 +687,6 @@ class StructuredConfiguration(DottedConfiguration):
         10
         
     
-    By default, this will not work for doubly nested values::
-        
-        >>> Config["Data"]["Value.ResultA"]
-        KeyError
-        
-    However, this behavior can be changed by specifying a new default nesting structure::
-        
-        >>> Config.dn = DottedConfiguration
-        
     """
     
     DEFAULT_FILENAME = '__main__'
@@ -790,5 +767,3 @@ class StructuredConfiguration(DottedConfiguration):
             self._metadata["Files.Loaded"].append(self.filename)
         
 
-
-force_yaml_unicode()

@@ -23,16 +23,16 @@ class test_Configuration(object):
     CLASS = config.Configuration
     
     def setup(self):
+        from pyshell.yaml import OrderedDictLoader
         filename = resource_filename(__name__,"test_config/test_config.yml")
         with open(filename,'r') as stream:
-            self.test_dict = yaml.load(stream)
+            self.test_dict = yaml.load(stream, Loader=OrderedDictLoader)
         self.test_dict_A = {"Hi":{"A.py.p":1,"B":2,"D":[1,2],"E.py.p":{"F":"G"}},}
         self.test_dict_B = {"Hi":{"A.py.p":3,"C":4,"D":[3,4],"E.py.p":{"F":"G"}},}
         self.test_dict_C = {"Hi":{"A.py.p":3,"B":2,"C":4,"D":[3,4],"E.py.p":{"F":"G"}},} # Should be a merge of A and B
         self.test_dict_D = {"Hi":{"A.py.p":3,"B":2,"C":4,"D":[1,2,3,4],"E.py.p":{"F":"G"}},} # Should be a merge of A and B with a sequence
         self.test_dict_E = {"Hi.A.py.p":3,"Hi.B":2,"Hi.C":4,"Hi.D":[1,2,3,4],"Hi.E.py.p.F":"G"} # Should be a flattening of D
         self.test_dict_F = {"Hi":{"A":{"py":{"p":3}},"B":2,"C":4,"D":[1,2,3,4],"E":{"py":{"p":{"F":"G"}}}},} # Should be an expansion of D
-
         
     def teardown(self):
         """Remove junky files if they showed up"""

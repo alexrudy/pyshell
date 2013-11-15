@@ -49,7 +49,7 @@ class test_base_cliengine(object):
         except OSError:
             pass
         with open(filename,'w') as f:
-            yaml.dump(cfg,f,default_flow_style=False,encoding='utf-8')
+            yaml.safe_dump(cfg,f,default_flow_style=False,encoding='utf-8')
         
     
     def teardown(self):
