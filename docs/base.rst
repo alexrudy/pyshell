@@ -170,10 +170,25 @@ be overwritten by those loaded later.
   ``CLIEngine``-subclass's directory (think ``os.path.dirname(__file__)``),
   and the configuration file which will be searched for in the current 
   directory.
-* ``--config`` can change the name of the configuration file to look
-  for in the current directory.
+* ``--config`` can change the name of the configuration file that is loaded
+  from the current working directory.
 * ``--configure`` can write new configuration values into the configuration
-  at the end of the configuration loading process.
+  at the end of the configuration loading process, when they are passed as
+  literal values to the argument, like ``--configure key='some value'``.
+  
+Configuration with :mod:`argparse`
+----------------------------------
+
+Along with configuration done through the classmembers and through configuration
+command-line arguments, it is possible to use argparse arguments to set values
+for configuration variables. Arguments which should be translated to configuration
+values should use ``action='config'`` in the :meth:`argparse.ArgumentParser.add_argument`
+function. This method will use the destination as the key for the configuration,
+and set the value of the configuration to be the parsed value from the command
+line interface.
+
+.. todo:: A ``config_const`` action should be built, which when activated, applies
+    a constant to the configuration.
 
 Command Line Help
 -----------------

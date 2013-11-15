@@ -16,11 +16,13 @@ Contents:
     overview
     base
     subcommand
-    config
+    mapping
+    yaml
     loggers
+    config
+    core
     util
     postmortem
-    pipeline
 
 
 Examples:

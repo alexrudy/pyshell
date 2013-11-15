@@ -138,7 +138,8 @@ class test_BackupScript(object):
         clear_dir(os.path.join(self.PATH,'c/'))
         clear_dir(os.path.join(self.PATH,'d/'))
         try:
-            os.remove(os.path.join(self.PATH,"Backup.yaml"))
+            pass
+            #os.remove(os.path.join(self.PATH,"Backup.yaml"))
         except:
             pass
         
@@ -170,7 +171,7 @@ class test_BackupScript(object):
             raise SkipTest()
         assert len(os.listdir(os.path.join(self.PATH,'a/'))) != len(os.listdir(os.path.join(self.PATH,'b/')))
         assert len(os.listdir(os.path.join(self.PATH,'c/'))) != len(os.listdir(os.path.join(self.PATH,'d/')))
-        backup_py_path = os.path.join(self.EXEPATH,"backup.py")
+        backup_py_path = os.path.join(self.PATH,"backup.py")
         backup_py_config = os.path.join(self.PATH,"Backup.yaml")
         backup_py_command = shlex.split("python %s " % backup_py_path)
         backup_py_args = shlex.split("-q --config %s main other" % backup_py_config)
