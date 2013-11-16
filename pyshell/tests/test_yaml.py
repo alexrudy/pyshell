@@ -14,6 +14,7 @@ import nose.tools as nt
 import os
 import collections
 from six.moves import cStringIO as StringIO
+import six
 
 class test_yaml(object):
     """pyshell.yaml"""
@@ -31,7 +32,7 @@ class test_yaml(object):
         data = yaml.dump(self.test_dict_A, Dumper=ps_yaml.UnicodeDumper)
         test_A = yaml.load(data, Loader=ps_yaml.UnicodeLoader)
         for key in test_A.keys():
-            nt.ok_(isinstance(key, unicode),"Key was not UNICODE! {}".format(type(key)))
+            nt.ok_(isinstance(key, six.text_type),"Key was not UNICODE! {}".format(type(key)))
     
     def test_roundtrip_order(self):
         """Test the order of everything."""
