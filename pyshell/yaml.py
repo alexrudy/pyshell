@@ -213,7 +213,7 @@ def dump_yaml_unicode(*dumpers):
         return self.represent_scalar('tag:yaml.org,2002:str', data)
     
     for dumper in dumpers:
-        dumper.add_representer(unicode, represent_unicode)
+        dumper.add_representer(six.text_type, represent_unicode)
 
 @six.add_metaclass(abc.ABCMeta)
 class UnicodeYAMLLoader(object):
@@ -239,7 +239,7 @@ class UnicodeYAMLDumper(object):
     def __init__(self, *args, **kwargs):
         super(UnicodeYAMLDumper, self).__init__(*args, **kwargs)
         
-        self.add_representer(unicode, type(self).represent_unicode)
+        self.add_representer(six.text_type, type(self).represent_unicode)
     
     def represent_unicode(self, data):
         return self.represent_scalar('tag:yaml.org,2002:str', data)
