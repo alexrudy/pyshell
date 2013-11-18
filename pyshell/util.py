@@ -383,4 +383,11 @@ def setup_kwargs(func, *source_kwargs):
                 break
         kwargs.setdefault(arg,defaults[i])
     return kwargs
-            
+    
+def get_keyword_args(func):
+    """Get a list of the keyword arguments and their values for a function."""
+    args, varargs, keywords, defaults = inspect.getargspec(func)
+    kwargs = {}
+    for i,arg in enumerate(args[-len(defaults):]):
+        kwargs[arg] = defaults[i]
+    return kwargs
