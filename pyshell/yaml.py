@@ -233,6 +233,7 @@ class UnicodeYAMLLoader(object):
         to be unicode objects."""
         return self.construct_scalar(node)
     
+@six.add_metaclass(abc.ABCMeta)
 class UnicodeYAMLDumper(object):
     """This Mixin can be used for |Dumper| and |SafeDumper| to provide unicode loading support
     by default."""
