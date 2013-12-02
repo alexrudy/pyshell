@@ -391,3 +391,40 @@ def get_keyword_args(func):
     for i,arg in enumerate(args[-len(defaults):]):
         kwargs[arg] = defaults[i]
     return kwargs
+    
+def descriptor__get__(f):
+    """A simple wrapper for descriptors which handles the convention that 
+    type(self).item should return the full descriptor class used by item."""
+    
+    @functools.wraps(f)
+    def get(self, obj, objtype):
+        if obj is None:
+            return self
+        else:
+            return f(self, obj, objtype)
+    
+    return get
+    
+class TypedProperty(object):
+    """A typed property object."""
+    def __init__(self, name, property_class, readonly=False):
+        super(TypedProperty, self).__init__()
+        self._class = property_class
+        self.name = name
+        self._attr = "_{}_{}".format(self.__class__.__name__,name)
+        self.readonly = readonly
+        
+    
+    @descriptor__get__
+    def __get__(self, obj, objtype):
+        """Property getter."""
+        return getattr(obj, self._attr)
+        
+    def __set__(self, obj, value):
+        """Property setter with type checking."""
+        if hasattr(obj, self._attr) and self.readonly:
+            raise AttributeError("{}:{} Cannot set a read-only attribute".format(obj, self.name))
+        if not isinstance(value, self._class):
+            raise TypeError("{}:{} requires type {}, got {}".format(obj, self.name, self._class, type(value)))
+        setattr(obj, self._attr, value)
+    
