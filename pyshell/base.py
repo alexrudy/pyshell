@@ -24,7 +24,8 @@ from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import os, os.path
 import abc
 from warnings import warn
-from .config import StructuredConfiguration, ConfigureAction
+from .config import StructuredConfiguration
+from .config.helpers import ConfigureAction, ConfigurationProperty
 from .util import semiabstractmethod, deprecatedmethod
 from .loggers import configure_logging, getLogger, PYSHELL_LOGGING, PYSHELL_LOGGING_STREAM, PYSHELL_LOGGING_STREAM_ALL
 from six import with_metaclass
@@ -86,7 +87,7 @@ class CLIEngine(object):
             epilog = self.epilog,
             conflict_handler = conflict_handler)
         self._home = os.environ["HOME"]
-        self._config = StructuredConfiguration()
+        self.config = StructuredConfiguration()
         self._opts = None
         self._rargs = None
         self.__help_action = None
@@ -95,7 +96,9 @@ class CLIEngine(object):
         self._hasargs = False
         self._hasvars = True
         
-        
+    
+    config = ConfigurationProperty()
+    
     @property
     def parser(self):
         """:class:`argparse.ArgumentParser` instance for this engine."""
@@ -104,11 +107,7 @@ class CLIEngine(object):
         else:
             raise AttributeError("Parser has not yet been initialized!")
         
-    @property
-    def config(self):
-        """:class:`pyshell.config.Configuration` object for this engine."""
-        return self._config
-        
+    
     @property
     def opts(self):
         """Command Line Options, as paresed, for this engine"""

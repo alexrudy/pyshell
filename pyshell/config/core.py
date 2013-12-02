@@ -7,57 +7,7 @@
 #  Copyright 2012 Alexander Rudy. All rights reserved.
 #  Version 0.6.0
 # 
-"""
-:mod:`config` — YAML-based Configuration Dictionaries
-==========================================================
 
-.. testsetup ::
-    
-    from pyshell.config import *
-
-This module provides structured, YAML based, deep dictionary configuration 
-objects. The objects have a built-in deep-update function and use deep-update 
-behavior by default. They act otherwise like dictionaries, and handle thier 
-internal operation using a storage dictionary. The objects also provide a 
-YAML configuration file reading and writing interface.
- 
-.. inheritance-diagram::
-    pyshell.config.Configuration
-    pyshell.config.StructuredConfiguration
-    :parts: 1
-    
-
-Basic Configurations: :class:`Configuration`
---------------------------------------------
-
-.. autoclass::
-    pyshell.config.Configuration
-    :members:
-
-Dotted Configurations: :class:`Configuration`
----------------------------------------------
-
-.. autoclass::
-    pyshell.config.DottedConfiguration
-    :members:
-    :inherited-members:
-
-
-Structured Configurations: :class:`StructuredConfiguration`
------------------------------------------------------------
-
-.. autoclass::
-    pyshell.config.StructuredConfiguration
-    :members:
-    :inherited-members:
-
-Argparse Action for Configurations: :class:`ConfigureAction`
-------------------------------------------------------------
-
-.. autoclass::
-    pyshell.config.ConfigureAction
-
-"""
 from __future__ import (absolute_import, unicode_literals, division,
                         print_function)
 
@@ -75,10 +25,10 @@ import six
 import argparse
 
 # Submodules from this system
-from . import util
-from . import loggers
-from .mapping import reformat, advanceddeepmerge, deepmerge, flatten, expand, MutableMappingBase
-from .yaml import PyshellLoader, PyshellDumper
+from .. import util
+from .. import loggers
+from ..mapping import reformat, advanceddeepmerge, deepmerge, flatten, expand, MutableMappingBase
+from ..yaml import PyshellLoader, PyshellDumper
 #pylint: disable=R0904
 
 __all__ = ['ConfigurationError',
@@ -97,29 +47,7 @@ class ConfigurationError(Exception):
 class DeepNestDict(collections.OrderedDict):
     """Class for deep nesting emptiness"""
     pass
-        
 
-class ConfigureAction(argparse.Action):
-    """An argument parser action for use with a configuration.
-    
-    This action applies an argparse argument to a configuration destination. The `dest`
-    keyword is used as the destination key.
-    
-    :keyword config: The configuration to be updated.
-    :keyword dest: The destination key in the configuration.
-    :keyword default: The default configuration value.
-    
-    This action class can be passed as the ``action=`` keyword in :meth:`argparse.ArgumentParser.add_argument`.
-    """
-    def __init__(self, config=None, **kwargs):
-        self.config = config
-        kwargs.setdefault('default', self.config[kwargs['dest']])
-        super(ConfigureAction, self).__init__(**kwargs)
-        
-    def __call__(self, parser, namespace, values, option_string):
-        """Parse this action. The value is applied to both the namespace and the configuration."""
-        self.config[self.dest] = values
-        setattr(namespace, self.dest, values)        
 
 class Configuration(MutableMappingBase):
     """Adds extra methods to dictionary for configuration"""
