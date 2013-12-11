@@ -21,44 +21,42 @@ import astropy.units as u
 from ..util import descriptor__get__
 
 u.du = u.dimensionless_unscaled
+UNIT_MAX_DEPTH = 4
+NON_DIMENSIONAL_FLAG = '_is_nondimensional'
+INITIAL_VALUE_FLAG = '_is_initial'
 
-
-def ensure_quantity(value, unit, isscalar=None):
-    """Ensure that a quantity exists and convert it."""
-    quantity = u.Quantity(value, unit=unit)
-    if isscalar is None:
-        return quantity
-    elif quantity.isscalar != isscalar:
-        raise ValueError("Quantity {} should{} be scalar!".format(value, "" if isscalar else " not"))
-    else:
-        return quantity
-
-def unscale_unit(old_unit):
-    """Return a unit, scale tuple"""
-    new_unit = old_unit / u.Unit(old_unit.scale)
-    return (new_unit, old_unit.scale)
-
-def unscale(quantity):
-    """Remove the scale on a quantity."""
-    old_unit = quantity.unit
-    new_unit, scale = unscale_unit(old_unit)
-    new_value = quantity.value * scale
-    return quantity.__quantity_instance__(new_value,new_unit)
+def recompose(quantity, bases, scaled=False, warn_compositons=False, max_depth=UNIT_MAX_DEPTH):
+    """Recompose a quantity in terms of the given bases.
     
-def unscaled_unit(unit, bases=None):
-    """Unscale a given unit."""
-    if bases is not None:
-        unit = unit.compose(units=bases, max_depth=4)[0]
-    new_unit, scale = unscale_unit(unit)
-    return new_unit
+    :param unit: The unit to recompose.
+    :param bases: The set of units allowed in the final result.
+    :param bool scaled: Whether to allow units with a scale or not.
+    :param bool warn_compositons: Whether to warn when there were multiple compositions found.
+    """
+    result_unit, result_scale = recompose_unit(quantity.unit, bases, scaled, warn_compositons, max_depth)
+    result = quantity.to(result_unit)
+    return result
+
+def recompose_unit(unit, bases, scaled=False, warn_compositons=False, max_depth=UNIT_MAX_DEPTH):
+    """Recompose a unit in terms of the provided bases.
     
-def recompose(quantity, bases, warn_compositons=False):
-    """Recompose a quantity in terms of the given bases."""
-    composed = quantity.unit.compose(units=bases, max_depth=4)
-    result = quantity.to(composed[0]).copy()
+    :param unit: The unit to recompose.
+    :param bases: The set of units allowed in the final result.
+    :param bool scaled: Whether to allow units with a scale or not.
+    :param bool warn_compositons: Whether to warn when there were multiple compositions found.
+    
+    """
+    composed = unit.compose(units=bases, max_depth=UNIT_MAX_DEPTH)
     if len(composed) != 1 and warn_compositons:
-        warnings.warn("Multiple compositions: {}".format(composed))
-    return unscale(result)
+        warnings.warn("Multiple compositions are possible for {!r}: {!r}".format(unit,composed))
+    result = composed[0]
+    if result.scale == 1.0:
+        return result
+    elif scaled:
+        return result
+    else:
+        unscaled = result / u.Unit(result.scale)
+        return unscaled
 
 class FrozenError(Exception):
     """An error occuring when trying to set frozen attributes."""
@@ -66,12 +64,14 @@ class FrozenError(Exception):
 
 class UnitsProperty(object):
     """A descriptor which enforces units."""
-    def __init__(self, name, unit, nonnegative=False, warn_for_unit_composition=False):
+    def __init__(self, name, unit, nonnegative=False, readonly=False, scale=False, warn_for_unit_composition=False):
         super(UnitsProperty, self).__init__()
         self.name = name
         self._unit = unit
         self._attr = '_{}_{}'.format(self.__class__.__name__, name.replace(" ", "_"))
         self._nn = nonnegative
+        self._readonly = readonly
+        self._scale = scale
         self._warncompositon = warn_for_unit_composition
         
     def bases(self, obj):
@@ -80,24 +80,26 @@ class UnitsProperty(object):
         
     def recompose(self, quantity, bases):
         """Recompose a unit into a new base set."""
-        return recompose(quantity, bases, self._warncompositon)
+        return recompose(quantity, bases, scaled=self._scale, warn_compositons=self._warncompositon)
         
-    def recomposed_unit(self, obj):
+    def unit(self, obj):
         """Get the recomposed unit."""
-        return unscaled_unit(self._unit, self.bases(obj))
+        return recompose_unit(self._unit, self.bases(obj), scaled=self._scale, warn_compositons=self._warncompositon)
         
     def __set__(self, obj, value):
         """Set this property's value"""
+        if self._readonly:
+            raise AttributeError("{} cannot set read-only attribute {}".format(obj, self.name))
         return self.set(obj, value)
         
     def set(self, obj, value):
         """Shortcut for the setter."""
-        if not np.isfinite(value).all():
+        quantity = u.Quantity(value, unit=self.unit(obj))
+        if not np.isfinite(quantity.value).all():
             raise ValueError("{} must be finite!".format(self.name))
-        if self._nn and not np.all(value >= 0.0):
+        if self._nn and not np.all(quantity.value >= 0.0):
             raise ValueError("{} must be non-negative!".format(self.name))
-        value = ensure_quantity(value, self._unit)
-        return setattr(obj, self._attr, value)
+        return setattr(obj, self._attr, quantity)
         
     @descriptor__get__
     def __get__(self, obj, objtype):
@@ -106,55 +108,51 @@ class UnitsProperty(object):
         
     def get(self, obj):
         """Shortcut get method."""
-        return self.recompose(getattr(obj, self._attr), self.bases(obj))
+        value = getattr(obj, self._attr)
+        recomposed = self.recompose(value, self.bases(obj))
+        if value.unit != recomposed.unit:
+            setattr(obj, self._attr, value)
+            return recomposed
+        return value
         
 class ComputedUnitsProperty(UnitsProperty):
     """A units property computed from source."""
-    def __init__(self, fget, warn_for_unit_composition=False):
-        super(ComputedUnitsProperty, self).__init__(fget.__name__, None, False, warn_for_unit_composition)
+    def __init__(self, fget, readonly=True, warn_for_unit_composition=False):
+        super(ComputedUnitsProperty, self).__init__(fget.__name__, None, readonly=True, scale=False,
+            warn_for_unit_composition=warn_for_unit_composition)
         self.fget = fget
         
     @descriptor__get__
     def __get__(self, obj, objtype):
-        """Getter"""
+        """Getter which calls the property function."""
         return self.recompose(self.fget(obj), self.bases(obj))
         
-    def __set__(self):
-        """Setter"""
-        raise AttributeError("Can't set a computed property.")
         
 class NonDimensionalProperty(UnitsProperty):
     """NonDimensionalProperty"""
-    def __init__(self, name, unit, nonnegative=False, warn_for_unit_composition=False):
-        super(NonDimensionalProperty, self).__init__(name, unit, nonnegative, warn_for_unit_composition)
-        
-    def nd_ensure_quantity(self, obj, quantity):
-        """Return the non-dimensionalized unit."""
-        return ensure_quantity(quantity, unscaled_unit(self._unit, self.bases(obj)))
-        
+    def __init__(self, name, unit, nonnegative=False, scale=False, warn_for_unit_composition=False):
+        super(NonDimensionalProperty, self).__init__(name, unit, nonnegative, readonly=False, scale=scale,
+            warn_for_unit_composition=warn_for_unit_composition)
+    
     def bases(self, obj):
         """Get the non-dimensional bases."""
-        if getattr(obj,'_is_nondimensional',False):
-            return getattr(obj,'_nondimensional_bases',None)
+        if getattr(obj, NON_DIMENSIONAL_FLAG, False):
+            return getattr(obj, '_nondimensional_bases', None)
         else:
             return super(NonDimensionalProperty, self).bases(obj)
-    
-    def __set__(self, obj, value):
-        """Set this property's value"""
-        if getattr(obj,'_is_nondimensional',False):
-            value = self.nd_ensure_quantity(obj, value)
-        super(NonDimensionalProperty, self).__set__(obj, value)
+        
 
 class InitialValueProperty(NonDimensionalProperty):
     """Initial Value Property"""
     
-    def __init__(self, name, unit, nonnegative=False, warn_for_unit_composition=False):
-        super(InitialValueProperty, self).__init__(name, unit, nonnegative, warn_for_unit_composition)
+    def __init__(self, name, unit, nonnegative=False, scale=False, warn_for_unit_composition=False):
+        super(InitialValueProperty, self).__init__(name, unit, nonnegative, readonly=False, scale=scale,
+            warn_for_unit_composition=warn_for_unit_composition)
         self._init = '_{}_init_{}'.format(self.__class__.__name__, name.replace(" ", "_"))
         
     def get(self, obj):
         """docstring for get"""
-        if getattr(obj, '_is_initial', False):
+        if getattr(obj, INITIAL_VALUE_FLAG, False):
             return self.initial(obj)
         else:
             return super(InitialValueProperty, self).get(obj)
@@ -200,7 +198,6 @@ class HasNonDimensonals(HasUnitsProperties):
     
     _bases = None
     _nondimensional_bases = None
-    _is_nondimensional = False
         
     def _list_attributes(self, klass):
         """Generate attributes matching a certain class."""
@@ -222,7 +219,7 @@ class HasNonDimensonals(HasUnitsProperties):
     @property
     def is_nondimensional(self):
         """A boolean determining whether the state is non-dimensional or not."""
-        return self._is_nondimensional
+        return getattr(self, NON_DIMENSIONAL_FLAG)
         
     @property
     def nondimensional_bases(self):
@@ -243,11 +240,11 @@ class HasNonDimensonals(HasUnitsProperties):
         """Place the object in a non-dimensional state."""
         if not isinstance(self._nondimensional_bases, set) and len(self._nondimensional_bases) > 0:
             raise ValueError("{} has no non-dimensional bases.".format(self))
-        self._is_nondimensional = True
+        setattr(self, NON_DIMENSIONAL_FLAG, True)
         
     def dimensionalize(self):
         """Place the object in a dimensional state."""
-        self._is_nondimensional = False
+        setattr(self, NON_DIMENSIONAL_FLAG, False)
         
     @contextlib.contextmanager
     def in_nondimensional(self):
@@ -256,10 +253,10 @@ class HasNonDimensonals(HasUnitsProperties):
         yield self
         self.dimensionalize()
         
+setattr(HasNonDimensonals, NON_DIMENSIONAL_FLAG, False)
+        
 class HasInitialValues(HasNonDimensonals):
     """Base class for something which has non-dimensional properties."""
-    
-    _is_initial = False
     
     def _list_iv_variables(self):
         """List all of the state variables in this object's dir."""
@@ -273,15 +270,15 @@ class HasInitialValues(HasNonDimensonals):
     @property
     def is_initial(self):
         """A boolean determining whether the state is non-dimensional or not."""
-        return self._is_initial
+        return getattr(self, INITIAL_VALUE_FLAG)
         
     def initals(self):
         """Place the object in the initial state."""
-        self._is_initial = True
+        setattr(self, INITIAL_VALUE_FLAG, True)
         
     def actuals(self):
         """Place the object in the actual state."""
-        self._is_initial = False
+        setattr(self, INITIAL_VALUE_FLAG, False)
         
     def freeze(self):
         """Freeze this object."""
@@ -299,3 +296,5 @@ class HasInitialValues(HasNonDimensonals):
         self.initals()
         yield self
         self.actuals()
+        
+setattr(HasInitialValues, INITIAL_VALUE_FLAG, False)
