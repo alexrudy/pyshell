@@ -28,7 +28,7 @@ class ConfigureAction(argparse.Action):
     
     This action class can be passed as the ``action=`` keyword in :meth:`argparse.ArgumentParser.add_argument`.
     """
-    def __init__(self, config=None, **kwargs):
+    def __init__(self, config, **kwargs):
         self.config = config
         if kwargs.get('dest',None) in self.config:
             kwargs.setdefault('default', self.config[kwargs['dest']])
@@ -40,10 +40,27 @@ class ConfigureAction(argparse.Action):
         setattr(namespace, self.dest, values)
         
         
+class BoundConfigureAction(ConfigureAction):
+    """A configure action which is bound."""
+    def __init__(self, config=None, **kwargs):
+        if config is not None:
+            raise ValueError("Cannot pass a configuration instance to a bound configuration action.")
+        super(BoundConfigureAction, self).__init__(config=self.config,**kwargs)
+        
+def bind_configuration_action(configuration):
+    """Return a bound configuration item."""
+    class _BoundConfigureAction(BoundConfigureAction):
+        config = configuration
+    return _BoundConfigureAction
+        
+        
 class ConfigurationProperty(TypedProperty):
     """A configuration item property."""
-    def __init__(self):
-        super(ConfigurationProperty, self).__init__("configuration", Configuration, readonly=True)
+    def __init__(self, configuration_type=Configuration):
+        if not issubclass(configuration_type, Configuration):
+            raise ValueError("{} must use a subclass of {} as the configuration type. Got {}".format(self,
+            Configuration, configuration_type))
+        super(ConfigurationProperty, self).__init__("configuration", Configuration, readonly=True, init_func=configuration_type)
 
 class ConfigurationItemProperty(object):
     """A property which accessess an underlying configuration item"""
