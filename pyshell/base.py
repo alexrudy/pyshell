@@ -25,7 +25,7 @@ import os, os.path
 import abc
 from warnings import warn
 from .config import StructuredConfiguration
-from .config.helpers import ConfigureAction, ConfigurationProperty
+from .config.helpers import bind_configuration_action, ConfigurationProperty
 from .util import semiabstractmethod, deprecatedmethod
 from .loggers import configure_logging, getLogger, PYSHELL_LOGGING, PYSHELL_LOGGING_STREAM, PYSHELL_LOGGING_STREAM_ALL
 from six import with_metaclass
@@ -281,7 +281,7 @@ class CLIEngine(object):
             action='store', metavar='file.yml', default=self.defaultcfg,
             help="Set configuration file. By default, load %(file)s and"
             " ~/%(file)s if it exists." % dict(file=self.defaultcfg))
-        self.parser.register('action', 'config', ConfigureAction)
+        self.parser.register('action', 'config', bind_configuration_action(self.config))
             
     def _add_configure_args(self,*args):
         """Add a parser command line argument for literal configuration items.
