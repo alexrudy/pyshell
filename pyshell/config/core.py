@@ -665,6 +665,8 @@ class StructuredConfiguration(DottedConfiguration):
         """
         if filename == None:
             filename = self._metadata["Files.This"]
+        if isinstance(filename, six.string_types):
+            self._saving_filename = filename
         return super(StructuredConfiguration, self).save(filename)
     
     def _load_yaml_callback(self,*documents):
@@ -674,10 +676,14 @@ class StructuredConfiguration(DottedConfiguration):
         elif len(documents) > 1:
             self._metadata.update(documents[0])
             warnings.warn("Too Many metadata documents found. Ignoring {:d} documents".format(len(documents)-1))
+        self.metadata["Files.Loaded"] = []
         
     def _save_yaml_callback(self):
         """Return the metadata in an array."""
-        return [ self.metadata.store ]
+        metadata = self.metadata.store
+        if hasattr(self, '_saving_filename'):
+            metadata["Files"]["This"] = self._saving_filename
+        return [ metadata ]
     
     def load(self, filename=None, silent=True, fname=None):
         """Load the configuration to a YAML file. If ``filename`` is 
@@ -692,6 +698,6 @@ class StructuredConfiguration(DottedConfiguration):
             filename = self._metadata["Files.This"]
         loaded = super(StructuredConfiguration, self).load(filename, silent, fname=fname)
         if loaded and self._set_on_load:
-            self._metadata["Files.Loaded"].append(self.filename)
+            self.metadata["Files.Loaded"].append(self.filename)
         
 
