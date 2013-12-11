@@ -223,4 +223,9 @@ class SCController(CLIEngine):
         self.subcommand.configure()
         self.subcommand.after_configure()
         
+class SCFEngine(CLIEngine):
+    """A subcontroller engine which uses named functions as the targets for subcommands."""
+    def __init__(self, arg):
+        super(SCFEngine, self).__init__()
+        self.arg = arg
         
