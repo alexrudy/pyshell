@@ -407,23 +407,31 @@ def descriptor__get__(f):
     
 class TypedProperty(object):
     """A typed property object."""
-    def __init__(self, name, property_class, readonly=False):
+    def __init__(self, name, property_class, readonly=False, init_func=None):
         super(TypedProperty, self).__init__()
         self._class = property_class
         self.name = name
         self._attr = "_{}_{}".format(self.__class__.__name__,name)
         self.readonly = readonly
+        self._init_func = init_func
+        if not readonly and init_func is not None:
+            raise ValueError("{} cannot use an intialization function when not a read-only property!".format(self.name))
         
     
     @descriptor__get__
     def __get__(self, obj, objtype):
         """Property getter."""
+        if (self.readonly and self._init_func is not None):
+            if not hasattr(obj, self._attr):
+                setattr(obj, self._attr, self._init_func())
         return getattr(obj, self._attr)
         
     def __set__(self, obj, value):
         """Property setter with type checking."""
+        if value is None and not isinstance(value, self._class):
+            return
         if hasattr(obj, self._attr) and self.readonly:
-            raise AttributeError("{}:{} Cannot set a read-only attribute".format(obj, self.name))
+            raise AttributeError("{}:{} cannot set a read-only attribute".format(obj, self.name))
         if not isinstance(value, self._class):
             raise TypeError("{}:{} requires type {}, got {}".format(obj, self.name, self._class, type(value)))
         setattr(obj, self._attr, value)
