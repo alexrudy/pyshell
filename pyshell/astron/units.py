@@ -21,7 +21,7 @@ import astropy.units as u
 from ..util import descriptor__get__
 
 u.du = u.dimensionless_unscaled
-UNIT_MAX_DEPTH = 4
+UNIT_MAX_DEPTH = 3
 NON_DIMENSIONAL_FLAG = '_is_nondimensional'
 INITIAL_VALUE_FLAG = '_is_initial'
 
@@ -33,7 +33,7 @@ def recompose(quantity, bases, scaled=False, warn_compositons=False, max_depth=U
     :param bool scaled: Whether to allow units with a scale or not.
     :param bool warn_compositons: Whether to warn when there were multiple compositions found.
     """
-    result_unit, result_scale = recompose_unit(quantity.unit, bases, scaled, warn_compositons, max_depth)
+    result_unit = recompose_unit(quantity.unit, bases, scaled, warn_compositons, max_depth)
     result = quantity.to(result_unit)
     return result
 
@@ -64,9 +64,10 @@ class FrozenError(Exception):
 
 class UnitsProperty(object):
     """A descriptor which enforces units."""
-    def __init__(self, name, unit, nonnegative=False, readonly=False, scale=False, warn_for_unit_composition=False):
+    def __init__(self, name, unit, latex=None, nonnegative=False, readonly=False, scale=False, warn_for_unit_composition=False):
         super(UnitsProperty, self).__init__()
         self.name = name
+        self.latex = name if latex is None else latex
         self._unit = unit
         self._attr = '_{}_{}'.format(self.__class__.__name__, name.replace(" ", "_"))
         self._nn = nonnegative
@@ -131,7 +132,7 @@ class ComputedUnitsProperty(UnitsProperty):
 class NonDimensionalProperty(UnitsProperty):
     """NonDimensionalProperty"""
     def __init__(self, name, unit, nonnegative=False, scale=False, warn_for_unit_composition=False):
-        super(NonDimensionalProperty, self).__init__(name, unit, nonnegative, readonly=False, scale=scale,
+        super(NonDimensionalProperty, self).__init__(name, unit, nonnegative=nonnegative, readonly=False, scale=scale,
             warn_for_unit_composition=warn_for_unit_composition)
     
     def bases(self, obj):
@@ -146,7 +147,7 @@ class InitialValueProperty(NonDimensionalProperty):
     """Initial Value Property"""
     
     def __init__(self, name, unit, nonnegative=False, scale=False, warn_for_unit_composition=False):
-        super(InitialValueProperty, self).__init__(name, unit, nonnegative, readonly=False, scale=scale,
+        super(InitialValueProperty, self).__init__(name, unit, nonnegative=nonnegative, scale=scale,
             warn_for_unit_composition=warn_for_unit_composition)
         self._init = '_{}_init_{}'.format(self.__class__.__name__, name.replace(" ", "_"))
         
