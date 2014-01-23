@@ -76,7 +76,7 @@ class Configuration(MutableMappingBase):
     def dn(self, new_type):
         """Deep nesting type setter.""" #pylint: disable=C0103
         if not issubclass(new_type, collections.MutableMapping):
-            raise ValueError("Deep nesting type must be an instance of {:s}, got {:s}".format(
+            raise TypeError("Deep nesting type must be an instance of {:s}, got {:s}".format(
                 collections.MutableMapping, new_type
             ))
         self._dn = new_type

@@ -64,18 +64,24 @@ class ConfigurationProperty(TypedProperty):
 
 class ConfigurationItemProperty(object):
     """A property which accessess an underlying configuration item"""
-    def __init__(self, configvalue, configattr='config'):
+    def __init__(self, configvalue, configattr='config', readonly=False, postget=lambda x : x, preset=lambda x : x):
         super(ConfigurationItemProperty, self).__init__()
         self.configvalue = configvalue
         self.configattr = configattr
+        self.readonly = readonly
+        self.postget = postget
+        self.preset = presets
         
     @descriptor__get__
     def __get__(self, obj, objtype):
         """Descriptor get."""
         config = getattr(obj, self.configattr)
-        return config[self.configvalue]
+        return self.postget(config[self.configvalue])
         
     def __set__(self, obj, value):
         """Descriptor set."""
-        raise AttributeError("Cannot set a read-only configuration attribute.")
+        if self.readonly:
+            raise AttributeError("Cannot set a read-only configuration attribute.")
+        else:
+            config[self.configvalue] = self.preset(value)
         

@@ -26,7 +26,7 @@ import abc
 from warnings import warn
 from .config import StructuredConfiguration
 from .config.helpers import bind_configuration_action, ConfigurationProperty
-from .util import semiabstractmethod, deprecatedmethod
+from .util import semiabstractmethod, deprecatedmethod, ipydbAction
 from .loggers import configure_logging, getLogger, PYSHELL_LOGGING, PYSHELL_LOGGING_STREAM, PYSHELL_LOGGING_STREAM_ALL
 from six import with_metaclass
 import six
@@ -124,6 +124,8 @@ class CLIEngine(object):
         if self.defaultcfg:
             self._add_configfile_args()
             self._add_configure_args()
+        if self.debug:
+            self._add_debug_args()
         
     
     def arguments(self, *args):
@@ -297,6 +299,12 @@ class CLIEngine(object):
             action='append', metavar='Item.Key=value',default=[],
             help="Set configuration value. The value is parsed as a"
             " python literal.")
+    
+    def _add_debug_args(self, *args):
+        """Add debugging arguments."""
+        if len(args) == 0:
+            args = ('--ipdb',)
+        self.parser.add_argument(*args, dest='debug', action=ipydbAction, help="enable the ipython debugger.")
     
     def configure_logging(self):
         """Configure the logging system using the configuration underneath 

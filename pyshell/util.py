@@ -27,6 +27,7 @@ import functools
 import inspect
 import six
 import collections
+import argparse
 
 try:
     input = raw_input
@@ -37,8 +38,14 @@ with warnings.catch_warnings():
     warnings.simplefilter('ignore')
     import pkg_resources # pylint: disable = unused-import
 
+_ipydb_active = False
+
 def ipydb():
     """Try to use the iPython debugger on program failures."""
+    global _ipydb_active
+    if _ipydb_active:
+        return
+    
     try:
         from IPython.core import ultratb
     except ImportError:
@@ -48,6 +55,16 @@ def ipydb():
         _file = getattr(sys.modules['__main__'], '__file__', '')
         sys.excepthook = ultratb.ColorTB(color_scheme='Linux', call_pdb=1)
         setattr(sys.modules['__main__'], '__file__', _file)
+        __ipydb_active = True
+        
+class ipydbAction(argparse._StoreTrueAction):
+    """An action which triggers the ipython debugger."""
+    
+    def __call__(self, parser, namespace, values, option_string):
+        """Parse this action. The value is applied to both the namespace and the configuration."""
+        ipydb()
+        setattr(namespace, self.dest, values)
+        
 
 def askip(pylab=False, enter="Launch iPython?", exit="Continuing...", default="no"):
     """Ask for ipython, returning a callable to start the shell, or do nothing.
@@ -169,13 +186,14 @@ def warn_exists(path, name="path", exists=True):
             exist=" not" if exists else ""), RuntimeWarning)
             
 def remove(path, warn=False, name='path'):
-    """docstring for remove"""
-    if os.path.exists(path):
+    """A silent remove."""
+    try:
         os.remove(path)
-    elif warn:
-        warnings.warn("{name} '{path}' does not exist!".format(
-            name=name.capitalize(), path=path
-        ))
+    except OSError:
+        if warn:
+            warnings.warn("{name} '{path}' does not exist!".format(
+                name=name.capitalize(), path=path
+            ))
     
 def is_remote_path(path):
     """Path looks like an SSH or other URL compatible path?"""
@@ -256,6 +274,31 @@ def deprecatedmethod(message=None, version=None, replacement=None):
         return decorator(message)
     return decorator
 
+def _has_readline():
+    """Check for the readline module."""
+    try:
+        import readline
+    except ImportError:
+        return False
+    else:
+        return True
+
+def readline_input(prompt, default="", use_readline=True):
+    """Readline-based input with a default value."""
+    if not _has_readline() and use_readline:
+        warnings.warn("The module 'readline' is required for default-value string input.")
+        use_readline = False
+    
+    if use_readline:
+        import readline
+        readline.set_startup_hook(lambda: readline.insert_text(prefill))
+    try:
+        result = input(prompt)
+    finally:
+        if use_readline:
+            readline.set_startup_hook()
+    return result
+
 # Borrowed from:
 # http://stackoverflow.com/questions/3041986/python-command-line-yes-no-input  
 def query_yes_no(question, default="yes"):
@@ -290,28 +333,41 @@ def query_yes_no(question, default="yes"):
             sys.stdout.write("Please respond with 'yes' or 'no' "
                              "(or 'y' or 'n').\n")
                              
-def query_string(question, default=None, validate=None, output=sys.stdout):
+def query_string(question, default=None, validate=None, process=None, typed=None, output=sys.stdout):
     """Ask a question via raw_input, and return the answer as a string.
     
     :param question: A string presented to the user
     :param default: The answer if the user hits <Enter> with no input.
     :param validate: A function to validate responses. To validate that the answer is a specific type, use :func:`is_type_factory`.
+    :param process: Process output from the query before returning.
+    :param typed: If a type, uses :func:`is_type_factory` and ensures the result is returned as the correct type.
     :param output: The output stream.
     :return: A string with the user's answer or the default if no answer.
     
     """
     
+    if typed is not None:
+        if validate is not None or process is not None:
+            warnings.warn("[query_string] Ignoring 'typed' keyword because 'validate' or 'process' is set.")
+        else:
+            validate = is_type_factory(typed)
+            process = typed
+    
     if default is None:
         prompt = ": "
+    elif _has_readline():
+        prompt = ":"
     else:
         prompt = " ({:s}): ".format(default)
     
     
     while True:
-        answer = input(question + prompt)
+        answer = readline_input(question + prompt, default=default, use_readline=_has_readline())
         if default is not None and answer == '':
             answer = default
         if validate is None or validate(answer):
+            if callable(process):
+                answer = process(answer)
             return answer
         else:
             if hasattr(validate, '__hlp__'):
@@ -405,34 +461,54 @@ def descriptor__get__(f):
     
     return get
     
+class ResetTypedProperty(object):
+    """A symbol used to reset a typed property."""
+    pass
+        
+    
 class TypedProperty(object):
     """A typed property object."""
-    def __init__(self, name, property_class, readonly=False, init_func=None):
+    def __init__(self, name, property_class, readonly=False, init_func=None, coerce=False, allow_none=False, init_none=False):
         super(TypedProperty, self).__init__()
         self._class = property_class
         self.name = name
         self._attr = "_{}_{}".format(self.__class__.__name__,name)
         self.readonly = readonly
-        self._init_func = init_func
-        if not readonly and init_func is not None:
+        self.coerce = coerce
+        self.allow_none = allow_none
+        if init_none and init_func is None:
+            init_func = lambda : None
+        elif not readonly and init_func is not None:
             raise ValueError("{} cannot use an intialization function when not a read-only property!".format(self.name))
+        self._init_func = init_func
         
     
     @descriptor__get__
     def __get__(self, obj, objtype):
         """Property getter."""
-        if (self.readonly and self._init_func is not None):
-            if not hasattr(obj, self._attr):
-                setattr(obj, self._attr, self._init_func())
+        if (self._init_func is not None) and not hasattr(obj, self._attr):
+            setattr(obj, self._attr, self._init_func())
         return getattr(obj, self._attr)
         
     def __set__(self, obj, value):
         """Property setter with type checking."""
-        if value is None and not isinstance(value, self._class):
+        if value is None and not isinstance(value, self._class) and not self.allow_none:
+            return
+        if value is ResetTypedProperty:
+            if hasattr(obj, self._attr):
+                delattr(obj, self._attr)
             return
         if hasattr(obj, self._attr) and self.readonly:
-            raise AttributeError("{}:{} cannot set a read-only attribute".format(obj, self.name))
+            raise AttributeError("{}.{} can't set a read-only attribute".format(obj, self.name))
         if not isinstance(value, self._class):
-            raise TypeError("{}:{} requires type {}, got {}".format(obj, self.name, self._class, type(value)))
+            if self.coerce:
+                try:
+                    value = self._class(value)
+                except TypeError as e:
+                    raise TypeError("{}.{} must be able to create type {}, got {}, exception {}".format(
+                        type(obj), self.name, self._class, type(value), e.msg
+                    ))
+            else:
+                raise TypeError("{}.{} requires type {}, got {}".format(type(obj), self.name, self._class, type(value)))
         setattr(obj, self._attr, value)
     
