@@ -176,6 +176,13 @@ class InitialValueProperty(NonDimensionalProperty):
 class HasUnitsProperties(object):
     """docstring for HasUnitsProperties"""
     
+    def _list_attributes(self, klass):
+        """Generate attributes matching a certain class."""
+        for element in dir(type(self)):
+            attr = getattr(type(self), element)
+            if isinstance(attr, klass):
+                yield element
+    
     def _get_attr_by_name(self, name):
         """Get an attribute by its full name."""
         for element in dir(type(self)):
@@ -193,6 +200,10 @@ class HasUnitsProperties(object):
             attr = getattr(type(self), attr)
         return attr.recomposed_unit(self)
         
+    def list_units_properties(self):
+        """List all of the unit properties"""
+        return self._list_attributes(UnitsProperty)
+        
         
 class HasNonDimensonals(HasUnitsProperties):
     """A bass class for things which have non-dimensional variables."""
@@ -200,12 +211,6 @@ class HasNonDimensonals(HasUnitsProperties):
     _bases = None
     _nondimensional_bases = None
         
-    def _list_attributes(self, klass):
-        """Generate attributes matching a certain class."""
-        for element in dir(type(self)):
-            attr = getattr(type(self), element)
-            if isinstance(attr, klass):
-                yield element
         
     def _list_nd_variables(self):
         """List all of the state variables in this object's dir."""
