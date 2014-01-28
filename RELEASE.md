@@ -45,3 +45,9 @@
 **0.5.0**
 - `BumpVersion`
 - Improvements to `BackUp` script
+
+**0.6.0**
+- Descriptors everywhere!
+- `yaml` subpackage
+- `astron` subpackage
+- `config` subpackage with descriptors and argparse actions
