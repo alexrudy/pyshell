@@ -16,7 +16,11 @@ import abc
 import warnings
 import contextlib
 from collections import OrderedDict
-import astropy.units as u
+
+try:
+    import astropy.units as u
+except ImportError:
+    raise ImportError("This module requires the 'astropy' module to function properly.")
 
 from ..util import descriptor__get__
 
