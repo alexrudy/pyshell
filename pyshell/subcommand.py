@@ -95,9 +95,9 @@ class SCEngine(CLIEngine):
         
     def __superconfig__(self, config, opts):
         """Configure this subcommand."""
-        self._config = config
+        setattr(self, type(self).config._attr, config)
         if self.defaultcfg:
-            self.config.configure(module=self.module,defaultcfg=self.defaultcfg,cfg=self.defaultcfg)
+            self.config.configure(module=self.__module__, defaultcfg=self.defaultcfg, cfg=self.defaultcfg)
         self._opts = opts
         self._add_help()
         
@@ -204,11 +204,11 @@ class SCController(CLIEngine):
     
     def parse(self):
         """Parse command line args"""
-        if len(self._subcommand) and hasattr(self._opts,'mode'):
+        if len(self._subcommand) and hasattr(self.opts,'mode'):
             # This code is present because parse_known_args() doesn't
             # play well with sub-parsers. If the sub-parser is triggered,
             # it won't get parsed again.
-            self._rargs.insert(0,self._opts.mode)
+            self._rargs.insert(0,self.opts.mode)
             delattr(self._opts,'mode')
         self._opts = self.parser.parse_args(self._rargs, self._opts)
         self.configure_logging()
@@ -218,9 +218,14 @@ class SCController(CLIEngine):
     def configure(self):
         """Configure the package creator"""
         super(SCController, self).configure()
-        self.subcommand.__superconfig__(self._config,self._opts)
+        self.subcommand.__superconfig__(self.config,self._opts)
         self.subcommand.before_configure()
         self.subcommand.configure()
         self.subcommand.after_configure()
         
+class SCFEngine(CLIEngine):
+    """A subcontroller engine which uses named functions as the targets for subcommands."""
+    def __init__(self, arg):
+        super(SCFEngine, self).__init__()
+        self.arg = arg
         

@@ -24,8 +24,9 @@ from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import os, os.path
 import abc
 from warnings import warn
-from .config import StructuredConfiguration, ConfigureAction
-from .util import semiabstractmethod, deprecatedmethod
+from .config import StructuredConfiguration
+from .config.helpers import bind_configuration_action, ConfigurationProperty
+from .util import semiabstractmethod, deprecatedmethod, ipydbAction
 from .loggers import configure_logging, getLogger, PYSHELL_LOGGING, PYSHELL_LOGGING_STREAM, PYSHELL_LOGGING_STREAM_ALL
 from six import with_metaclass
 import six
@@ -86,7 +87,7 @@ class CLIEngine(object):
             epilog = self.epilog,
             conflict_handler = conflict_handler)
         self._home = os.environ["HOME"]
-        self._config = StructuredConfiguration()
+        self.config = StructuredConfiguration()
         self._opts = None
         self._rargs = None
         self.__help_action = None
@@ -95,7 +96,9 @@ class CLIEngine(object):
         self._hasargs = False
         self._hasvars = True
         
-        
+    
+    config = ConfigurationProperty()
+    
     @property
     def parser(self):
         """:class:`argparse.ArgumentParser` instance for this engine."""
@@ -104,11 +107,7 @@ class CLIEngine(object):
         else:
             raise AttributeError("Parser has not yet been initialized!")
         
-    @property
-    def config(self):
-        """:class:`pyshell.config.Configuration` object for this engine."""
-        return self._config
-        
+    
     @property
     def opts(self):
         """Command Line Options, as paresed, for this engine"""
@@ -125,6 +124,8 @@ class CLIEngine(object):
         if self.defaultcfg:
             self._add_configfile_args()
             self._add_configure_args()
+        if self.debug:
+            self._add_debug_args()
         
     
     def arguments(self, *args):
@@ -282,7 +283,7 @@ class CLIEngine(object):
             action='store', metavar='file.yml', default=self.defaultcfg,
             help="Set configuration file. By default, load %(file)s and"
             " ~/%(file)s if it exists." % dict(file=self.defaultcfg))
-        self.parser.register('action', 'config', ConfigureAction)
+        self.parser.register('action', 'config', bind_configuration_action(self.config))
             
     def _add_configure_args(self,*args):
         """Add a parser command line argument for literal configuration items.
@@ -298,6 +299,12 @@ class CLIEngine(object):
             action='append', metavar='Item.Key=value',default=[],
             help="Set configuration value. The value is parsed as a"
             " python literal.")
+    
+    def _add_debug_args(self, *args):
+        """Add debugging arguments."""
+        if len(args) == 0:
+            args = ('--ipdb',)
+        self.parser.add_argument(*args, dest='debug', action=ipydbAction, help="enable the ipython debugger.")
     
     def configure_logging(self):
         """Configure the logging system using the configuration underneath 

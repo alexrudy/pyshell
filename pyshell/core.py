@@ -20,7 +20,7 @@ from __future__ import (absolute_import, unicode_literals, division,
 
 import time
 from collections import OrderedDict
-from .config import MutableMappingBase
+from .mapping import MutableMappingBase
 
 __all__ = ['Typedkwargs','State','Stateful','Struct','OneToOneMapping']
 

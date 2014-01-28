@@ -351,7 +351,7 @@ class PyshellLoader(MappingYAMLLoader, UnicodeYAMLLoader, yaml.SafeLoader):
 class PyshellDumper(ClassMappingYAMLDumper, UnicodeYAMLDumper, yaml.SafeDumper):
     """A |SafeDumper| which uses unicode by default and |odict|."""
     CUSTOM_CLASSMAPPING = {}
-    CUSTOM_SUBCLASSMAPPING = { dict: dict }
+    CUSTOM_SUBCLASSMAPPING = { dict: dict, float:float, int:int }
 
 # OrderedDict Dumpers
 #####################

@@ -268,16 +268,19 @@ class FallbackDictionary(object):
     def __getitem__(self, key):
         """Dictionary getter"""
         if key not in self:
-            self.build_key(key)
+            try:
+                self.build_key(key)
+            except NotImplementedError as e:
+                pass
         return super(FallbackDictionary, self).__getitem__(key)
         
     @abc.abstractmethod
     def build_key(self, key):
         """A custom method to build missing keys for this dictionary."""
-        raise KeyError("Fallback undefined!")
+        raise NotImplementedError
         
     
-_RECLASS = re.compile("")
+_RECLASS = type(re.compile(""))
 
 class RegexDictionary(object):
     """A dictionary which allows indexing with regular expression objects."""
@@ -288,25 +291,25 @@ class RegexDictionary(object):
     
     def _matching_keys(self, rexp):
         """Return the keys which match a given regular expression."""
-        return tuple([ key for key in self.keys() if rexp.search(key) is not None ])
+        return ( key for key in self.keys() if rexp.search(key) is not None )
     
     def __getitem__(self, key):
         """Get an item."""
-        if isinstance(key, type(_RECLASS)):
+        if isinstance(key, _RECLASS):
             return tuple([ super(RegexDictionary, self).__getitem__(rkey) for rkey in self._matching_keys(key) ])
         else:
             return super(RegexDictionary, self).__getitem__(key)
         
     def __setitem__(self, key, value):
         """Set an item."""
-        if isinstance(key, type(_RECLASS)):
-            raise TypeError("Key cannot be a instance of {}".format(type(_RECLASS)))
+        if isinstance(key, _RECLASS):
+            raise TypeError("Key cannot be a instance of {}".format(_RECLASS))
         else:
             super(RegexDictionary, self).__setitem__(key, value)
         
     def __delitem__(self, key):
         """Delete an item, or a regular expression match of items."""
-        if isinstance(key, type(_RECLASS)):
+        if isinstance(key, _RECLASS):
             for rkey in self._matching_keys(key):
                 super(RegexDictionary, self).__delitem__(rkey)
         else:

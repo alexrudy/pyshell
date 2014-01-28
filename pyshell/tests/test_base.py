@@ -76,25 +76,25 @@ class test_base_cliengine(object):
     def test_argparse(self):
         """.parser arguments"""
         IN = self.CLASS()
-        nt.eq_(dests_from_argparse(IN.parser),[])
+        nt.eq_(set(dests_from_argparse(IN.parser)),set([]))
         IN.init()
-        nt.eq_(dests_from_argparse(IN.parser),['config','configure'])
+        nt.eq_(set(dests_from_argparse(IN.parser)),set(['config','configure','debug']))
         IN._add_help()
-        nt.eq_(dests_from_argparse(IN.parser),['config','configure','help'])
+        nt.eq_(set(dests_from_argparse(IN.parser)),set(['config','configure','debug','help']))
         IN._remove_help()
-        nt.eq_(dests_from_argparse(IN.parser),['config','configure'])
+        nt.eq_(set(dests_from_argparse(IN.parser)),set(['config','configure','debug']))
         
     def test_init(self):
         """.init()"""
         IN = self.CLASS()
-        nt.eq_(dests_from_argparse(IN.parser),[])
+        nt.eq_(set(dests_from_argparse(IN.parser)),set([]))
         IN.init()
-        nt.eq_(dests_from_argparse(IN.parser),['config','configure'])
+        nt.eq_(set(dests_from_argparse(IN.parser)),set(['config','configure','debug']))
         self.CLASS.defaultcfg = False
         IN = self.CLASS()
-        nt.eq_(dests_from_argparse(IN.parser),[])
+        nt.eq_(set(dests_from_argparse(IN.parser)),set([]))
         IN.init()
-        nt.eq_(dests_from_argparse(IN.parser),[])
+        nt.eq_(set(dests_from_argparse(IN.parser)),set(['debug']))
         
         
     def test_arguments(self):
@@ -104,7 +104,7 @@ class test_base_cliengine(object):
         IN.arguments(shlex.split("--config file.yml --other value"))
         nt.eq_(IN._rargs,["--other","value"])
         nt.eq_(IN.opts.config,"file.yml")
-        nt.eq_(vars(IN.opts),{'config':'file.yml','configure':[]})
+        nt.eq_(vars(IN.opts),{'config':'file.yml','configure':[],'debug':False})
         
     def test_configure(self):
         """.configure()"""
