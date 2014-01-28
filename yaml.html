@@ -1,0 +1,370 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pyshell.yaml – Extensions to PyYAML &mdash; PyShell 0.6.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.6.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PyShell 0.6.0 documentation" href="index.html" />
+    <link rel="next" title="loggers - Logging made Easy" href="loggers.html" />
+    <link rel="prev" title="mapping – Mutable Mapping Tools" href="mapping.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="loggers.html" title="loggers - Logging made Easy"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="mapping.html" title="mapping – Mutable Mapping Tools"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">PyShell 0.6.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="pyshell-yaml-extensions-to-pyyaml">
+<h1><a class="reference internal" href="#module-pyshell.yaml" title="pyshell.yaml"><tt class="xref py py-mod docutils literal"><span class="pre">pyshell.yaml</span></tt></a> – Extensions to PyYAML<a class="headerlink" href="#pyshell-yaml-extensions-to-pyyaml" title="Permalink to this headline">¶</a></h1>
+<p>This module is designed to provide a few features to <a class="reference external" href="http://pyyaml.org">PyYAML</a>, the YAML parser in python.</p>
+<ul class="simple">
+<li>For Python 2.7, enable unicode keys and literals by default in YAML loaders.</li>
+<li>Allow custom mapping types to be used for YAML mappings.</li>
+<li>Allow OrderedDictionaries to be used for dumping and loading, preserving key ordering.</li>
+</ul>
+<p>Users can import the custom loaders and dumpers described in <a class="reference internal" href="#loaders"><em>yaml compatible Loaders</em></a> and <a class="reference internal" href="#dumpers"><em>yaml compatible Dumpers</em></a>
+to load and dump arbitrary YAML files:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">MyLoader</span><span class="p">)</span>
+<span class="n">yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">Dumper</span><span class="o">=</span><span class="n">MyDumper</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If you are an end user, and just want a customized loader or dumper, see <a class="reference internal" href="#loaders"><em>yaml compatible Loaders</em></a> and <a class="reference internal" href="#dumpers"><em>yaml compatible Dumpers</em></a>. If you
+want to write ordered YAML files in pure unicode, use <a class="reference internal" href="#pyshell.yaml.PyshellLoader" title="pyshell.yaml.PyshellLoader"><tt class="xref py py-class docutils literal"><span class="pre">PyshellLoader</span></tt></a> and <a class="reference internal" href="#pyshell.yaml.PyshellDumper" title="pyshell.yaml.PyshellDumper"><tt class="xref py py-class docutils literal"><span class="pre">PyshellDumper</span></tt></a> respectively.</p>
+<p>For developers, there are two interfaces to this module, a class-inheritance based Mixin interface, and a functional
+interface. The <a class="reference internal" href="#mixin"><em>Mixin Interface</em></a> uses custom class mixins to create new loaders which have the desired behavior.
+Using Mixins to create custom loaders and dumpers has the advantage that it does not modify the internal PyYAML
+behavior, so other libraries and classes which might use <tt class="xref py py-mod docutils literal"><span class="pre">yaml</span></tt> won&#8217;t be affected by any applied changes.
+The <a class="reference internal" href="#functions"><em>Function Interface</em></a> does modify the behaviors of any <tt class="xref py py-mod docutils literal"><span class="pre">yaml</span></tt> laoders and dumpers it acts upon, and
+by default, it modifies the <tt class="xref py py-mod docutils literal"><span class="pre">yaml</span></tt> included loaders and dumpers. The advantage is that you can modify the
+default dumpers and loaders once and then forget about it, the disadvantage is that those changes might propagate
+to other modules which use <tt class="xref py py-mod docutils literal"><span class="pre">yaml</span></tt>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Since this module changes the parsing and dumping behavior of PyYAML, it is not
+compatible with the libyaml implementations of the Parser.</p>
+</div>
+<span class="target" id="module-pyshell.yaml"></span><div class="section" id="yaml-compatible-loaders">
+<span id="loaders"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">yaml</span></tt> compatible Loaders<a class="headerlink" href="#yaml-compatible-loaders" title="Permalink to this headline">¶</a></h2>
+<p>The loader interface provides <tt class="xref py py-class docutils literal"><span class="pre">yaml.Loader</span></tt> objects which can be used directly:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">UnicodeLoader</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>These loaders use the mixin interface described in <a class="reference internal" href="#mixin"><em>Mixin Interface</em></a>. Loader objects implement the entirety of
+the YAML parsing engine, so customization of any of the YAML base classes can be done via loaders.</p>
+<dl class="class">
+<dt id="pyshell.yaml.OrderedDictLoader">
+<em class="property">class </em><tt class="descclassname">pyshell.yaml.</tt><tt class="descname">OrderedDictLoader</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/pyshell/yaml.html#OrderedDictLoader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.yaml.OrderedDictLoader" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <tt class="xref py py-class docutils literal"><span class="pre">yaml.Loader</span></tt> which uses <a class="reference external" href="http://docs.python.org/2/library/collections.html#collections.OrderedDict" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">OrderedDict</span></tt></a> instead of regular dictionaries.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyshell.yaml.OrderedDictSafeLoader">
+<em class="property">class </em><tt class="descclassname">pyshell.yaml.</tt><tt class="descname">OrderedDictSafeLoader</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/pyshell/yaml.html#OrderedDictSafeLoader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.yaml.OrderedDictSafeLoader" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <tt class="xref py py-class docutils literal"><span class="pre">yaml.SafeLodaer</span></tt> which uses <a class="reference external" href="http://docs.python.org/2/library/collections.html#collections.OrderedDict" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">OrderedDict</span></tt></a> instead of regular dictionaries.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyshell.yaml.UnicodeLoader">
+<em class="property">class </em><tt class="descclassname">pyshell.yaml.</tt><tt class="descname">UnicodeLoader</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/pyshell/yaml.html#UnicodeLoader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.yaml.UnicodeLoader" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <tt class="xref py py-class docutils literal"><span class="pre">yaml.Loader</span></tt> which uses unicode for all keys and strings.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyshell.yaml.UnicodeSafeLoader">
+<em class="property">class </em><tt class="descclassname">pyshell.yaml.</tt><tt class="descname">UnicodeSafeLoader</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/pyshell/yaml.html#UnicodeSafeLoader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.yaml.UnicodeSafeLoader" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <tt class="xref py py-class docutils literal"><span class="pre">yaml.SafeLodaer</span></tt> which uses unicode for all keys and strings.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyshell.yaml.PyshellLoader">
+<em class="property">class </em><tt class="descclassname">pyshell.yaml.</tt><tt class="descname">PyshellLoader</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/pyshell/yaml.html#PyshellLoader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.yaml.PyshellLoader" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <tt class="xref py py-class docutils literal"><span class="pre">yaml.Loader</span></tt> which uses unicode by default and <a class="reference external" href="http://docs.python.org/2/library/collections.html#collections.OrderedDict" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">OrderedDict</span></tt></a>.</p>
+</dd></dl>
+
+<p class="graphviz">
+<img src="_images/inheritance-599976846027a3db76ba5cfc9bd85b4938894cae.png" alt="Inheritance diagram of OrderedDictLoader, OrderedDictSafeLoader, UnicodeLoader, UnicodeSafeLoader, PyshellLoader" usemap="#inheritance5d47f8f1d5" class="inheritance"/>
+<map id="inheritance5d47f8f1d5" name="inheritance5d47f8f1d5">
+<area shape="rect" id="node15" href="#pyshell.yaml.OrderedDictSafeLoader" title="A |SafeLoader| which uses |odict| instead of regular dictionaries." alt="" coords="625,78,764,93"/>
+<area shape="rect" id="node17" href="#pyshell.yaml.UnicodeSafeLoader" title="A |SafeLoader| which uses unicode for all keys and strings." alt="" coords="632,137,758,152"/>
+<area shape="rect" id="node18" href="#pyshell.yaml.PyshellLoader" title="A |Loader| which uses unicode by default and |odict|." alt="" coords="641,107,749,122"/>
+<area shape="rect" id="node14" href="#pyshell.yaml.OrderedDictLoader" title="A |Loader| which uses |odict| instead of regular dictionaries." alt="" coords="633,19,756,34"/>
+<area shape="rect" id="node16" href="#pyshell.yaml.UnicodeLoader" title="A |Loader| which uses unicode for all keys and strings." alt="" coords="639,48,750,63"/>
+<area shape="rect" id="node12" href="#pyshell.yaml.UnicodeYAMLLoader" title="A YAML loader that loads unicode values everywhere." alt="" coords="463,107,595,122"/>
+<area shape="rect" id="node13" href="#pyshell.yaml.MappingYAMLLoader" title="A YAML loader that loads mappings into ordered dictionaries." alt="" coords="462,78,596,93"/>
+</map>
+</p>
+</div>
+<div class="section" id="yaml-compatible-dumpers">
+<span id="dumpers"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">yaml</span></tt> compatible Dumpers<a class="headerlink" href="#yaml-compatible-dumpers" title="Permalink to this headline">¶</a></h2>
+<p>The dumper interface provides <tt class="xref py py-class docutils literal"><span class="pre">yaml.Dumper</span></tt> objects which can be used directly:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">stream</span><span class="p">,</span> <span class="n">Dumper</span><span class="o">=</span><span class="n">UnicodeLoader</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>These dumpers use the mixin interface described in <a class="reference internal" href="#mixin"><em>Mixin Interface</em></a>. Dumper objects implement the entirety of
+the YAML parsing engine, so customization of any of the YAML base classes can be done via dumpers.</p>
+<dl class="class">
+<dt id="pyshell.yaml.OrderedDictDumper">
+<em class="property">class </em><tt class="descclassname">pyshell.yaml.</tt><tt class="descname">OrderedDictDumper</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/pyshell/yaml.html#OrderedDictDumper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.yaml.OrderedDictDumper" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <tt class="xref py py-class docutils literal"><span class="pre">yaml.Dumper</span></tt> which dumps <a class="reference external" href="http://docs.python.org/2/library/collections.html#collections.OrderedDict" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">OrderedDict</span></tt></a> as a regular <a class="reference external" href="http://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyshell.yaml.OrderedDictSafeDumper">
+<em class="property">class </em><tt class="descclassname">pyshell.yaml.</tt><tt class="descname">OrderedDictSafeDumper</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/pyshell/yaml.html#OrderedDictSafeDumper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.yaml.OrderedDictSafeDumper" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <tt class="xref py py-class docutils literal"><span class="pre">yaml.SafeDumper</span></tt> which dumps <a class="reference external" href="http://docs.python.org/2/library/collections.html#collections.OrderedDict" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">OrderedDict</span></tt></a> as a regular <a class="reference external" href="http://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyshell.yaml.UnicodeDumper">
+<em class="property">class </em><tt class="descclassname">pyshell.yaml.</tt><tt class="descname">UnicodeDumper</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/pyshell/yaml.html#UnicodeDumper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.yaml.UnicodeDumper" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <tt class="xref py py-class docutils literal"><span class="pre">yaml.Dumper</span></tt> that dumps all keys and strings as unicode literals.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyshell.yaml.UnicodeSafeDumper">
+<em class="property">class </em><tt class="descclassname">pyshell.yaml.</tt><tt class="descname">UnicodeSafeDumper</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/pyshell/yaml.html#UnicodeSafeDumper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.yaml.UnicodeSafeDumper" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <tt class="xref py py-class docutils literal"><span class="pre">yaml.SafeDumper</span></tt> that dumps all keys and strings as unicode literals.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyshell.yaml.MappingDumper">
+<em class="property">class </em><tt class="descclassname">pyshell.yaml.</tt><tt class="descname">MappingDumper</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/pyshell/yaml.html#MappingDumper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.yaml.MappingDumper" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <tt class="xref py py-class docutils literal"><span class="pre">yaml.Dumper</span></tt> which dumps any mapping as regular mappings.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyshell.yaml.MappingSafeDumper">
+<em class="property">class </em><tt class="descclassname">pyshell.yaml.</tt><tt class="descname">MappingSafeDumper</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/pyshell/yaml.html#MappingSafeDumper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.yaml.MappingSafeDumper" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <tt class="xref py py-class docutils literal"><span class="pre">yaml.SafeDumper</span></tt> which dumps any mapping as regular mappings.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyshell.yaml.PyshellDumper">
+<em class="property">class </em><tt class="descclassname">pyshell.yaml.</tt><tt class="descname">PyshellDumper</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/pyshell/yaml.html#PyshellDumper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.yaml.PyshellDumper" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <tt class="xref py py-class docutils literal"><span class="pre">yaml.SafeDumper</span></tt> which uses unicode by default and <a class="reference external" href="http://docs.python.org/2/library/collections.html#collections.OrderedDict" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">OrderedDict</span></tt></a>.</p>
+</dd></dl>
+
+<p class="graphviz">
+<img src="_images/inheritance-e8977501c56b859e0625cda2ace6ef2b58cd1106.png" alt="Inheritance diagram of OrderedDictDumper, OrderedDictSafeDumper, MappingDumper, MappingSafeDumper, PyshellDumper" usemap="#inheritance3821deaefb" class="inheritance"/>
+<map id="inheritance3821deaefb" name="inheritance3821deaefb">
+<area shape="rect" id="node12" href="#pyshell.yaml.PyshellDumper" title="A |SafeDumper| which uses unicode by default and |odict|." alt="" coords="643,116,750,130"/>
+<area shape="rect" id="node14" href="#pyshell.yaml.OrderedDictSafeDumper" title="A |SafeDumper| which dumps |odict| as a regular :class:`dict`." alt="" coords="628,88,765,102"/>
+<area shape="rect" id="node16" href="#pyshell.yaml.MappingSafeDumper" title="A |SafeDumper| which dumps any mapping as regular mappings." alt="" coords="633,59,759,74"/>
+<area shape="rect" id="node13" href="#pyshell.yaml.OrderedDictDumper" title="A |Dumper| which dumps |odict| as a regular :class:`dict`." alt="" coords="635,31,757,46"/>
+<area shape="rect" id="node15" href="#pyshell.yaml.MappingDumper" title="A |Dumper| which dumps any mapping as regular mappings." alt="" coords="641,3,752,17"/>
+<area shape="rect" id="node10" href="#pyshell.yaml.UnicodeYAMLDumper" title="This Mixin can be used for |Dumper| and |SafeDumper| to provide unicode loading support" alt="" coords="460,116,590,130"/>
+<area shape="rect" id="node11" href="#pyshell.yaml.ClassMappingYAMLDumper" title="A Mixin for YAML Mapping." alt="" coords="450,59,600,74"/>
+</map>
+</p>
+</div>
+<div class="section" id="mixin-interface">
+<span id="mixin"></span><h2>Mixin Interface<a class="headerlink" href="#mixin-interface" title="Permalink to this headline">¶</a></h2>
+<p>The Mixin Interface provides classes which can be used with the default <tt class="xref py py-mod docutils literal"><span class="pre">yaml</span></tt>
+loaders and dumpers to create new loaders and dumpers with modified behavior. You
+should always ensure to inherit from the <tt class="xref py py-mod docutils literal"><span class="pre">yaml</span></tt> loaders and dumpers last, to ensure
+that the required methods are overwritten by the mixins here.</p>
+<p>Many mixins will work without providing any subclass content. 
+For example, to make a unicode-compatible loader, you might use:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyUnicodeLoader</span><span class="p">(</span><span class="n">UnicodeYAMLLoader</span><span class="p">,</span> <span class="n">yaml</span><span class="o">.</span><span class="n">SafeLoader</span><span class="p">):</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+<p>In fact, this is how this module defines the <a class="reference internal" href="#pyshell.yaml.UnicodeSafeLoader" title="pyshell.yaml.UnicodeSafeLoader"><tt class="xref py py-class docutils literal"><span class="pre">UnicodeSafeLoader</span></tt></a>.</p>
+<div class="section" id="mixins-for-loaders">
+<h3>Mixins for Loaders<a class="headerlink" href="#mixins-for-loaders" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="pyshell.yaml.UnicodeYAMLLoader">
+<em class="property">class </em><tt class="descclassname">pyshell.yaml.</tt><tt class="descname">UnicodeYAMLLoader</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/pyshell/yaml.html#UnicodeYAMLLoader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.yaml.UnicodeYAMLLoader" title="Permalink to this definition">¶</a></dt>
+<dd><p>A YAML loader that loads unicode values everywhere.</p>
+<p>This MixIn can be used for SafeLoaders and Regular Loaders. It doesn&#8217;t work alone.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyshell.yaml.MappingYAMLLoader">
+<em class="property">class </em><tt class="descclassname">pyshell.yaml.</tt><tt class="descname">MappingYAMLLoader</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/pyshell/yaml.html#MappingYAMLLoader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.yaml.MappingYAMLLoader" title="Permalink to this definition">¶</a></dt>
+<dd><p>A YAML loader that loads mappings into ordered dictionaries.</p>
+<p>This MixIn can be used for SafeLoaders and Regular Loaders. It doesn&#8217;t work alone.</p>
+<p>It has an abstract attribute, <tt class="xref py py-attr docutils literal"><span class="pre">CUSTOM_MAPPING</span></tt> which must be set to the desired
+mapping type in a subclass before use.</p>
+<p>Original Design From: <a class="reference external" href="https://gist.github.com/enaeseth/844388">https://gist.github.com/enaeseth/844388</a></p>
+</dd></dl>
+
+</div>
+<div class="section" id="mixins-for-dumpers">
+<h3>Mixins for Dumpers<a class="headerlink" href="#mixins-for-dumpers" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="pyshell.yaml.UnicodeYAMLDumper">
+<em class="property">class </em><tt class="descclassname">pyshell.yaml.</tt><tt class="descname">UnicodeYAMLDumper</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/pyshell/yaml.html#UnicodeYAMLDumper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.yaml.UnicodeYAMLDumper" title="Permalink to this definition">¶</a></dt>
+<dd><p>This Mixin can be used for <tt class="xref py py-class docutils literal"><span class="pre">yaml.Dumper</span></tt> and <tt class="xref py py-class docutils literal"><span class="pre">yaml.SafeDumper</span></tt> to provide unicode loading support
+by default.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyshell.yaml.ClassMappingYAMLDumper">
+<em class="property">class </em><tt class="descclassname">pyshell.yaml.</tt><tt class="descname">ClassMappingYAMLDumper</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/pyshell/yaml.html#ClassMappingYAMLDumper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.yaml.ClassMappingYAMLDumper" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Mixin for YAML Mapping.</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="function-interface">
+<span id="functions"></span><h2>Function Interface<a class="headerlink" href="#function-interface" title="Permalink to this headline">¶</a></h2>
+<p>The functional interface provides three functions which implement
+the functionality found in the rest of the class through a functional
+interface. The only functionality not implemented is the mapping loader
+<a class="reference internal" href="#pyshell.yaml.MappingYAMLLoader" title="pyshell.yaml.MappingYAMLLoader"><tt class="xref py py-class docutils literal"><span class="pre">MappingYAMLLoader</span></tt></a>.</p>
+<p>By default, the functions below take no arguments, and then apply their
+modifications to <tt class="xref py py-class docutils literal"><span class="pre">yaml.Loader</span></tt>, <tt class="xref py py-class docutils literal"><span class="pre">yaml.SafeLodaer</span></tt> and <tt class="xref py py-class docutils literal"><span class="pre">yaml.Dumper</span></tt>.</p>
+<div class="section" id="functions-for-loaders">
+<h3>Functions for Loaders<a class="headerlink" href="#functions-for-loaders" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="pyshell.yaml.load_yaml_unicode">
+<tt class="descclassname">pyshell.yaml.</tt><tt class="descname">load_yaml_unicode</tt><big>(</big><em>*loaders</em><big>)</big><a class="reference internal" href="_modules/pyshell/yaml.html#load_yaml_unicode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.yaml.load_yaml_unicode" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method forces the PyYAML library to construct unicode objects when
+reading YAML instead of producing regular strings.</p>
+<p>It is designed to improve compatibility in Python2.x using unicode 
+objects.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="functions-for-dumpers">
+<h3>Functions for Dumpers<a class="headerlink" href="#functions-for-dumpers" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="pyshell.yaml.dump_yaml_unicode">
+<tt class="descclassname">pyshell.yaml.</tt><tt class="descname">dump_yaml_unicode</tt><big>(</big><em>*dumpers</em><big>)</big><a class="reference internal" href="_modules/pyshell/yaml.html#dump_yaml_unicode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.yaml.dump_yaml_unicode" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method forces the PyYAML library to dump unicode objects when
+dumping YAML instead of producing YAML unicode tags.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyshell.yaml.dump_yaml_subclasses">
+<tt class="descclassname">pyshell.yaml.</tt><tt class="descname">dump_yaml_subclasses</tt><big>(</big><em>subclass</em>, <em>representclass</em>, <em>*dumpers</em><big>)</big><a class="reference internal" href="_modules/pyshell/yaml.html#dump_yaml_subclasses"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.yaml.dump_yaml_subclasses" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dump an ordered dict like you would a regular dict.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyshell.yaml.dump_yaml_classmapping">
+<tt class="descclassname">pyshell.yaml.</tt><tt class="descname">dump_yaml_classmapping</tt><big>(</big><em>fromclass</em>, <em>toclass</em>, <em>*dumpers</em><big>)</big><a class="reference internal" href="_modules/pyshell/yaml.html#dump_yaml_classmapping"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.yaml.dump_yaml_classmapping" title="Permalink to this definition">¶</a></dt>
+<dd><p>Map one class to another in the YAML representer.</p>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#"><tt class="docutils literal"><span class="pre">pyshell.yaml</span></tt> – Extensions to PyYAML</a><ul>
+<li><a class="reference internal" href="#yaml-compatible-loaders"><tt class="docutils literal"><span class="pre">yaml</span></tt> compatible Loaders</a></li>
+<li><a class="reference internal" href="#yaml-compatible-dumpers"><tt class="docutils literal"><span class="pre">yaml</span></tt> compatible Dumpers</a></li>
+<li><a class="reference internal" href="#mixin-interface">Mixin Interface</a><ul>
+<li><a class="reference internal" href="#mixins-for-loaders">Mixins for Loaders</a></li>
+<li><a class="reference internal" href="#mixins-for-dumpers">Mixins for Dumpers</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#function-interface">Function Interface</a><ul>
+<li><a class="reference internal" href="#functions-for-loaders">Functions for Loaders</a></li>
+<li><a class="reference internal" href="#functions-for-dumpers">Functions for Dumpers</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="mapping.html"
+                        title="previous chapter"><tt class="docutils literal"><span class="pre">mapping</span></tt> – Mutable Mapping Tools</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="loggers.html"
+                        title="next chapter"><tt class="docutils literal"><span class="pre">loggers</span></tt> - Logging made Easy</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/yaml.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="loggers.html" title="loggers - Logging made Easy"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="mapping.html" title="mapping – Mutable Mapping Tools"
+             >previous</a> |</li>
+        <li><a href="index.html">PyShell 0.6.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Alexander Rudy.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+    </div>
+  </body>
+</html>

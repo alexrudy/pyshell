@@ -1,0 +1,277 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>mapping – Mutable Mapping Tools &mdash; PyShell 0.6.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.6.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PyShell 0.6.0 documentation" href="index.html" />
+    <link rel="next" title="pyshell.yaml – Extensions to PyYAML" href="yaml.html" />
+    <link rel="prev" title="subcommand – Creating commands with Subcommands" href="subcommand.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="yaml.html" title="pyshell.yaml – Extensions to PyYAML"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="subcommand.html" title="subcommand – Creating commands with Subcommands"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">PyShell 0.6.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <span class="target" id="module-pyshell.mapping"></span><div class="section" id="mapping-mutable-mapping-tools">
+<h1><tt class="xref py py-mod docutils literal"><span class="pre">mapping</span></tt> – Mutable Mapping Tools<a class="headerlink" href="#mapping-mutable-mapping-tools" title="Permalink to this headline">¶</a></h1>
+<p>This module contains functions and base classes for mutable mappings in Python.</p>
+<div class="section" id="mapping-base-classes">
+<h2>Mapping Base Classes<a class="headerlink" href="#mapping-base-classes" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pyshell.mapping.MutableMappingBase">
+<em class="property">class </em><tt class="descclassname">pyshell.mapping.</tt><tt class="descname">MutableMappingBase</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/pyshell/mapping.html#MutableMappingBase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.mapping.MutableMappingBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for mutable mappings which store things in an internal dictionary.</p>
+<p>This class implements a full dictionary interface, including pretty-printing,
+containment, setting, deleting and getting of items. The interface works via
+<a class="reference external" href="http://docs.python.org/2/library/collections.html#collections.MutableMapping" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">collections.MutableMapping</span></tt></a>. Internally, values are stored in an &#8216;inner&#8217;
+mapping object, which is set by the attribute <tt class="xref py py-attr docutils literal"><span class="pre">_dt</span></tt>.</p>
+<dl class="attribute">
+<dt id="pyshell.mapping.MutableMappingBase.store">
+<tt class="descname">store</tt><a class="reference internal" href="_modules/pyshell/mapping.html#MutableMappingBase.store"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.mapping.MutableMappingBase.store" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a copy of the internal storage object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.mapping.MutableMappingBase.merge">
+<tt class="descname">merge</tt><big>(</big><em>item</em><big>)</big><a class="reference internal" href="_modules/pyshell/mapping.html#MutableMappingBase.merge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.mapping.MutableMappingBase.merge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias between merge and update in the basic case.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pyshell.mapping.FallbackDictionary">
+<em class="property">class </em><tt class="descclassname">pyshell.mapping.</tt><tt class="descname">FallbackDictionary</tt><a class="reference internal" href="_modules/pyshell/mapping.html#FallbackDictionary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.mapping.FallbackDictionary" title="Permalink to this definition">¶</a></dt>
+<dd><p>An abstract base class for dictionaries which might not contain all of their desired objects.</p>
+<p>Contains abstract methods for accessing missing items.</p>
+<dl class="method">
+<dt id="pyshell.mapping.FallbackDictionary.build_key">
+<tt class="descname">build_key</tt><big>(</big><em>key</em><big>)</big><a class="reference internal" href="_modules/pyshell/mapping.html#FallbackDictionary.build_key"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.mapping.FallbackDictionary.build_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>A custom method to build missing keys for this dictionary.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="mapping-functions">
+<h2>Mapping Functions<a class="headerlink" href="#mapping-functions" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="pyshell.mapping.reformat">
+<tt class="descclassname">pyshell.mapping.</tt><tt class="descname">reformat</tt><big>(</big><em>d</em>, <em>nt</em><big>)</big><a class="reference internal" href="_modules/pyshell/mapping.html#reformat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.mapping.reformat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recursive extraction method for changing the type of 
+nested dictionary objects.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>d</strong> (<em>mapping</em>) &#8211; The dictionary to re-type.</li>
+<li><strong>nt</strong> (<em>mapping-type</em>) &#8211; The new mapping type to use.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyshell.mapping.flatten">
+<tt class="descclassname">pyshell.mapping.</tt><tt class="descname">flatten</tt><big>(</big><em>d</em>, <em>stump=u''</em>, <em>sequence=False</em>, <em>separator=u'.'</em>, <em>dt=&lt;type 'dict'&gt;</em><big>)</big><a class="reference internal" href="_modules/pyshell/mapping.html#flatten"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.mapping.flatten" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flatten a given nested dictionary.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>d</strong> &#8211; Dictionary to flatten.</li>
+<li><strong>stump</strong> &#8211; The base stump for flattened keys. Setting this applies a universal starting value to each key.</li>
+<li><strong>sequence</strong> &#8211; Whether to expand sequences.</li>
+<li><strong>separator</strong> &#8211; The string separator to use in flat keys.</li>
+<li><strong>dt</strong> &#8211; The final output type for the dictionary.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Each nested key will become a root level key in the final dictionary. The root level keys will be the set of nested keys, joined by the <cite>separator</cite> keyword argument.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyshell.mapping.expand">
+<tt class="descclassname">pyshell.mapping.</tt><tt class="descname">expand</tt><big>(</big><em>d</em>, <em>sequence=False</em>, <em>separator=u'.'</em>, <em>dt=&lt;type 'dict'&gt;</em><big>)</big><a class="reference internal" href="_modules/pyshell/mapping.html#expand"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.mapping.expand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Expand a flattened dictionary into a nested one.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>d</strong> &#8211; Dictionary to expand.</li>
+<li><strong>sequence</strong> &#8211; Whether to expand sequences.</li>
+<li><strong>separator</strong> &#8211; The string separator to use in flat keys.</li>
+<li><strong>dt</strong> &#8211; The final output type for all levels of the nested dictionary.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Each key with the <cite>separator</cite> will become a nested dictionary key in the final dictionary.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyshell.mapping.advanceddeepmerge">
+<tt class="descclassname">pyshell.mapping.</tt><tt class="descname">advanceddeepmerge</tt><big>(</big><em>d</em>, <em>u</em>, <em>s</em>, <em>sequence=True</em>, <em>invert=False</em>, <em>inplace=True</em><big>)</big><a class="reference internal" href="_modules/pyshell/mapping.html#advanceddeepmerge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.mapping.advanceddeepmerge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Merge deep collection-like structures.</p>
+<p>This function will merge sequence structures when they are found. When used with <tt class="docutils literal"><span class="pre">sequence=False</span></tt>, it behaves like <a class="reference internal" href="#pyshell.mapping.deepmerge" title="pyshell.mapping.deepmerge"><tt class="xref py py-func docutils literal"><span class="pre">deepmerge()</span></tt></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>d</strong> (<em>dict-like</em>) &#8211; Deep Structure</li>
+<li><strong>u</strong> (<em>dict-like</em>) &#8211; Updated Structure</li>
+<li><strong>s</strong> (<em>dict-like-type</em>) &#8211; Default structure to use when a new deep structure is required.</li>
+<li><strong>sequence</strong> (<a class="reference external" href="http://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Control sequence merging</li>
+<li><strong>invert</strong> (<a class="reference external" href="http://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Whether to do an inverse merge.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p><em>Inverse Merge</em> causes <tt class="docutils literal"><span class="pre">u</span></tt> to only update missing values of <tt class="docutils literal"><span class="pre">d</span></tt>, but does
+so in a deep fashion.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyshell.mapping.deepmerge">
+<tt class="descclassname">pyshell.mapping.</tt><tt class="descname">deepmerge</tt><big>(</big><em>d</em>, <em>u</em>, <em>s</em>, <em>invert=False</em>, <em>inplace=True</em><big>)</big><a class="reference internal" href="_modules/pyshell/mapping.html#deepmerge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.mapping.deepmerge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Merge deep collection-like structures.</p>
+<p>When this function encounters a sequence, the entire sequence from <tt class="docutils literal"><span class="pre">u</span></tt> is considered a single value which replaces any value from <tt class="docutils literal"><span class="pre">d</span></tt>. To allow for merging sequences in <tt class="docutils literal"><span class="pre">u</span></tt> and <tt class="docutils literal"><span class="pre">d</span></tt>, see function <a class="reference internal" href="#pyshell.mapping.advanceddeepmerge" title="pyshell.mapping.advanceddeepmerge"><tt class="xref py py-func docutils literal"><span class="pre">advanceddeepmerge()</span></tt></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>d</strong> (<em>dict-like</em>) &#8211; Deep Structure</li>
+<li><strong>u</strong> (<em>dict-like</em>) &#8211; Updated Structure</li>
+<li><strong>s</strong> (<em>dict-like-type</em>) &#8211; Default structure to use when a new deep structure is required.</li>
+<li><strong>invert</strong> (<a class="reference external" href="http://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Whether to do an inverse merge.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p><em>Inverse Merge</em> causes <tt class="docutils literal"><span class="pre">u</span></tt> to only update missing values of <tt class="docutils literal"><span class="pre">d</span></tt>, but does
+so in a deep fashion.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#"><tt class="docutils literal"><span class="pre">mapping</span></tt> – Mutable Mapping Tools</a><ul>
+<li><a class="reference internal" href="#mapping-base-classes">Mapping Base Classes</a></li>
+<li><a class="reference internal" href="#mapping-functions">Mapping Functions</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="subcommand.html"
+                        title="previous chapter"><tt class="docutils literal"><span class="pre">subcommand</span></tt> – Creating commands with Subcommands</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="yaml.html"
+                        title="next chapter"><tt class="docutils literal"><span class="pre">pyshell.yaml</span></tt> – Extensions to PyYAML</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/mapping.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="yaml.html" title="pyshell.yaml – Extensions to PyYAML"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="subcommand.html" title="subcommand – Creating commands with Subcommands"
+             >previous</a> |</li>
+        <li><a href="index.html">PyShell 0.6.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Alexander Rudy.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+    </div>
+  </body>
+</html>

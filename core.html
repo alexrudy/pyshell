@@ -1,0 +1,175 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>core – Certain ‘core’ functions &mdash; PyShell 0.6.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.6.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PyShell 0.6.0 documentation" href="index.html" />
+    <link rel="next" title="util - Utilities" href="util.html" />
+    <link rel="prev" title="Configuration: YAML based nested dictionaries" href="config.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="util.html" title="util - Utilities"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="config.html" title="Configuration: YAML based nested dictionaries"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">PyShell 0.6.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <span class="target" id="module-pyshell.core"></span><div class="section" id="core-certain-core-functions">
+<h1><tt class="xref py py-mod docutils literal"><span class="pre">core</span></tt> – Certain &#8216;core&#8217; functions<a class="headerlink" href="#core-certain-core-functions" title="Permalink to this headline">¶</a></h1>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">These functions should probably all live elsewhere.</p>
+</div>
+<dl class="class">
+<dt id="pyshell.core.Typedkwargs">
+<em class="property">class </em><tt class="descclassname">pyshell.core.</tt><tt class="descname">Typedkwargs</tt><a class="reference internal" href="_modules/pyshell/core.html#Typedkwargs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.core.Typedkwargs" title="Permalink to this definition">¶</a></dt>
+<dd><p>docstring for TypedKWArgs</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyshell.core.State">
+<em class="property">class </em><tt class="descclassname">pyshell.core.</tt><tt class="descname">State</tt><big>(</big><em>*args</em>, <em>**kwds</em><big>)</big><a class="reference internal" href="_modules/pyshell/core.html#State"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.core.State" title="Permalink to this definition">¶</a></dt>
+<dd><p>Controls the state of a system.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyshell.core.Stateful">
+<em class="property">class </em><tt class="descclassname">pyshell.core.</tt><tt class="descname">Stateful</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/pyshell/core.html#Stateful"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.core.Stateful" title="Permalink to this definition">¶</a></dt>
+<dd><p>A base class for objects which have some sort of state.</p>
+<dl class="attribute">
+<dt id="pyshell.core.Stateful.state">
+<tt class="descname">state</tt><a class="reference internal" href="_modules/pyshell/core.html#Stateful.state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.core.Stateful.state" title="Permalink to this definition">¶</a></dt>
+<dd><p>The boolean dictionary defining the state of this system.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyshell.core.Stateful.timing">
+<tt class="descname">timing</tt><a class="reference internal" href="_modules/pyshell/core.html#Stateful.timing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.core.Stateful.timing" title="Permalink to this definition">¶</a></dt>
+<dd><p>The dictionary of timing values for each state flag.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.core.Stateful.set_state">
+<tt class="descname">set_state</tt><big>(</big><em>state</em><big>)</big><a class="reference internal" href="_modules/pyshell/core.html#Stateful.set_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.core.Stateful.set_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set a state to the current time.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.core.Stateful.del_state">
+<tt class="descname">del_state</tt><big>(</big><em>state</em><big>)</big><a class="reference internal" href="_modules/pyshell/core.html#Stateful.del_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.core.Stateful.del_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>docstring for del_state</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pyshell.core.OneToOneMapping">
+<em class="property">class </em><tt class="descclassname">pyshell.core.</tt><tt class="descname">OneToOneMapping</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/pyshell/core.html#OneToOneMapping"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.core.OneToOneMapping" title="Permalink to this definition">¶</a></dt>
+<dd><p>A mapping that goes both ways. Looking up map[k] = v and map[v] = k works.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyshell.core.Struct">
+<em class="property">class </em><tt class="descclassname">pyshell.core.</tt><tt class="descname">Struct</tt><a class="reference internal" href="_modules/pyshell/core.html#Struct"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.core.Struct" title="Permalink to this definition">¶</a></dt>
+<dd><p>A basic structure</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="config.html"
+                        title="previous chapter">Configuration: YAML based nested dictionaries</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="util.html"
+                        title="next chapter"><tt class="docutils literal"><span class="pre">util</span></tt> - Utilities</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/core.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="util.html" title="util - Utilities"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="config.html" title="Configuration: YAML based nested dictionaries"
+             >previous</a> |</li>
+        <li><a href="index.html">PyShell 0.6.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Alexander Rudy.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+    </div>
+  </body>
+</html>

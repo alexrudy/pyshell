@@ -1,0 +1,8 @@
+<map id="inheritance3a653054bf" name="inheritance3a653054bf">
+<area shape="rect" id="node4" title="A Mapping is a generic container for associating key/value" alt="" coords="91,38,141,55"/>
+<area shape="rect" id="node5" title="A MutableMapping is a generic container for associating" alt="" coords="174,38,256,55"/>
+<area shape="rect" id="node6" href="mapping.html#pyshell.mapping.MutableMappingBase" title="Base class for mutable mappings which store things in an internal dictionary." alt="" coords="289,38,391,55"/>
+<area shape="rect" id="node7" title="Adds extra methods to dictionary for configuration" alt="" coords="425,38,493,55"/>
+<area shape="rect" id="node8" title="A configuration which can use dotted accessor methods." alt="" coords="527,38,621,55"/>
+<area shape="rect" id="node9" title="A structured configuration with some basic defaults." alt="" coords="655,38,764,55"/>
+</map>

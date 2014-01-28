@@ -1,0 +1,357 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Tools for using Units &mdash; PyShell 0.6.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.6.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PyShell 0.6.0 documentation" href="../index.html" />
+    <link rel="next" title="postmortem – A postmortem debugging tool for nosetests." href="../postmortem.html" />
+    <link rel="prev" title="Tools for use with astropy" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../postmortem.html" title="postmortem – A postmortem debugging tool for nosetests."
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Tools for use with astropy"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">PyShell 0.6.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="tools-for-using-units">
+<h1>Tools for using Units<a class="headerlink" href="#tools-for-using-units" title="Permalink to this headline">¶</a></h1>
+<p>This module contains descriptors for using units. Descriptors
+are objects that behave like properties. The python documentaion on
+<a class="reference external" href="http://docs.python.org/2/howto/descriptor.html">descriptors</a> provides a good introduction. To use a descriptor:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyObject</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="gp">...</span>
+<span class="gp">... </span>   <span class="n">height</span> <span class="o">=</span> <span class="n">UnitsProperty</span><span class="p">(</span><span class="s">&#39;height&#39;</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">MyInstance</span> <span class="o">=</span> <span class="n">MyObject</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">MyInstance</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">MyInstance</span><span class="o">.</span><span class="n">height</span>
+<span class="go">10 m</span>
+</pre></div>
+</div>
+<span class="target" id="module-pyshell.astron.units"></span><dl class="function">
+<dt id="pyshell.astron.units.recompose">
+<tt class="descclassname">pyshell.astron.units.</tt><tt class="descname">recompose</tt><big>(</big><em>quantity</em>, <em>bases</em>, <em>scaled=False</em>, <em>warn_compositons=False</em>, <em>max_depth=3</em><big>)</big><a class="reference internal" href="../_modules/pyshell/astron/units.html#recompose"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.astron.units.recompose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recompose a quantity in terms of the given bases.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>unit</strong> &#8211; The unit to recompose.</li>
+<li><strong>bases</strong> &#8211; The set of units allowed in the final result.</li>
+<li><strong>scaled</strong> (<a class="reference external" href="http://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Whether to allow units with a scale or not.</li>
+<li><strong>warn_compositons</strong> (<a class="reference external" href="http://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Whether to warn when there were multiple compositions found.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyshell.astron.units.recompose_unit">
+<tt class="descclassname">pyshell.astron.units.</tt><tt class="descname">recompose_unit</tt><big>(</big><em>unit</em>, <em>bases</em>, <em>scaled=False</em>, <em>warn_compositons=False</em>, <em>max_depth=3</em><big>)</big><a class="reference internal" href="../_modules/pyshell/astron/units.html#recompose_unit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.astron.units.recompose_unit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recompose a unit in terms of the provided bases.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>unit</strong> &#8211; The unit to recompose.</li>
+<li><strong>bases</strong> &#8211; The set of units allowed in the final result.</li>
+<li><strong>scaled</strong> (<a class="reference external" href="http://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Whether to allow units with a scale or not.</li>
+<li><strong>warn_compositons</strong> (<a class="reference external" href="http://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Whether to warn when there were multiple compositions found.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="exception">
+<dt id="pyshell.astron.units.FrozenError">
+<em class="property">exception </em><tt class="descclassname">pyshell.astron.units.</tt><tt class="descname">FrozenError</tt><a class="reference internal" href="../_modules/pyshell/astron/units.html#FrozenError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.astron.units.FrozenError" title="Permalink to this definition">¶</a></dt>
+<dd><p>An error occuring when trying to set frozen attributes.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyshell.astron.units.UnitsProperty">
+<em class="property">class </em><tt class="descclassname">pyshell.astron.units.</tt><tt class="descname">UnitsProperty</tt><big>(</big><em>name</em>, <em>unit</em>, <em>latex=None</em>, <em>nonnegative=False</em>, <em>readonly=False</em>, <em>scale=False</em>, <em>warn_for_unit_composition=False</em><big>)</big><a class="reference internal" href="../_modules/pyshell/astron/units.html#UnitsProperty"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.astron.units.UnitsProperty" title="Permalink to this definition">¶</a></dt>
+<dd><p>A descriptor which enforces units.</p>
+<dl class="method">
+<dt id="pyshell.astron.units.UnitsProperty.bases">
+<tt class="descname">bases</tt><big>(</big><em>obj</em><big>)</big><a class="reference internal" href="../_modules/pyshell/astron/units.html#UnitsProperty.bases"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.astron.units.UnitsProperty.bases" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the bases.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.astron.units.UnitsProperty.recompose">
+<tt class="descname">recompose</tt><big>(</big><em>quantity</em>, <em>bases</em><big>)</big><a class="reference internal" href="../_modules/pyshell/astron/units.html#UnitsProperty.recompose"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.astron.units.UnitsProperty.recompose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recompose a unit into a new base set.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.astron.units.UnitsProperty.unit">
+<tt class="descname">unit</tt><big>(</big><em>obj</em><big>)</big><a class="reference internal" href="../_modules/pyshell/astron/units.html#UnitsProperty.unit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.astron.units.UnitsProperty.unit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the recomposed unit.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.astron.units.UnitsProperty.set">
+<tt class="descname">set</tt><big>(</big><em>obj</em>, <em>value</em><big>)</big><a class="reference internal" href="../_modules/pyshell/astron/units.html#UnitsProperty.set"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.astron.units.UnitsProperty.set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shortcut for the setter.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.astron.units.UnitsProperty.get">
+<tt class="descname">get</tt><big>(</big><em>obj</em><big>)</big><a class="reference internal" href="../_modules/pyshell/astron/units.html#UnitsProperty.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.astron.units.UnitsProperty.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shortcut get method.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pyshell.astron.units.ComputedUnitsProperty">
+<em class="property">class </em><tt class="descclassname">pyshell.astron.units.</tt><tt class="descname">ComputedUnitsProperty</tt><big>(</big><em>fget</em>, <em>readonly=True</em>, <em>warn_for_unit_composition=False</em><big>)</big><a class="reference internal" href="../_modules/pyshell/astron/units.html#ComputedUnitsProperty"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.astron.units.ComputedUnitsProperty" title="Permalink to this definition">¶</a></dt>
+<dd><p>A units property computed from source.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyshell.astron.units.NonDimensionalProperty">
+<em class="property">class </em><tt class="descclassname">pyshell.astron.units.</tt><tt class="descname">NonDimensionalProperty</tt><big>(</big><em>name</em>, <em>unit</em>, <em>nonnegative=False</em>, <em>scale=False</em>, <em>warn_for_unit_composition=False</em><big>)</big><a class="reference internal" href="../_modules/pyshell/astron/units.html#NonDimensionalProperty"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.astron.units.NonDimensionalProperty" title="Permalink to this definition">¶</a></dt>
+<dd><p>NonDimensionalProperty</p>
+<dl class="method">
+<dt id="pyshell.astron.units.NonDimensionalProperty.bases">
+<tt class="descname">bases</tt><big>(</big><em>obj</em><big>)</big><a class="reference internal" href="../_modules/pyshell/astron/units.html#NonDimensionalProperty.bases"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.astron.units.NonDimensionalProperty.bases" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the non-dimensional bases.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pyshell.astron.units.InitialValueProperty">
+<em class="property">class </em><tt class="descclassname">pyshell.astron.units.</tt><tt class="descname">InitialValueProperty</tt><big>(</big><em>name</em>, <em>unit</em>, <em>nonnegative=False</em>, <em>scale=False</em>, <em>warn_for_unit_composition=False</em><big>)</big><a class="reference internal" href="../_modules/pyshell/astron/units.html#InitialValueProperty"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.astron.units.InitialValueProperty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initial Value Property</p>
+<dl class="method">
+<dt id="pyshell.astron.units.InitialValueProperty.get">
+<tt class="descname">get</tt><big>(</big><em>obj</em><big>)</big><a class="reference internal" href="../_modules/pyshell/astron/units.html#InitialValueProperty.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.astron.units.InitialValueProperty.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>docstring for get</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.astron.units.InitialValueProperty.freeze">
+<tt class="descname">freeze</tt><big>(</big><em>obj</em><big>)</big><a class="reference internal" href="../_modules/pyshell/astron/units.html#InitialValueProperty.freeze"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.astron.units.InitialValueProperty.freeze" title="Permalink to this definition">¶</a></dt>
+<dd><p>Freeze the value&#8217;s initial state.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.astron.units.InitialValueProperty.frozen">
+<tt class="descname">frozen</tt><big>(</big><em>obj</em><big>)</big><a class="reference internal" href="../_modules/pyshell/astron/units.html#InitialValueProperty.frozen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.astron.units.InitialValueProperty.frozen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Frozen data</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.astron.units.InitialValueProperty.initial">
+<tt class="descname">initial</tt><big>(</big><em>obj</em><big>)</big><a class="reference internal" href="../_modules/pyshell/astron/units.html#InitialValueProperty.initial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.astron.units.InitialValueProperty.initial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the initial value of a property.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pyshell.astron.units.HasUnitsProperties">
+<em class="property">class </em><tt class="descclassname">pyshell.astron.units.</tt><tt class="descname">HasUnitsProperties</tt><a class="reference internal" href="../_modules/pyshell/astron/units.html#HasUnitsProperties"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.astron.units.HasUnitsProperties" title="Permalink to this definition">¶</a></dt>
+<dd><p>docstring for HasUnitsProperties</p>
+<dl class="method">
+<dt id="pyshell.astron.units.HasUnitsProperties.get_unit">
+<tt class="descname">get_unit</tt><big>(</big><em>attr=None</em>, <em>name=None</em><big>)</big><a class="reference internal" href="../_modules/pyshell/astron/units.html#HasUnitsProperties.get_unit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.astron.units.HasUnitsProperties.get_unit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a property unit by attribute name or full name.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.astron.units.HasUnitsProperties.list_units_properties">
+<tt class="descname">list_units_properties</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/pyshell/astron/units.html#HasUnitsProperties.list_units_properties"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.astron.units.HasUnitsProperties.list_units_properties" title="Permalink to this definition">¶</a></dt>
+<dd><p>List all of the unit properties</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pyshell.astron.units.HasNonDimensonals">
+<em class="property">class </em><tt class="descclassname">pyshell.astron.units.</tt><tt class="descname">HasNonDimensonals</tt><a class="reference internal" href="../_modules/pyshell/astron/units.html#HasNonDimensonals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.astron.units.HasNonDimensonals" title="Permalink to this definition">¶</a></dt>
+<dd><p>A bass class for things which have non-dimensional variables.</p>
+<dl class="attribute">
+<dt id="pyshell.astron.units.HasNonDimensonals.is_nondimensional">
+<tt class="descname">is_nondimensional</tt><a class="reference internal" href="../_modules/pyshell/astron/units.html#HasNonDimensonals.is_nondimensional"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.astron.units.HasNonDimensonals.is_nondimensional" title="Permalink to this definition">¶</a></dt>
+<dd><p>A boolean determining whether the state is non-dimensional or not.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyshell.astron.units.HasNonDimensonals.nondimensional_bases">
+<tt class="descname">nondimensional_bases</tt><a class="reference internal" href="../_modules/pyshell/astron/units.html#HasNonDimensonals.nondimensional_bases"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.astron.units.HasNonDimensonals.nondimensional_bases" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the non-dimensional bases.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.astron.units.HasNonDimensonals.nondimensionalize">
+<tt class="descname">nondimensionalize</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/pyshell/astron/units.html#HasNonDimensonals.nondimensionalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.astron.units.HasNonDimensonals.nondimensionalize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Place the object in a non-dimensional state.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.astron.units.HasNonDimensonals.dimensionalize">
+<tt class="descname">dimensionalize</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/pyshell/astron/units.html#HasNonDimensonals.dimensionalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.astron.units.HasNonDimensonals.dimensionalize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Place the object in a dimensional state.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.astron.units.HasNonDimensonals.in_nondimensional">
+<tt class="descname">in_nondimensional</tt><big>(</big><em>*args</em>, <em>**kwds</em><big>)</big><a class="reference internal" href="../_modules/pyshell/astron/units.html#HasNonDimensonals.in_nondimensional"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.astron.units.HasNonDimensonals.in_nondimensional" title="Permalink to this definition">¶</a></dt>
+<dd><p>A context manager to put this object in the non-dimensional state.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pyshell.astron.units.HasInitialValues">
+<em class="property">class </em><tt class="descclassname">pyshell.astron.units.</tt><tt class="descname">HasInitialValues</tt><a class="reference internal" href="../_modules/pyshell/astron/units.html#HasInitialValues"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.astron.units.HasInitialValues" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for something which has non-dimensional properties.</p>
+<dl class="attribute">
+<dt id="pyshell.astron.units.HasInitialValues.is_initial">
+<tt class="descname">is_initial</tt><a class="reference internal" href="../_modules/pyshell/astron/units.html#HasInitialValues.is_initial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.astron.units.HasInitialValues.is_initial" title="Permalink to this definition">¶</a></dt>
+<dd><p>A boolean determining whether the state is non-dimensional or not.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.astron.units.HasInitialValues.initals">
+<tt class="descname">initals</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/pyshell/astron/units.html#HasInitialValues.initals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.astron.units.HasInitialValues.initals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Place the object in the initial state.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.astron.units.HasInitialValues.actuals">
+<tt class="descname">actuals</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/pyshell/astron/units.html#HasInitialValues.actuals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.astron.units.HasInitialValues.actuals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Place the object in the actual state.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.astron.units.HasInitialValues.freeze">
+<tt class="descname">freeze</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/pyshell/astron/units.html#HasInitialValues.freeze"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.astron.units.HasInitialValues.freeze" title="Permalink to this definition">¶</a></dt>
+<dd><p>Freeze this object.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyshell.astron.units.HasInitialValues.frozen">
+<tt class="descname">frozen</tt><a class="reference internal" href="../_modules/pyshell/astron/units.html#HasInitialValues.frozen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.astron.units.HasInitialValues.frozen" title="Permalink to this definition">¶</a></dt>
+<dd><p>docstring for frozen</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyshell.astron.units.HasInitialValues.in_initial">
+<tt class="descname">in_initial</tt><big>(</big><em>*args</em>, <em>**kwds</em><big>)</big><a class="reference internal" href="../_modules/pyshell/astron/units.html#HasInitialValues.in_initial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyshell.astron.units.HasInitialValues.in_initial" title="Permalink to this definition">¶</a></dt>
+<dd><p>A context manager to put this object in the initial state.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Tools for use with <tt class="docutils literal"><span class="pre">astropy</span></tt></a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../postmortem.html"
+                        title="next chapter"><tt class="docutils literal"><span class="pre">postmortem</span></tt> – A postmortem debugging tool for nosetests.</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/astron/units.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../postmortem.html" title="postmortem – A postmortem debugging tool for nosetests."
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Tools for use with astropy"
+             >previous</a> |</li>
+        <li><a href="../index.html">PyShell 0.6.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Alexander Rudy.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+    </div>
+  </body>
+</html>

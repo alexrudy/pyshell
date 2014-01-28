@@ -1,0 +1,486 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pyshell.yaml &mdash; PyShell 0.6.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.6.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PyShell 0.6.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">PyShell 0.6.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pyshell.yaml</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="c"># </span>
+<span class="c">#  yaml.py</span>
+<span class="c">#  pyshell</span>
+<span class="c">#  </span>
+<span class="c">#  Created by Jaberwocky on 2013-11-15.</span>
+<span class="c">#  Copyright 2013 Jaberwocky. All rights reserved.</span>
+<span class="c"># </span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">.. _loaders:</span>
+
+<span class="sd">:mod:`yaml` compatible Loaders</span>
+<span class="sd">------------------------------</span>
+
+<span class="sd">The loader interface provides |Loader| objects which can be used directly::</span>
+<span class="sd">    </span>
+<span class="sd">    yaml.load(stream, Loader=UnicodeLoader)</span>
+<span class="sd">    </span>
+<span class="sd">These loaders use the mixin interface described in :ref:`mixin`. Loader objects implement the entirety of</span>
+<span class="sd">the YAML parsing engine, so customization of any of the YAML base classes can be done via loaders.</span>
+
+<span class="sd">.. autoclass:: OrderedDictLoader</span>
+
+<span class="sd">.. autoclass:: OrderedDictSafeLoader</span>
+
+<span class="sd">.. autoclass:: UnicodeLoader</span>
+
+<span class="sd">.. autoclass:: UnicodeSafeLoader</span>
+
+<span class="sd">.. autoclass:: PyshellLoader</span>
+
+<span class="sd">.. inheritance-diagram::</span>
+<span class="sd">    OrderedDictLoader</span>
+<span class="sd">    OrderedDictSafeLoader</span>
+<span class="sd">    UnicodeLoader</span>
+<span class="sd">    UnicodeSafeLoader</span>
+<span class="sd">    PyshellLoader</span>
+
+<span class="sd">.. _dumpers:</span>
+
+<span class="sd">:mod:`yaml` compatible Dumpers</span>
+<span class="sd">------------------------------</span>
+
+<span class="sd">The dumper interface provides |Dumper| objects which can be used directly::</span>
+<span class="sd">    </span>
+<span class="sd">    yaml.dump(data, stream, Dumper=UnicodeLoader)</span>
+<span class="sd">    </span>
+<span class="sd">These dumpers use the mixin interface described in :ref:`mixin`. Dumper objects implement the entirety of</span>
+<span class="sd">the YAML parsing engine, so customization of any of the YAML base classes can be done via dumpers.</span>
+
+<span class="sd">.. autoclass:: OrderedDictDumper</span>
+
+<span class="sd">.. autoclass:: OrderedDictSafeDumper</span>
+
+<span class="sd">.. autoclass:: UnicodeDumper</span>
+
+<span class="sd">.. autoclass:: UnicodeSafeDumper</span>
+
+<span class="sd">.. autoclass:: MappingDumper</span>
+
+<span class="sd">.. autoclass:: MappingSafeDumper</span>
+
+<span class="sd">.. autoclass:: PyshellDumper</span>
+
+<span class="sd">.. inheritance-diagram::</span>
+<span class="sd">    OrderedDictDumper</span>
+<span class="sd">    OrderedDictSafeDumper</span>
+<span class="sd">    MappingDumper</span>
+<span class="sd">    MappingSafeDumper</span>
+<span class="sd">    PyshellDumper</span>
+
+<span class="sd">.. _mixin:</span>
+
+<span class="sd">Mixin Interface</span>
+<span class="sd">---------------</span>
+
+<span class="sd">The Mixin Interface provides classes which can be used with the default :mod:`yaml`</span>
+<span class="sd">loaders and dumpers to create new loaders and dumpers with modified behavior. You</span>
+<span class="sd">should always ensure to inherit from the :mod:`yaml` loaders and dumpers last, to ensure</span>
+<span class="sd">that the required methods are overwritten by the mixins here. </span>
+
+<span class="sd">Many mixins will work without providing any subclass content. </span>
+<span class="sd">For example, to make a unicode-compatible loader, you might use::</span>
+<span class="sd">    </span>
+<span class="sd">    class MyUnicodeLoader(UnicodeYAMLLoader, yaml.SafeLoader):</span>
+<span class="sd">        pass</span>
+<span class="sd">    </span>
+
+<span class="sd">In fact, this is how this module defines the :class:`UnicodeSafeLoader`.</span>
+
+<span class="sd">Mixins for Loaders</span>
+<span class="sd">******************</span>
+
+<span class="sd">.. autoclass::</span>
+<span class="sd">    UnicodeYAMLLoader</span>
+<span class="sd">    </span>
+<span class="sd">.. autoclass::</span>
+<span class="sd">    MappingYAMLLoader</span>
+
+
+<span class="sd">Mixins for Dumpers</span>
+<span class="sd">******************</span>
+
+<span class="sd">.. autoclass::</span>
+<span class="sd">    UnicodeYAMLDumper</span>
+<span class="sd">    </span>
+<span class="sd">.. autoclass::</span>
+<span class="sd">    ClassMappingYAMLDumper</span>
+
+
+<span class="sd">.. _functions:</span>
+
+<span class="sd">Function Interface</span>
+<span class="sd">------------------</span>
+
+<span class="sd">The functional interface provides three functions which implement</span>
+<span class="sd">the functionality found in the rest of the class through a functional</span>
+<span class="sd">interface. The only functionality not implemented is the mapping loader</span>
+<span class="sd">:class:`MappingYAMLLoader`.</span>
+
+<span class="sd">By default, the functions below take no arguments, and then apply their</span>
+<span class="sd">modifications to |Loader|, |SafeLoader| and |Dumper|.</span>
+
+<span class="sd">Functions for Loaders</span>
+<span class="sd">*********************</span>
+
+<span class="sd">.. autofunction::</span>
+<span class="sd">    load_yaml_unicode</span>
+
+<span class="sd">Functions for Dumpers</span>
+<span class="sd">*********************</span>
+
+<span class="sd">.. autofunction::</span>
+<span class="sd">    dump_yaml_unicode</span>
+<span class="sd">    </span>
+<span class="sd">.. autofunction::</span>
+<span class="sd">    dump_yaml_subclasses</span>
+<span class="sd">    </span>
+<span class="sd">.. autofunction::</span>
+<span class="sd">    dump_yaml_classmapping</span>
+
+<span class="sd">.. |odict| replace:: :class:`~collections.OrderedDict`</span>
+<span class="sd">.. |Dumper| replace:: :class:`yaml.Dumper`</span>
+<span class="sd">.. |Loader| replace:: :class:`yaml.Loader`</span>
+<span class="sd">.. |SafeDumper| replace:: :class:`yaml.SafeDumper`</span>
+<span class="sd">.. |SafeLoader| replace:: :class:`yaml.SafeLodaer`</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="p">(</span><span class="n">absolute_import</span><span class="p">,</span> <span class="n">unicode_literals</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span>
+                        <span class="n">print_function</span><span class="p">)</span>
+                        
+<span class="kn">import</span> <span class="nn">yaml</span>
+<span class="kn">import</span> <span class="nn">six</span>
+<span class="kn">import</span> <span class="nn">abc</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span><span class="p">,</span> <span class="n">Mapping</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;load_yaml_unicode&#39;</span><span class="p">,</span> <span class="s">&#39;dump_yaml_unicode&#39;</span>
+            <span class="s">&#39;dump_yaml_subclasses&#39;</span><span class="p">,</span> <span class="s">&#39;dump_yaml_classmapping&#39;</span>
+            <span class="s">&#39;OrderedDictLoader&#39;</span><span class="p">,</span> <span class="s">&#39;OrderedDictSafeLoader&#39;</span><span class="p">,</span>
+            <span class="s">&#39;OrderedDictDumper&#39;</span><span class="p">,</span> <span class="s">&#39;OrderedDictSafeDumper&#39;</span><span class="p">,</span>
+            <span class="s">&#39;MappingDumper&#39;</span><span class="p">,</span> <span class="s">&#39;MappingSafeDumper&#39;</span><span class="p">,</span>
+            <span class="s">&#39;UnicodeLoader&#39;</span><span class="p">,</span> <span class="s">&#39;UnicodeSafeLoader&#39;</span><span class="p">,</span>
+            <span class="s">&#39;UnicodeDumper&#39;</span><span class="p">,</span> <span class="s">&#39;UnicodeSafeDumper&#39;</span>
+            <span class="s">&#39;PyshellLoader&#39;</span><span class="p">,</span> <span class="s">&#39;PyshellDumper&#39;</span>
+            <span class="s">&#39;MappingYAMLLoader&#39;</span><span class="p">,</span> <span class="s">&#39;UnicodeYAMLLoader&#39;</span><span class="p">]</span>
+
+<span class="n">YAML_LOADERS</span> <span class="o">=</span> <span class="p">[</span><span class="n">yaml</span><span class="o">.</span><span class="n">Loader</span><span class="p">,</span> <span class="n">yaml</span><span class="o">.</span><span class="n">SafeLoader</span><span class="p">]</span>
+<span class="n">YAML_DUMPERS</span> <span class="o">=</span> <span class="p">[</span><span class="n">yaml</span><span class="o">.</span><span class="n">SafeDumper</span><span class="p">]</span>
+    
+<div class="viewcode-block" id="dump_yaml_subclasses"><a class="viewcode-back" href="../../yaml.html#pyshell.yaml.dump_yaml_subclasses">[docs]</a><span class="k">def</span> <span class="nf">dump_yaml_subclasses</span><span class="p">(</span><span class="n">subclass</span><span class="p">,</span> <span class="n">representclass</span><span class="p">,</span> <span class="o">*</span><span class="n">dumpers</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Dump an ordered dict like you would a regular dict.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">dumpers</span><span class="p">):</span>
+        <span class="n">dumpers</span> <span class="o">=</span> <span class="n">YAML_DUMPERS</span>
+    <span class="k">for</span> <span class="n">dumper</span> <span class="ow">in</span> <span class="n">dumpers</span><span class="p">:</span>
+        <span class="n">dumper</span><span class="o">.</span><span class="n">add_multi_representer</span><span class="p">(</span><span class="n">subclass</span><span class="p">,</span> <span class="n">dumper</span><span class="o">.</span><span class="n">yaml_representers</span><span class="p">[</span><span class="n">representclass</span><span class="p">])</span>
+    </div>
+<div class="viewcode-block" id="dump_yaml_classmapping"><a class="viewcode-back" href="../../yaml.html#pyshell.yaml.dump_yaml_classmapping">[docs]</a><span class="k">def</span> <span class="nf">dump_yaml_classmapping</span><span class="p">(</span><span class="n">fromclass</span><span class="p">,</span> <span class="n">toclass</span><span class="p">,</span> <span class="o">*</span><span class="n">dumpers</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Map one class to another in the YAML representer.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">dumpers</span><span class="p">):</span>
+        <span class="n">dumpers</span> <span class="o">=</span> <span class="n">YAML_DUMPERS</span>
+    <span class="k">for</span> <span class="n">dumper</span> <span class="ow">in</span> <span class="n">dumpers</span><span class="p">:</span>
+        <span class="n">dumper</span><span class="o">.</span><span class="n">add_representer</span><span class="p">(</span><span class="n">fromclass</span><span class="p">,</span> <span class="n">dumper</span><span class="o">.</span><span class="n">yaml_representers</span><span class="p">[</span><span class="n">toclass</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="load_yaml_unicode"><a class="viewcode-back" href="../../yaml.html#pyshell.yaml.load_yaml_unicode">[docs]</a><span class="k">def</span> <span class="nf">load_yaml_unicode</span><span class="p">(</span><span class="o">*</span><span class="n">loaders</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This method forces the PyYAML library to construct unicode objects when</span>
+<span class="sd">    reading YAML instead of producing regular strings.</span>
+<span class="sd">    </span>
+<span class="sd">    It is designed to improve compatibility in Python2.x using unicode </span>
+<span class="sd">    objects.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">construct_yaml_str</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Constructs a regular scalar instead of a python</span>
+<span class="sd">        string object from a YAML key, forcing all YAML strings</span>
+<span class="sd">        to be unicode objects.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">construct_scalar</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">loaders</span><span class="p">):</span>
+        <span class="n">loaders</span> <span class="o">=</span> <span class="n">YAML_LOADERS</span>
+    
+    <span class="k">for</span> <span class="n">loader</span> <span class="ow">in</span> <span class="n">loaders</span><span class="p">:</span>
+        <span class="n">loader</span><span class="o">.</span><span class="n">add_constructor</span><span class="p">(</span><span class="s">&#39;tag:yaml.org,2002:str&#39;</span><span class="p">,</span> <span class="n">construct_yaml_str</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="dump_yaml_unicode"><a class="viewcode-back" href="../../yaml.html#pyshell.yaml.dump_yaml_unicode">[docs]</a><span class="k">def</span> <span class="nf">dump_yaml_unicode</span><span class="p">(</span><span class="o">*</span><span class="n">dumpers</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This method forces the PyYAML library to dump unicode objects when</span>
+<span class="sd">    dumping YAML instead of producing YAML unicode tags.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">dumpers</span><span class="p">):</span>
+        <span class="n">dumpers</span> <span class="o">=</span> <span class="n">YAML_DUMPERS</span>
+    
+    <span class="k">def</span> <span class="nf">represent_unicode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">represent_scalar</span><span class="p">(</span><span class="s">&#39;tag:yaml.org,2002:str&#39;</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">dumper</span> <span class="ow">in</span> <span class="n">dumpers</span><span class="p">:</span>
+        <span class="n">dumper</span><span class="o">.</span><span class="n">add_representer</span><span class="p">(</span><span class="n">six</span><span class="o">.</span><span class="n">text_type</span><span class="p">,</span> <span class="n">represent_unicode</span><span class="p">)</span>
+</div>
+<span class="nd">@six.add_metaclass</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABCMeta</span><span class="p">)</span>
+<div class="viewcode-block" id="UnicodeYAMLLoader"><a class="viewcode-back" href="../../yaml.html#pyshell.yaml.UnicodeYAMLLoader">[docs]</a><span class="k">class</span> <span class="nc">UnicodeYAMLLoader</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A YAML loader that loads unicode values everywhere.</span>
+<span class="sd">    </span>
+<span class="sd">    This MixIn can be used for SafeLoaders and Regular Loaders. It doesn&#39;t work alone.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">UnicodeYAMLLoader</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_constructor</span><span class="p">(</span><span class="s">&#39;tag:yaml.org,2002:str&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">construct_yaml_str_unicode</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">construct_yaml_str_unicode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Constructs a regular scalar instead of a python</span>
+<span class="sd">        string object from a YAML key, forcing all YAML strings</span>
+<span class="sd">        to be unicode objects.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">construct_scalar</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+    </div>
+<span class="nd">@six.add_metaclass</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABCMeta</span><span class="p">)</span>
+<div class="viewcode-block" id="UnicodeYAMLDumper"><a class="viewcode-back" href="../../yaml.html#pyshell.yaml.UnicodeYAMLDumper">[docs]</a><span class="k">class</span> <span class="nc">UnicodeYAMLDumper</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This Mixin can be used for |Dumper| and |SafeDumper| to provide unicode loading support</span>
+<span class="sd">    by default.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">UnicodeYAMLDumper</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_representer</span><span class="p">(</span><span class="n">six</span><span class="o">.</span><span class="n">text_type</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">represent_unicode</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">represent_unicode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">represent_scalar</span><span class="p">(</span><span class="s">&#39;tag:yaml.org,2002:str&#39;</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+</div>
+<span class="nd">@six.add_metaclass</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABCMeta</span><span class="p">)</span>
+<div class="viewcode-block" id="MappingYAMLLoader"><a class="viewcode-back" href="../../yaml.html#pyshell.yaml.MappingYAMLLoader">[docs]</a><span class="k">class</span> <span class="nc">MappingYAMLLoader</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A YAML loader that loads mappings into ordered dictionaries.</span>
+<span class="sd">    </span>
+<span class="sd">    This MixIn can be used for SafeLoaders and Regular Loaders. It doesn&#39;t work alone.</span>
+<span class="sd">    </span>
+<span class="sd">    It has an abstract attribute, :attr:`CUSTOM_MAPPING` which must be set to the desired</span>
+<span class="sd">    mapping type in a subclass before use.</span>
+<span class="sd">    </span>
+<span class="sd">    Original Design From: https://gist.github.com/enaeseth/844388</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="nd">@abc.abstractproperty</span>
+    <span class="k">def</span> <span class="nf">CUSTOM_MAPPING</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;set this attribute to the desired custom mapping.&quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MappingYAMLLoader</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_constructor</span><span class="p">(</span><span class="s">&#39;tag:yaml.org,2002:map&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">construct_yaml_map</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_constructor</span><span class="p">(</span><span class="s">&#39;tag:yaml.org,2002:omap&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">construct_yaml_map</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">construct_yaml_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CUSTOM_MAPPING</span><span class="p">()</span>
+        <span class="k">yield</span> <span class="n">data</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">construct_mapping</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">construct_mapping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">deep</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">yaml</span><span class="o">.</span><span class="n">MappingNode</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">flatten_mapping</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">yaml</span><span class="o">.</span><span class="n">constructor</span><span class="o">.</span><span class="n">ConstructorError</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span>
+                <span class="s">&#39;expected a mapping node, but found </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">start_mark</span><span class="p">)</span>
+
+        <span class="n">mapping</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CUSTOM_MAPPING</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">key_node</span><span class="p">,</span> <span class="n">value_node</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">construct_object</span><span class="p">(</span><span class="n">key_node</span><span class="p">,</span> <span class="n">deep</span><span class="o">=</span><span class="n">deep</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="nb">hash</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">yaml</span><span class="o">.</span><span class="n">constructor</span><span class="o">.</span><span class="n">ConstructorError</span><span class="p">(</span><span class="s">&#39;while constructing a mapping&#39;</span><span class="p">,</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">start_mark</span><span class="p">,</span> <span class="s">&#39;found unacceptable key (</span><span class="si">%s</span><span class="s">)&#39;</span> <span class="o">%</span> <span class="n">exc</span><span class="p">,</span> <span class="n">key_node</span><span class="o">.</span><span class="n">start_mark</span><span class="p">)</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">construct_object</span><span class="p">(</span><span class="n">value_node</span><span class="p">,</span> <span class="n">deep</span><span class="o">=</span><span class="n">deep</span><span class="p">)</span>
+            <span class="n">mapping</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">return</span> <span class="n">mapping</span>
+        </div>
+<span class="nd">@six.add_metaclass</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABCMeta</span><span class="p">)</span>
+<div class="viewcode-block" id="ClassMappingYAMLDumper"><a class="viewcode-back" href="../../yaml.html#pyshell.yaml.ClassMappingYAMLDumper">[docs]</a><span class="k">class</span> <span class="nc">ClassMappingYAMLDumper</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A Mixin for YAML Mapping.&quot;&quot;&quot;</span>
+    
+    <span class="nd">@abc.abstractproperty</span>
+    <span class="k">def</span> <span class="nf">CUSTOM_CLASSMAPPING</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;set this attribute to the desired custom mapping.&quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+        
+    <span class="nd">@abc.abstractproperty</span>
+    <span class="k">def</span> <span class="nf">CUSTOM_SUBCLASSMAPPING</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;set this attribute to the desired custom mapping.&quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ClassMappingYAMLDumper</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">fromclass</span><span class="p">,</span> <span class="n">toclass</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">CUSTOM_CLASSMAPPING</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_representer</span><span class="p">(</span><span class="n">fromclass</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">yaml_representers</span><span class="p">[</span><span class="n">toclass</span><span class="p">])</span>
+        
+        <span class="k">for</span> <span class="n">subclass</span><span class="p">,</span> <span class="n">toclass</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">CUSTOM_SUBCLASSMAPPING</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_multi_representer</span><span class="p">(</span><span class="n">subclass</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">yaml_representers</span><span class="p">[</span><span class="n">toclass</span><span class="p">])</span>
+        
+<span class="c"># OrderedDict Loaders</span>
+<span class="c">#####################</span>
+</div>
+<div class="viewcode-block" id="OrderedDictLoader"><a class="viewcode-back" href="../../yaml.html#pyshell.yaml.OrderedDictLoader">[docs]</a><span class="k">class</span> <span class="nc">OrderedDictLoader</span><span class="p">(</span><span class="n">MappingYAMLLoader</span><span class="p">,</span> <span class="n">yaml</span><span class="o">.</span><span class="n">Loader</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A |Loader| which uses |odict| instead of regular dictionaries.&quot;&quot;&quot;</span>
+    <span class="n">CUSTOM_MAPPING</span> <span class="o">=</span> <span class="n">OrderedDict</span>
+    </div>
+<div class="viewcode-block" id="OrderedDictSafeLoader"><a class="viewcode-back" href="../../yaml.html#pyshell.yaml.OrderedDictSafeLoader">[docs]</a><span class="k">class</span> <span class="nc">OrderedDictSafeLoader</span><span class="p">(</span><span class="n">MappingYAMLLoader</span><span class="p">,</span> <span class="n">yaml</span><span class="o">.</span><span class="n">SafeLoader</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A |SafeLoader| which uses |odict| instead of regular dictionaries.&quot;&quot;&quot;</span>
+    <span class="n">CUSTOM_MAPPING</span> <span class="o">=</span> <span class="n">OrderedDict</span>
+    
+    
+
+<span class="c"># Unicode Loaders</span>
+<span class="c">#################</span>
+</div>
+<div class="viewcode-block" id="UnicodeLoader"><a class="viewcode-back" href="../../yaml.html#pyshell.yaml.UnicodeLoader">[docs]</a><span class="k">class</span> <span class="nc">UnicodeLoader</span><span class="p">(</span><span class="n">UnicodeYAMLLoader</span><span class="p">,</span> <span class="n">yaml</span><span class="o">.</span><span class="n">Loader</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A |Loader| which uses unicode for all keys and strings.&quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="UnicodeSafeLoader"><a class="viewcode-back" href="../../yaml.html#pyshell.yaml.UnicodeSafeLoader">[docs]</a><span class="k">class</span> <span class="nc">UnicodeSafeLoader</span><span class="p">(</span><span class="n">UnicodeYAMLLoader</span><span class="p">,</span> <span class="n">yaml</span><span class="o">.</span><span class="n">SafeLoader</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A |SafeLoader| which uses unicode for all keys and strings.&quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+<span class="c"># PyShell Loaders combine Unicode and OrderedDict Loaders</span>
+<span class="c">#########################################################</span>
+</div>
+<div class="viewcode-block" id="PyshellLoader"><a class="viewcode-back" href="../../yaml.html#pyshell.yaml.PyshellLoader">[docs]</a><span class="k">class</span> <span class="nc">PyshellLoader</span><span class="p">(</span><span class="n">MappingYAMLLoader</span><span class="p">,</span> <span class="n">UnicodeYAMLLoader</span><span class="p">,</span> <span class="n">yaml</span><span class="o">.</span><span class="n">SafeLoader</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A |Loader| which uses unicode by default and |odict|.&quot;&quot;&quot;</span>
+    <span class="n">CUSTOM_MAPPING</span> <span class="o">=</span> <span class="n">OrderedDict</span>
+    </div>
+<div class="viewcode-block" id="PyshellDumper"><a class="viewcode-back" href="../../yaml.html#pyshell.yaml.PyshellDumper">[docs]</a><span class="k">class</span> <span class="nc">PyshellDumper</span><span class="p">(</span><span class="n">ClassMappingYAMLDumper</span><span class="p">,</span> <span class="n">UnicodeYAMLDumper</span><span class="p">,</span> <span class="n">yaml</span><span class="o">.</span><span class="n">SafeDumper</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A |SafeDumper| which uses unicode by default and |odict|.&quot;&quot;&quot;</span>
+    <span class="n">CUSTOM_CLASSMAPPING</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">CUSTOM_SUBCLASSMAPPING</span> <span class="o">=</span> <span class="p">{</span> <span class="nb">dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="nb">float</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">:</span><span class="nb">int</span> <span class="p">}</span>
+
+<span class="c"># OrderedDict Dumpers</span>
+<span class="c">#####################</span>
+</div>
+<div class="viewcode-block" id="OrderedDictDumper"><a class="viewcode-back" href="../../yaml.html#pyshell.yaml.OrderedDictDumper">[docs]</a><span class="k">class</span> <span class="nc">OrderedDictDumper</span><span class="p">(</span><span class="n">ClassMappingYAMLDumper</span><span class="p">,</span> <span class="n">yaml</span><span class="o">.</span><span class="n">Dumper</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A |Dumper| which dumps |odict| as a regular :class:`dict`.&quot;&quot;&quot;</span>
+    <span class="n">CUSTOM_CLASSMAPPING</span> <span class="o">=</span> <span class="p">{</span> <span class="n">OrderedDict</span> <span class="p">:</span> <span class="nb">dict</span> <span class="p">}</span>
+    <span class="n">CUSTOM_SUBCLASSMAPPING</span> <span class="o">=</span> <span class="p">{}</span>
+    </div>
+<div class="viewcode-block" id="OrderedDictSafeDumper"><a class="viewcode-back" href="../../yaml.html#pyshell.yaml.OrderedDictSafeDumper">[docs]</a><span class="k">class</span> <span class="nc">OrderedDictSafeDumper</span><span class="p">(</span><span class="n">ClassMappingYAMLDumper</span><span class="p">,</span> <span class="n">yaml</span><span class="o">.</span><span class="n">SafeDumper</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A |SafeDumper| which dumps |odict| as a regular :class:`dict`.&quot;&quot;&quot;</span>
+    <span class="n">CUSTOM_CLASSMAPPING</span> <span class="o">=</span> <span class="p">{</span> <span class="n">OrderedDict</span> <span class="p">:</span> <span class="nb">dict</span> <span class="p">}</span>
+    <span class="n">CUSTOM_SUBCLASSMAPPING</span> <span class="o">=</span> <span class="p">{}</span>
+    
+
+<span class="c"># Unicode Dumpers</span>
+<span class="c">#################</span>
+</div>
+<div class="viewcode-block" id="UnicodeDumper"><a class="viewcode-back" href="../../yaml.html#pyshell.yaml.UnicodeDumper">[docs]</a><span class="k">class</span> <span class="nc">UnicodeDumper</span><span class="p">(</span><span class="n">UnicodeYAMLDumper</span><span class="p">,</span> <span class="n">yaml</span><span class="o">.</span><span class="n">Dumper</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A |Dumper| that dumps all keys and strings as unicode literals.&quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="UnicodeSafeDumper"><a class="viewcode-back" href="../../yaml.html#pyshell.yaml.UnicodeSafeDumper">[docs]</a><span class="k">class</span> <span class="nc">UnicodeSafeDumper</span><span class="p">(</span><span class="n">UnicodeYAMLDumper</span><span class="p">,</span> <span class="n">yaml</span><span class="o">.</span><span class="n">SafeDumper</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A |SafeDumper| that dumps all keys and strings as unicode literals.&quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+<span class="c"># Mapping Dumpers</span>
+<span class="c">#################</span>
+</div>
+<div class="viewcode-block" id="MappingDumper"><a class="viewcode-back" href="../../yaml.html#pyshell.yaml.MappingDumper">[docs]</a><span class="k">class</span> <span class="nc">MappingDumper</span><span class="p">(</span><span class="n">ClassMappingYAMLDumper</span><span class="p">,</span> <span class="n">yaml</span><span class="o">.</span><span class="n">Dumper</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A |Dumper| which dumps any mapping as regular mappings.&quot;&quot;&quot;</span>
+    <span class="n">CUSTOM_CLASSMAPPING</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">CUSTOM_SUBCLASSMAPPING</span> <span class="o">=</span> <span class="p">{</span> <span class="nb">dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">:</span> <span class="nb">dict</span><span class="p">}</span>
+</div>
+<div class="viewcode-block" id="MappingSafeDumper"><a class="viewcode-back" href="../../yaml.html#pyshell.yaml.MappingSafeDumper">[docs]</a><span class="k">class</span> <span class="nc">MappingSafeDumper</span><span class="p">(</span><span class="n">ClassMappingYAMLDumper</span><span class="p">,</span> <span class="n">yaml</span><span class="o">.</span><span class="n">SafeDumper</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A |SafeDumper| which dumps any mapping as regular mappings.&quot;&quot;&quot;</span>
+    <span class="n">CUSTOM_CLASSMAPPING</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">CUSTOM_SUBCLASSMAPPING</span> <span class="o">=</span> <span class="p">{</span> <span class="nb">dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">:</span> <span class="nb">dict</span> <span class="p">}</span>
+    </div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">PyShell 0.6.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Alexander Rudy.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+    </div>
+  </body>
+</html>

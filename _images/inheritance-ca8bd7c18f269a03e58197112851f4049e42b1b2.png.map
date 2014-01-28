@@ -1,0 +1,5 @@
+<map id="inheritance6696988e9e" name="inheritance6696988e9e">
+<area shape="rect" id="node1" href="base.html#pyshell.base.CLIEngine" title="A base class for Command Line Inteface facing tools. :class:`CLIEnigne` " alt="" coords="6,30,87,55"/>
+<area shape="rect" id="node2" href="#pyshell.subcommand.SCEngine" title="A base engine for use as a subcommand or stand&#45;alone command like :class:`~pyshell.base.CLIEngine`. When used as a sub&#45;command, it should be attached to a :class:`SCController` to act as the base command." alt="" coords="144,5,224,30"/>
+<area shape="rect" id="node3" href="#pyshell.subcommand.SCController" title="A controller for a set of :class:`SCEngine` objects. This class provides the" alt="" coords="137,54,231,79"/>
+</map>

@@ -1,0 +1,403 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pyshell.astron.units &mdash; PyShell 0.6.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.6.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PyShell 0.6.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">PyShell 0.6.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pyshell.astron.units</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="c"># </span>
+<span class="c">#  units.py</span>
+<span class="c">#  pyshell</span>
+<span class="c">#  </span>
+<span class="c">#  Created by Alexander Rudy on 2013-12-02.</span>
+<span class="c">#  Copyright 2013 Alexander Rudy. All rights reserved.</span>
+<span class="c"># </span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="p">(</span><span class="n">absolute_import</span><span class="p">,</span> <span class="n">unicode_literals</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span>
+                        <span class="n">print_function</span><span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">six</span>
+<span class="kn">import</span> <span class="nn">abc</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">contextlib</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">astropy.units</span> <span class="kn">as</span> <span class="nn">u</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s">&quot;This module requires the &#39;astropy&#39; module to function properly.&quot;</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">..util</span> <span class="kn">import</span> <span class="n">descriptor__get__</span>
+
+<span class="n">u</span><span class="o">.</span><span class="n">du</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span>
+<span class="n">UNIT_MAX_DEPTH</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">NON_DIMENSIONAL_FLAG</span> <span class="o">=</span> <span class="s">&#39;_is_nondimensional&#39;</span>
+<span class="n">INITIAL_VALUE_FLAG</span> <span class="o">=</span> <span class="s">&#39;_is_initial&#39;</span>
+
+<div class="viewcode-block" id="recompose"><a class="viewcode-back" href="../../../astron/units.html#pyshell.astron.units.recompose">[docs]</a><span class="k">def</span> <span class="nf">recompose</span><span class="p">(</span><span class="n">quantity</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">scaled</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">warn_compositons</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">max_depth</span><span class="o">=</span><span class="n">UNIT_MAX_DEPTH</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Recompose a quantity in terms of the given bases.</span>
+<span class="sd">    </span>
+<span class="sd">    :param unit: The unit to recompose.</span>
+<span class="sd">    :param bases: The set of units allowed in the final result.</span>
+<span class="sd">    :param bool scaled: Whether to allow units with a scale or not.</span>
+<span class="sd">    :param bool warn_compositons: Whether to warn when there were multiple compositions found.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">result_unit</span> <span class="o">=</span> <span class="n">recompose_unit</span><span class="p">(</span><span class="n">quantity</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">scaled</span><span class="p">,</span> <span class="n">warn_compositons</span><span class="p">,</span> <span class="n">max_depth</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">quantity</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">result_unit</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span>
+</div>
+<div class="viewcode-block" id="recompose_unit"><a class="viewcode-back" href="../../../astron/units.html#pyshell.astron.units.recompose_unit">[docs]</a><span class="k">def</span> <span class="nf">recompose_unit</span><span class="p">(</span><span class="n">unit</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">scaled</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">warn_compositons</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">max_depth</span><span class="o">=</span><span class="n">UNIT_MAX_DEPTH</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Recompose a unit in terms of the provided bases.</span>
+<span class="sd">    </span>
+<span class="sd">    :param unit: The unit to recompose.</span>
+<span class="sd">    :param bases: The set of units allowed in the final result.</span>
+<span class="sd">    :param bool scaled: Whether to allow units with a scale or not.</span>
+<span class="sd">    :param bool warn_compositons: Whether to warn when there were multiple compositions found.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">composed</span> <span class="o">=</span> <span class="n">unit</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">units</span><span class="o">=</span><span class="n">bases</span><span class="p">,</span> <span class="n">max_depth</span><span class="o">=</span><span class="n">UNIT_MAX_DEPTH</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">composed</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">warn_compositons</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;Multiple compositions are possible for {!r}: {!r}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">unit</span><span class="p">,</span><span class="n">composed</span><span class="p">))</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">composed</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">scale</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">result</span>
+    <span class="k">elif</span> <span class="n">scaled</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">result</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">unscaled</span> <span class="o">=</span> <span class="n">result</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">unscaled</span>
+</div>
+<div class="viewcode-block" id="FrozenError"><a class="viewcode-back" href="../../../astron/units.html#pyshell.astron.units.FrozenError">[docs]</a><span class="k">class</span> <span class="nc">FrozenError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An error occuring when trying to set frozen attributes.&quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="UnitsProperty"><a class="viewcode-back" href="../../../astron/units.html#pyshell.astron.units.UnitsProperty">[docs]</a><span class="k">class</span> <span class="nc">UnitsProperty</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A descriptor which enforces units.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">latex</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">nonnegative</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">readonly</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">warn_for_unit_composition</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">UnitsProperty</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">latex</span> <span class="o">=</span> <span class="n">name</span> <span class="k">if</span> <span class="n">latex</span> <span class="ow">is</span> <span class="bp">None</span> <span class="k">else</span> <span class="n">latex</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_unit</span> <span class="o">=</span> <span class="n">unit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_attr</span> <span class="o">=</span> <span class="s">&#39;_{}_{}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">,</span> <span class="s">&quot;_&quot;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nn</span> <span class="o">=</span> <span class="n">nonnegative</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_readonly</span> <span class="o">=</span> <span class="n">readonly</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span> <span class="o">=</span> <span class="n">scale</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_warncompositon</span> <span class="o">=</span> <span class="n">warn_for_unit_composition</span>
+        
+<div class="viewcode-block" id="UnitsProperty.bases"><a class="viewcode-back" href="../../../astron/units.html#pyshell.astron.units.UnitsProperty.bases">[docs]</a>    <span class="k">def</span> <span class="nf">bases</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the bases.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s">&#39;_bases&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="UnitsProperty.recompose"><a class="viewcode-back" href="../../../astron/units.html#pyshell.astron.units.UnitsProperty.recompose">[docs]</a>    <span class="k">def</span> <span class="nf">recompose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">quantity</span><span class="p">,</span> <span class="n">bases</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Recompose a unit into a new base set.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">recompose</span><span class="p">(</span><span class="n">quantity</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">scaled</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_scale</span><span class="p">,</span> <span class="n">warn_compositons</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_warncompositon</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="UnitsProperty.unit"><a class="viewcode-back" href="../../../astron/units.html#pyshell.astron.units.UnitsProperty.unit">[docs]</a>    <span class="k">def</span> <span class="nf">unit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the recomposed unit.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">recompose_unit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_unit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bases</span><span class="p">(</span><span class="n">obj</span><span class="p">),</span> <span class="n">scaled</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_scale</span><span class="p">,</span> <span class="n">warn_compositons</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_warncompositon</span><span class="p">)</span>
+        </div>
+    <span class="k">def</span> <span class="nf">__set__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set this property&#39;s value&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_readonly</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s">&quot;{} cannot set read-only attribute {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        
+<div class="viewcode-block" id="UnitsProperty.set"><a class="viewcode-back" href="../../../astron/units.html#pyshell.astron.units.UnitsProperty.set">[docs]</a>    <span class="k">def</span> <span class="nf">set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Shortcut for the setter.&quot;&quot;&quot;</span>
+        <span class="n">quantity</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">unit</span><span class="p">(</span><span class="n">obj</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">quantity</span><span class="o">.</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;{} must be finite!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nn</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">quantity</span><span class="o">.</span><span class="n">value</span> <span class="o">&gt;=</span> <span class="mf">0.0</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;{} must be non-negative!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">setattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attr</span><span class="p">,</span> <span class="n">quantity</span><span class="p">)</span>
+        </div>
+    <span class="nd">@descriptor__get__</span>
+    <span class="k">def</span> <span class="nf">__get__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">objtype</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the property&#39;s value&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+        
+<div class="viewcode-block" id="UnitsProperty.get"><a class="viewcode-back" href="../../../astron/units.html#pyshell.astron.units.UnitsProperty.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Shortcut get method.&quot;&quot;&quot;</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attr</span><span class="p">)</span>
+        <span class="n">recomposed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">recompose</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bases</span><span class="p">(</span><span class="n">obj</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">unit</span> <span class="o">!=</span> <span class="n">recomposed</span><span class="o">.</span><span class="n">unit</span><span class="p">:</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attr</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">recomposed</span>
+        <span class="k">return</span> <span class="n">value</span>
+        </div></div>
+<div class="viewcode-block" id="ComputedUnitsProperty"><a class="viewcode-back" href="../../../astron/units.html#pyshell.astron.units.ComputedUnitsProperty">[docs]</a><span class="k">class</span> <span class="nc">ComputedUnitsProperty</span><span class="p">(</span><span class="n">UnitsProperty</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A units property computed from source.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fget</span><span class="p">,</span> <span class="n">readonly</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">warn_for_unit_composition</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ComputedUnitsProperty</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">fget</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">readonly</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+            <span class="n">warn_for_unit_composition</span><span class="o">=</span><span class="n">warn_for_unit_composition</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fget</span> <span class="o">=</span> <span class="n">fget</span>
+        
+    <span class="nd">@descriptor__get__</span>
+    <span class="k">def</span> <span class="nf">__get__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">objtype</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Getter which calls the property function.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">recompose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fget</span><span class="p">(</span><span class="n">obj</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">bases</span><span class="p">(</span><span class="n">obj</span><span class="p">))</span>
+        
+        </div>
+<div class="viewcode-block" id="NonDimensionalProperty"><a class="viewcode-back" href="../../../astron/units.html#pyshell.astron.units.NonDimensionalProperty">[docs]</a><span class="k">class</span> <span class="nc">NonDimensionalProperty</span><span class="p">(</span><span class="n">UnitsProperty</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;NonDimensionalProperty&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">nonnegative</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">warn_for_unit_composition</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">NonDimensionalProperty</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">nonnegative</span><span class="o">=</span><span class="n">nonnegative</span><span class="p">,</span> <span class="n">readonly</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span>
+            <span class="n">warn_for_unit_composition</span><span class="o">=</span><span class="n">warn_for_unit_composition</span><span class="p">)</span>
+    
+<div class="viewcode-block" id="NonDimensionalProperty.bases"><a class="viewcode-back" href="../../../astron/units.html#pyshell.astron.units.NonDimensionalProperty.bases">[docs]</a>    <span class="k">def</span> <span class="nf">bases</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the non-dimensional bases.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">NON_DIMENSIONAL_FLAG</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s">&#39;_nondimensional_bases&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">NonDimensionalProperty</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">bases</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+        
+</div></div>
+<div class="viewcode-block" id="InitialValueProperty"><a class="viewcode-back" href="../../../astron/units.html#pyshell.astron.units.InitialValueProperty">[docs]</a><span class="k">class</span> <span class="nc">InitialValueProperty</span><span class="p">(</span><span class="n">NonDimensionalProperty</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initial Value Property&quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">nonnegative</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">warn_for_unit_composition</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">InitialValueProperty</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">nonnegative</span><span class="o">=</span><span class="n">nonnegative</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span>
+            <span class="n">warn_for_unit_composition</span><span class="o">=</span><span class="n">warn_for_unit_composition</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_init</span> <span class="o">=</span> <span class="s">&#39;_{}_init_{}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">,</span> <span class="s">&quot;_&quot;</span><span class="p">))</span>
+        
+<div class="viewcode-block" id="InitialValueProperty.get"><a class="viewcode-back" href="../../../astron/units.html#pyshell.astron.units.InitialValueProperty.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;docstring for get&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">INITIAL_VALUE_FLAG</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">InitialValueProperty</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="InitialValueProperty.freeze"><a class="viewcode-back" href="../../../astron/units.html#pyshell.astron.units.InitialValueProperty.freeze">[docs]</a>    <span class="k">def</span> <span class="nf">freeze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Freeze the value&#39;s initial state.&quot;&quot;&quot;</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="InitialValueProperty.frozen"><a class="viewcode-back" href="../../../astron/units.html#pyshell.astron.units.InitialValueProperty.frozen">[docs]</a>    <span class="k">def</span> <span class="nf">frozen</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Frozen data&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="InitialValueProperty.initial"><a class="viewcode-back" href="../../../astron/units.html#pyshell.astron.units.InitialValueProperty.initial">[docs]</a>    <span class="k">def</span> <span class="nf">initial</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the initial value of a property.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">FrozenError</span><span class="p">(</span><span class="s">&quot;{0}.{1} is not yet frozen.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">recompose</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">bases</span><span class="p">(</span><span class="n">obj</span><span class="p">))</span>
+        </div></div>
+<div class="viewcode-block" id="HasUnitsProperties"><a class="viewcode-back" href="../../../astron/units.html#pyshell.astron.units.HasUnitsProperties">[docs]</a><span class="k">class</span> <span class="nc">HasUnitsProperties</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;docstring for HasUnitsProperties&quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">_list_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">klass</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generate attributes matching a certain class.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)):</span>
+            <span class="n">attr</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">element</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">klass</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="n">element</span>
+    
+    <span class="k">def</span> <span class="nf">_get_attr_by_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get an attribute by its full name.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)):</span>
+            <span class="n">attr</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">element</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">UnitsProperty</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">attr</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">name</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">attr</span>
+        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s">&quot;{} has no property named {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
+        
+<div class="viewcode-block" id="HasUnitsProperties.get_unit"><a class="viewcode-back" href="../../../astron/units.html#pyshell.astron.units.HasUnitsProperties.get_unit">[docs]</a>    <span class="k">def</span> <span class="nf">get_unit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a property unit by attribute name or full name.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">attr</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">attr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_attr_by_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">attr</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">attr</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">attr</span><span class="o">.</span><span class="n">recomposed_unit</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="HasUnitsProperties.list_units_properties"><a class="viewcode-back" href="../../../astron/units.html#pyshell.astron.units.HasUnitsProperties.list_units_properties">[docs]</a>    <span class="k">def</span> <span class="nf">list_units_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;List all of the unit properties&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_list_attributes</span><span class="p">(</span><span class="n">UnitsProperty</span><span class="p">)</span>
+        
+        </div></div>
+<div class="viewcode-block" id="HasNonDimensonals"><a class="viewcode-back" href="../../../astron/units.html#pyshell.astron.units.HasNonDimensonals">[docs]</a><span class="k">class</span> <span class="nc">HasNonDimensonals</span><span class="p">(</span><span class="n">HasUnitsProperties</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A bass class for things which have non-dimensional variables.&quot;&quot;&quot;</span>
+    
+    <span class="n">_bases</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">_nondimensional_bases</span> <span class="o">=</span> <span class="bp">None</span>
+        
+        
+    <span class="k">def</span> <span class="nf">_list_nd_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;List all of the state variables in this object&#39;s dir.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_list_attributes</span><span class="p">(</span><span class="n">NonDimensionalProperty</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">_nd_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generator for state properties.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_list_nd_variables</span><span class="p">():</span>
+            <span class="k">yield</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">element</span><span class="p">)</span>
+            
+            
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="HasNonDimensonals.is_nondimensional"><a class="viewcode-back" href="../../../astron/units.html#pyshell.astron.units.HasNonDimensonals.is_nondimensional">[docs]</a>    <span class="k">def</span> <span class="nf">is_nondimensional</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A boolean determining whether the state is non-dimensional or not.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">NON_DIMENSIONAL_FLAG</span><span class="p">)</span>
+        </div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">nondimensional_bases</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the non-dimensional bases.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nondimensional_bases</span>
+        
+    <span class="nd">@nondimensional_bases.setter</span>
+<div class="viewcode-block" id="HasNonDimensonals.nondimensional_bases"><a class="viewcode-back" href="../../../astron/units.html#pyshell.astron.units.HasNonDimensonals.nondimensional_bases">[docs]</a>    <span class="k">def</span> <span class="nf">nondimensional_bases</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the non-dimensional bases.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nondimensional_bases</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_nondimensional_bases</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;Non-dimensional bases should be a set of units.&quot;</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="HasNonDimensonals.nondimensionalize"><a class="viewcode-back" href="../../../astron/units.html#pyshell.astron.units.HasNonDimensonals.nondimensionalize">[docs]</a>    <span class="k">def</span> <span class="nf">nondimensionalize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Place the object in a non-dimensional state.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nondimensional_bases</span><span class="p">,</span> <span class="nb">set</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nondimensional_bases</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;{} has no non-dimensional bases.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">NON_DIMENSIONAL_FLAG</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="HasNonDimensonals.dimensionalize"><a class="viewcode-back" href="../../../astron/units.html#pyshell.astron.units.HasNonDimensonals.dimensionalize">[docs]</a>    <span class="k">def</span> <span class="nf">dimensionalize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Place the object in a dimensional state.&quot;&quot;&quot;</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">NON_DIMENSIONAL_FLAG</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+        </div>
+    <span class="nd">@contextlib.contextmanager</span>
+<div class="viewcode-block" id="HasNonDimensonals.in_nondimensional"><a class="viewcode-back" href="../../../astron/units.html#pyshell.astron.units.HasNonDimensonals.in_nondimensional">[docs]</a>    <span class="k">def</span> <span class="nf">in_nondimensional</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A context manager to put this object in the non-dimensional state.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nondimensionalize</span><span class="p">()</span>
+        <span class="k">yield</span> <span class="bp">self</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dimensionalize</span><span class="p">()</span>
+        </div></div>
+<span class="nb">setattr</span><span class="p">(</span><span class="n">HasNonDimensonals</span><span class="p">,</span> <span class="n">NON_DIMENSIONAL_FLAG</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+        
+<div class="viewcode-block" id="HasInitialValues"><a class="viewcode-back" href="../../../astron/units.html#pyshell.astron.units.HasInitialValues">[docs]</a><span class="k">class</span> <span class="nc">HasInitialValues</span><span class="p">(</span><span class="n">HasNonDimensonals</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for something which has non-dimensional properties.&quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">_list_iv_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;List all of the state variables in this object&#39;s dir.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_list_attributes</span><span class="p">(</span><span class="n">InitialValueProperty</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">_iv_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generator for state properties.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_list_iv_variables</span><span class="p">():</span>
+            <span class="k">yield</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">element</span><span class="p">)</span>
+    
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="HasInitialValues.is_initial"><a class="viewcode-back" href="../../../astron/units.html#pyshell.astron.units.HasInitialValues.is_initial">[docs]</a>    <span class="k">def</span> <span class="nf">is_initial</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A boolean determining whether the state is non-dimensional or not.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">INITIAL_VALUE_FLAG</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="HasInitialValues.initals"><a class="viewcode-back" href="../../../astron/units.html#pyshell.astron.units.HasInitialValues.initals">[docs]</a>    <span class="k">def</span> <span class="nf">initals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Place the object in the initial state.&quot;&quot;&quot;</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">INITIAL_VALUE_FLAG</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="HasInitialValues.actuals"><a class="viewcode-back" href="../../../astron/units.html#pyshell.astron.units.HasInitialValues.actuals">[docs]</a>    <span class="k">def</span> <span class="nf">actuals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Place the object in the actual state.&quot;&quot;&quot;</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">INITIAL_VALUE_FLAG</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="HasInitialValues.freeze"><a class="viewcode-back" href="../../../astron/units.html#pyshell.astron.units.HasInitialValues.freeze">[docs]</a>    <span class="k">def</span> <span class="nf">freeze</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Freeze this object.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">iv_property</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_iv_properties</span><span class="p">():</span>
+            <span class="n">iv_property</span><span class="o">.</span><span class="n">freeze</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            </div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="HasInitialValues.frozen"><a class="viewcode-back" href="../../../astron/units.html#pyshell.astron.units.HasInitialValues.frozen">[docs]</a>    <span class="k">def</span> <span class="nf">frozen</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;docstring for frozen&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">([</span>  <span class="n">iv_property</span><span class="o">.</span><span class="n">frozen</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="k">for</span> <span class="n">iv_property</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_iv_properties</span><span class="p">()</span> <span class="p">])</span>
+        </div>
+    <span class="nd">@contextlib.contextmanager</span>
+<div class="viewcode-block" id="HasInitialValues.in_initial"><a class="viewcode-back" href="../../../astron/units.html#pyshell.astron.units.HasInitialValues.in_initial">[docs]</a>    <span class="k">def</span> <span class="nf">in_initial</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A context manager to put this object in the initial state.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initals</span><span class="p">()</span>
+        <span class="k">yield</span> <span class="bp">self</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">actuals</span><span class="p">()</span>
+        </div></div>
+<span class="nb">setattr</span><span class="p">(</span><span class="n">HasInitialValues</span><span class="p">,</span> <span class="n">INITIAL_VALUE_FLAG</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">PyShell 0.6.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Alexander Rudy.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+    </div>
+  </body>
+</html>
