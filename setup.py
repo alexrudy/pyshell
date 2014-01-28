@@ -15,11 +15,9 @@ except ImportError:
 
 from setuptools import setup, find_packages
 
-from pyshell import version
-
 setup(
     name = 'pyshell',
-    version = "0.6.1",
+    version = "0.6.2",
     packages = find_packages(exclude=['tests']),
     package_data = {'pyshell':['*.yml','templates/*']},
     install_requires = ['PyYAML>=3.10','jinja2>2.0', 'six>=1.4.1'],
