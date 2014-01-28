@@ -6,20 +6,25 @@
 PyShell - Command Line Classes for Python
 =========================================
 
-This is a class-based command-line interface system. Using object-inheritance (my favorite thing, but maybe not yours), this module provides structure for command-line tools and configurable objects. 
+This is a class-based command-line interface system. Using object-inheritance (my favorite thing, but maybe not yours), this module provides structure for command-line tools and configurable objects. Have a look at the documentation to learn more.
 
 Contents:
 
 .. toctree::
     :maxdepth: 2
     
+    overview
     base
     subcommand
-    config
+    mapping
+    yaml
     loggers
+    config
+    core
     util
+    astron/index
+    astron/units
     postmortem
-    pipeline
 
 
 Examples:

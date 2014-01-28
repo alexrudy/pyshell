@@ -7,12 +7,20 @@
 #  Copyright 2013 Alexander Rudy. All rights reserved.
 # 
 
+"""
+:mod:`core` – Certain 'core' functions
+======================================
+
+.. note:: These functions should probably all live elsewhere.
+
+"""
+
 from __future__ import (absolute_import, unicode_literals, division,
                         print_function)
 
 import time
 from collections import OrderedDict
-from .config import MutableMappingBase
+from .mapping import MutableMappingBase
 
 __all__ = ['Typedkwargs','State','Stateful','Struct','OneToOneMapping']
 
@@ -43,7 +51,7 @@ class Typedkwargs(object):
             if key in kwargs:
                 del kwargs[key]
         if kwargs.keys():
-            raise ValueError("Unprocessed Keywords: {!r}".format(kwargs.keys()))
+            raise ValueError("Unprocessed Keywords: {!r}".format(list(kwargs.keys())))
             
 class State(OrderedDict):
     """Controls the state of a system."""
@@ -59,7 +67,7 @@ class Stateful(object):
     @property
     def state(self):
         """The boolean dictionary defining the state of this system."""
-        return { key : bool(value) for key,value in self._state.iteritems() }
+        return { key : bool(value) for key,value in self._state.items() }
         
     @property
     def timing(self):

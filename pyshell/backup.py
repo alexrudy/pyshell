@@ -22,13 +22,10 @@ import sys
 import argparse
 from textwrap import fill
 from warnings import warn
+import six
 
-try:
-    from . import version, CLIEngine, PYSHELL_LOGGING_STREAM
-    from .util import force_dir_path, is_remote_path
-except ValueError:
-    from pyshell import version, CLIEngine, PYSHELL_LOGGING_STREAM
-    from pyshell.util import force_dir_path, is_remote_path
+from . import version, CLIEngine, PYSHELL_LOGGING_STREAM
+from .util import force_dir_path, is_remote_path
 
 __all__ = ['BackupEngine']
 
@@ -92,12 +89,18 @@ class _BackupDestination(object):
         else:
             return [self.origin, self.destination]
         
+    def _pathcheck(self, path):
+        """Check the path."""
+        if is_remote_path(path):
+            return True
+        return os.path.isdir(os.path.dirname(path))
+        
     def launch(self,args,delete=False,prints=False,reverse=None):
         """Launch this process with the sequence of arguments."""
         if self.pseudo:
             return True
         
-        if not isinstance(self.origin,basestring) or not isinstance(self.destination,basestring) \
+        if not isinstance(self.origin,six.string_types) or not isinstance(self.destination,six.string_types) \
             or not isinstance(self.delete,bool):
             raise ValueError("Mode {mode} is incomplete.".format(mode=self.name))
         
@@ -110,12 +113,12 @@ class _BackupDestination(object):
             warn("Mode '{mode}' already running.".format(mode=self.name),
                 RuntimeWarning)
             return False
-        elif not (os.path.isdir(self.origin) or self.remote[0]):
+        elif not self._pathcheck(self.origin):
             warn("Skipping '{mode}' backup. Origin '{origin}' does not "\
                 "exist.".format(mode=self.name,origin=self.origin),
                 RuntimeWarning)
             return False
-        elif not (os.path.isdir(self.destination) or self.remote[1]):
+        elif not self._pathcheck(self.destination):
             warn("Skipping '{mode}' backup. Destination '{destination}' "\
                 "does not exist.".format(mode=self.name,
                     destination=self.destination),
@@ -224,17 +227,16 @@ class BackupEngine(CLIEngine):
         # variable is also set when the `super` call asks for the description,
         # the description property can correctly incorporate information about
         # the name and version of the command in use.
-        self._cmd = cmd
+        self._cmd = str(cmd)
         self._cmd_version = subprocess.check_output(
-            [self._cmd,'--version'],
-            stderr=subprocess.STDOUT,
-            ).split("\n")[0] # We take only the first line
+            [self._cmd, str('--version')],
+            ).splitlines()[0] # We take only the first line
         # - End initialization of Command Variables
         super(BackupEngine, self).__init__()
         
         self._destinations = {}
         self._help  = [    ]
-        self._pargs = ['-a','--partial']
+        self._pargs = ['-a','--partial', '-u']
     
     def init(self):
         """Initialize the command line arguments"""
@@ -251,12 +253,12 @@ class BackupEngine(CLIEngine):
             help="Use the root ('/') directory as origin base")
         self.parser.add_argument('-r','--reverse',
             action='store_true',
-            help="Flip destination and origin flags." \
+            help="Flip destination and origin flags."
             "Will disable any --del flag.")
         self.parser.add_argument('--reverse-delete',
             action='store_true',dest='reversedel',
             help="Use --del flag even when reversed.")
-        self.parser.usage = "%(prog)s [-nqdvpr] [--config file.yml] [--prefix "\
+        self.parser.usage = "%(prog)s [-nqdvpr] [--config file.yml] [--prefix "
         "origin [destination] | --root ]\n            target [target ...] {{{cmd} args}}".format(cmd=self._cmd)
         
     @property
@@ -318,26 +320,23 @@ class BackupEngine(CLIEngine):
         if self.opts.args:
             self._pargs += self.opts.args
     
-    def start(self):
+    def do(self):
         """Run all the given stored processes"""
         for mode in self.opts.modes:
             self._start_mode(mode)
+        for mode in self._destinations.keys():
+            self._end_mode(mode)
             
     def _start_mode(self,mode):
         """Start a single mode"""
         if self._destinations[mode].launch(self._pargs,prints=self.opts.prints):
-            # Run any post-dependent commands.
-            map(self._start_mode,self._destinations[mode].triggers)            
-        
+            for trigger in self._destinations[mode].triggers:
+                self._start_mode(trigger)
+    
     def _end_mode(self, mode):
         """Wait for a particular process to end."""
         if self._destinations[mode].running:
             self._destinations[mode].wait()
-        
-    def end(self):
-        """End all processes"""
-        for mode in self._destinations.keys():
-            self._end_mode(mode)
         
     def _kill_mode(self, mode):
         """Kill a particular subprocess"""
@@ -390,12 +389,9 @@ class BackupEngine(CLIEngine):
             version="%(prog)s version {version}\n{cmd_version}".format(
                 version=version, cmd_version=self._cmd_version))
         self.parser.add_argument('modes', metavar='target', nargs="+", 
-            choices=self._destinations.keys() ,default=[], help="The %(prog)s target's name.")
+            choices=list(self._destinations.keys()) ,default=[], help="The %(prog)s target's name.")
         self.parser.add_argument('args', nargs=argparse.REMAINDER, help=argparse.SUPPRESS)
         self.parser.epilog += "\n".join(self._help)
         
     
-if __name__ == '__main__':
-    print("Running from file: {arg}".format(arg=sys.argv[0]))
-    BackupEngine.script()
-    
+

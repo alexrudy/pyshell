@@ -83,7 +83,7 @@ class test_BackupEngine(object):
             warnings.simplefilter("always")
             engine.set_destination('test1','a/','b/','test2')
             engine.set_destination('test1','a/','c/','test3')
-        nt.eq_(warned[0].message.message, "Mode test1 will be overwritten.")
+        nt.eq_(warned[0].message.args[0], "Mode test1 will be overwritten.")
         nt.eq_(engine._destinations['test1'].destination, 'c/')
         
     def test_arguments(self):
@@ -127,6 +127,7 @@ class test_BackupScript(object):
         for i in range(self.NUM_FILES//self.SKIP_FACT):
             shutil.copy2(os.path.join(self.PATH,'c/c.%03d.test' % (i * self.SKIP_FACT)),os.path.join(self.PATH,'d/'))
             
+        self.make_cfg()
         self.engine = pyshell.backup.BackupEngine()
         self.engine.init()
     
@@ -136,6 +137,20 @@ class test_BackupScript(object):
         clear_dir(os.path.join(self.PATH,'b/'))
         clear_dir(os.path.join(self.PATH,'c/'))
         clear_dir(os.path.join(self.PATH,'d/'))
+        try:
+            pass
+            #os.remove(os.path.join(self.PATH,"Backup.yaml"))
+        except:
+            pass
+        
+    @nt.nottest
+    def make_cfg(self):
+        """Make the backup configuration"""
+        from pyshell.config import Configuration
+        cfg = Configuration.fromfile(os.path.join(self.PATH,"_Backup.yaml"))
+        cfg["origin"] = self.PATH
+        cfg["destination"] = self.PATH
+        cfg.save(os.path.join(self.PATH,"Backup.yaml"))
         
     
     def test_engine_full(self):
@@ -156,7 +171,7 @@ class test_BackupScript(object):
             raise SkipTest()
         assert len(os.listdir(os.path.join(self.PATH,'a/'))) != len(os.listdir(os.path.join(self.PATH,'b/')))
         assert len(os.listdir(os.path.join(self.PATH,'c/'))) != len(os.listdir(os.path.join(self.PATH,'d/')))
-        backup_py_path = os.path.join(self.EXEPATH,"backup.py")
+        backup_py_path = os.path.join(self.PATH,"backup.py")
         backup_py_config = os.path.join(self.PATH,"Backup.yaml")
         backup_py_command = shlex.split("python %s " % backup_py_path)
         backup_py_args = shlex.split("-q --config %s main other" % backup_py_config)

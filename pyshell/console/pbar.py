@@ -6,8 +6,10 @@
 #  Created by Alexander Rudy on 2012-05-08.
 #  Copyright 2012 Alexander Rudy. All rights reserved.
 # 
-from __future__ import division
-u"""
+from __future__ import (absolute_import, unicode_literals, division,
+                        print_function)
+
+"""
 :mod:`util.pbar` – Colored progressbar functions to extend the progressbar module
 ---------------------------------------------------------------------------------
 

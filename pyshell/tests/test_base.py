@@ -22,7 +22,9 @@ from .util import dests_from_argparse
 class test_base_cliengine(object):
     """pyshell.base.CLIEngine"""
     
-    CLASS = pyshell.base.CLIEngine
+    
+    
+    BASE_CLASS = pyshell.base.CLIEngine
     
     CONFIG = os.path.join("test_base","config.yml")
     
@@ -30,6 +32,15 @@ class test_base_cliengine(object):
     
     def setup(self):
         """Setup configuration"""
+        
+        class test_engine(self.BASE_CLASS):
+            """A do nothing CLI Engine"""
+            def do(self):
+                """A do nothing CLI Engine"""
+                pass
+        
+        self.CLASS = test_engine
+        
         import yaml
         cfg = {'a':'b','c':{'d':1}}
         filename = os.path.join(self.CWD,self.CONFIG)
@@ -38,7 +49,7 @@ class test_base_cliengine(object):
         except OSError:
             pass
         with open(filename,'w') as f:
-            yaml.dump(cfg,f,default_flow_style=False,encoding='utf-8')
+            yaml.safe_dump(cfg,f,default_flow_style=False,encoding='utf-8')
         
     
     def teardown(self):
@@ -65,25 +76,25 @@ class test_base_cliengine(object):
     def test_argparse(self):
         """.parser arguments"""
         IN = self.CLASS()
-        nt.eq_(dests_from_argparse(IN.parser),[])
+        nt.eq_(set(dests_from_argparse(IN.parser)),set([]))
         IN.init()
-        nt.eq_(dests_from_argparse(IN.parser),['config','configure'])
+        nt.eq_(set(dests_from_argparse(IN.parser)),set(['config','configure','debug']))
         IN._add_help()
-        nt.eq_(dests_from_argparse(IN.parser),['config','configure','help'])
+        nt.eq_(set(dests_from_argparse(IN.parser)),set(['config','configure','debug','help']))
         IN._remove_help()
-        nt.eq_(dests_from_argparse(IN.parser),['config','configure'])
+        nt.eq_(set(dests_from_argparse(IN.parser)),set(['config','configure','debug']))
         
     def test_init(self):
         """.init()"""
         IN = self.CLASS()
-        nt.eq_(dests_from_argparse(IN.parser),[])
+        nt.eq_(set(dests_from_argparse(IN.parser)),set([]))
         IN.init()
-        nt.eq_(dests_from_argparse(IN.parser),['config','configure'])
+        nt.eq_(set(dests_from_argparse(IN.parser)),set(['config','configure','debug']))
         self.CLASS.defaultcfg = False
         IN = self.CLASS()
-        nt.eq_(dests_from_argparse(IN.parser),[])
+        nt.eq_(set(dests_from_argparse(IN.parser)),set([]))
         IN.init()
-        nt.eq_(dests_from_argparse(IN.parser),[])
+        nt.eq_(set(dests_from_argparse(IN.parser)),set(['debug']))
         
         
     def test_arguments(self):
@@ -93,7 +104,7 @@ class test_base_cliengine(object):
         IN.arguments(shlex.split("--config file.yml --other value"))
         nt.eq_(IN._rargs,["--other","value"])
         nt.eq_(IN.opts.config,"file.yml")
-        nt.eq_(vars(IN.opts),{'config':'file.yml','configure':[]})
+        nt.eq_(vars(IN.opts),{'config':'file.yml','configure':[],'debug':False})
         
     def test_configure(self):
         """.configure()"""

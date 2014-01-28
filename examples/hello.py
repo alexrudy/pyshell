@@ -48,7 +48,7 @@ class Hello(CLIEngine):
         self.parser.add_argument("language",action='store')
         # We add this argument here, becauase it is required.
         
-        self.parser.add_argument("-t","--title",action='store',default=self.config["Address"],type=str,
+        self.parser.add_argument("-t","--title", action='config', dest='Address', config=self.config, type=str,
             help=u"Change from the default title '{:s}'".format(self.config["Address"]),metavar="MR")
         # We add this argument here because it uses information from the configuration.
         
@@ -61,7 +61,7 @@ class Hello(CLIEngine):
         self.opts.greeting = self.config["Language"].get(self.opts.language)
         self.opts.punct = u"!" if self.opts.flourish else u"."
         self.opts.name = self.opts.name.decode("utf-8").title()
-        self.opts.title = self.opts.title.decode('utf-8')
+        self.opts.title = self.config["Address"].decode('utf-8')
         
     def do(self):
         """Take the actual action"""

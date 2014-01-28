@@ -75,7 +75,7 @@ class BaseSubEngine(PyPackageBase,SCEngine):
         if os.path.exists(directory) and os.path.isdir(directory):
             self.log.debug("Directory '%s' already exists" % directory)
         elif os.path.exists(directory):
-            raise PackageConfigError, "Path '%s' does not appear to be a directory!" % directory
+            raise PackageConfigError("Path '%s' does not appear to be a directory!" % directory)
         else:
             os.mkdir(directory)
             self.log.debug("Created directory '%s'" % (directory))
@@ -146,7 +146,7 @@ class PackageEngine(BaseSubEngine):
             sys.exit(0)
         self.create_dir(self.path)
         if not os.path.isdir(self.path) or not os.access(self.path,os.X_OK):
-            raise PackageConfigError, "Can't access distribution directory '%s'" % self.path
+            raise PackageConfigError("Can't access distribution directory '%s'" % self.path)
         self.log.info("Created distribution '%(distname)s'" % self.config)
         
     def get_metadata(self):

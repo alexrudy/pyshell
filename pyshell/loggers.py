@@ -14,15 +14,22 @@ This module complements the python :mod:`logging` module. It is designed to seam
 
 Logger Functions
 ----------------
-
-.. autofunction::
-    configure_logging
     
 .. autofunction::
     getLogger
 
 .. autofunction::
     getSimpleLogger
+
+
+.. autofunction::
+    configure_logging
+    
+.. autofunction::
+    activateSimpleLogging
+        
+Automatic Logger Buffering
+--------------------------
         
 .. autofunction::
     debuffer_logger
@@ -30,6 +37,8 @@ Logger Functions
 .. autofunction::
     buffer_logger
     
+Custom Handlers and Formatters
+-------------------------------
 
 .. autoclass::
     ManyTargetHandler
@@ -65,7 +74,26 @@ from .console import get_color
 
 __all__ = ['configure_logging','debuffer_logger','GrowlHandler',
     'ManyTargetHandler','BufferHandler','getLogger','buffer_root','status',
-    'getSimpleLogger']
+    'getSimpleLogger',
+    'PYSHELL_LOGGING','PYSHELL_LOGGING_STREAM','PYSHELL_LOGGING_STREAM_ALL']
+
+PYSHELL_LOGGING = [('pyshell','logging.yml')]
+"""This constant item can be added to the superconfiguration 
+:attr:`supercfg` to enable a default logging configuration setup. It should
+probably be added first, so that your own code will override it."""
+
+PYSHELL_LOGGING_STREAM = [('pyshell','logging-stream-only.yml')]
+"""This constant item can be added to the superconfiguration 
+:attr:`supercfg` to enable a default logging configuration setup. It 
+should probably be added first, so that your own code will override it. 
+It only provides stream loggers, not file handlers."""
+
+PYSHELL_LOGGING_STREAM_ALL = [('pyshell','logging-stream-all.yml')]
+"""This constant item can be added to the superconfiguration
+:attr:`supercfg` to enable a default logging configuration setup. It 
+should probably be added first, so that your own code will override it. 
+It only provides stream loggers, not file handlers. Its logger is just a 
+root logger at the lowest level!"""
 
 def configure_logging(configuration):
     """Setup logging from a configuration object. Configuration should meet Python's :mod:`logging.config` configuration
@@ -108,26 +136,15 @@ def getLogger(name=None):
         logger.addHandler(BufferHandler(1e7))
     return logger
     
-def buffer_logger(name=None):
-    """Buffer named logger.
-    
-    :param name: The name of the logger to debuffer.
-    
-    This method will add a :class:`BufferHandler` to the
-    named logger, and will remove the other handlers.
-    """
-    _log = logging.getLogger(name)
-    _buffer = None
-    for handler in _log.handlers[:]:
-        if isinstance(handler,BufferHandler):
-            _buffer = handler
-        _log.removeHandler(handler)
-    _log.setLevel(1)
-    if not _buffer:
-        _buffer = BufferHandler(1e7)
-    _log.addHandler(_buffer)
-    
+
 _simpleConfig = None
+def _getSimpleConfig():
+    """Retrieve the _SimpleConfig object, populating it if it doesn't exist."""
+    from .config import DottedConfiguration
+    global _simpleConfig
+    if _simpleConfig is None:
+        _simpleConfig = DottedConfiguration.fromresource('pyshell','logging-stream-all.yml')
+
 def getSimpleLogger(name=None,level=None):
     """Retrieves a logger with a simple logging configuration setup,
     which writes colorful logging output to the console using the configuration
@@ -138,10 +155,7 @@ def getSimpleLogger(name=None,level=None):
     :param level: The level of the configured logger.
     
     Configurations are cumulative, so :func:`getSimpleLogger` can be called multiple times."""
-    from .config import DottedConfiguration
-    global _simpleConfig
-    if _simpleConfig is None:
-        _simpleConfig = DottedConfiguration.fromresource('pyshell','logging-stream-all.yml')
+    _simpleConfig = _getSimpleConfig()
     logger = getLogger(name)
     if level is not None and name is not None:
         _simpleConfig["logging.loggers."+name+".level"] = level
@@ -149,6 +163,18 @@ def getSimpleLogger(name=None,level=None):
         _simpleConfig["logging.root.level"] = level
     configure_logging(_simpleConfig)
     return logger
+    
+def activateSimpleLogging(ltype='simple'):
+    """Activate simple logging using a logging configuration built in to PyShell."""
+    _configurations = {
+        'all' : PYSHELL_LOGGING_STREAM_ALL,
+        'stream' : PYSHELL_LOGGING_STREAM,
+        'basic' : PYSHELL_LOGGING,
+        'simple' : _getSimpleConfig(),
+    }
+    if ltype not in _configurations:
+        raise ValueError("Logging Type must be in {!r}".format(_configurations.keys()))
+    configure_logging(_configurations[ltype])
 
 _buffers = {}
 def _prepare_config(name=None):
@@ -159,13 +185,32 @@ def _prepare_config(name=None):
     """
     logger = logging.getLogger(name)
     name = "__root__" if name is None else name
-    debuffer = False
+    _buffer = False
     for handler in logger.handlers:
         if isinstance(handler,BufferHandler):
-            debuffer = handler
+            _buffer = handler
             break
-    _buffers[name] = debuffer
+    _buffers[name] = _buffer
     
+def buffer_logger(name=None):
+    """Buffer named logger.
+
+    :param name: The name of the logger to buffer.
+
+    This method will add a :class:`BufferHandler` to the
+    named logger, and will remove the other handlers.
+    """
+    _log = logging.getLogger(name)
+    _buffer = False
+    for handler in _log.handlers[:]:
+        if isinstance(handler,BufferHandler):
+            _buffer = handler
+        _log.removeHandler(handler)
+    _log.setLevel(1)
+    if not _buffer:
+        _buffer = BufferHandler(1e7)
+    _log.addHandler(_buffer)
+    _buffers[name] = _buffer
     
 def debuffer_logger(name=None):
     """Debuffer a given logger.
@@ -230,7 +275,7 @@ class GrowlHandler(logging.Handler):
             self.disable = False
             self.notifier = self.gntp.notifier.GrowlNotifier(
                 applicationName=self.name,
-                notifications=self.mapping.values(),
+                notifications=list(self.mapping.values()),
                 defaultNotifications=[ v for k,v in self.mapping.items() if k >= logging.INFO ],
             )
             self.notifier.register()

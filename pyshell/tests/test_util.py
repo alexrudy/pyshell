@@ -25,8 +25,8 @@ def test_ipydb():
 def test_is_type_factory():
     """is_type_factory(type)"""
     is_int = pyshell.util.is_type_factory(int)
-    nt.eq_( is_int.__doc__, "Checks if obj can be *cast* as <type 'int'>.")
-    nt.eq_( is_int.__hlp__, "Input must be an <type 'int'>")
+    nt.eq_( is_int.__doc__, "Checks if obj can be *cast* as {}.".format(repr(int)))
+    nt.eq_( is_int.__hlp__, "Input must be an {}".format(repr(int)))
     nt.ok_(is_int("1"),"The string '1' should be a valid integer literal")
     nt.ok_(is_int("244920"),"The string '244920' should be a valid integer literal")
     nt.ok_(not is_int("1.1"),"The string '1.1' should not be a valid integer literal")

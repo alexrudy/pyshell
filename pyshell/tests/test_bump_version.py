@@ -21,6 +21,12 @@ class test_bump_version(object):
         self.filepath = pkg_resources.resource_filename(__name__,'test_bump_version/')
         shutil.copy(os.path.join(self.filepath,'vtest.py.original'),os.path.join(self.filepath,'vtest.py'))
     
+    def teardown(self):
+        """Remove vtest.py"""
+        if os.path.exists(os.path.join(self.filepath,'vtest.py')):
+            os.remove(os.path.join(self.filepath,'vtest.py'))
+        if os.path.exists(os.path.join(self.filepath,'vtest.py.backup')):
+            os.remove(os.path.join(self.filepath,'vtest.py.backup'))
     
     @nt.nottest
     def file_eq(self, file_a, file_b):
