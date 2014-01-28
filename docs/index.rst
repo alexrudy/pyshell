@@ -22,6 +22,8 @@ Contents:
     config
     core
     util
+    astron/index
+    astron/units
     postmortem
 
 
