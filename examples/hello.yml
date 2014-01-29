@@ -2,4 +2,11 @@ Language:
   French: "Bienvenue"
   English: "Sup"
   Chinese: "你好"
+
+
+# Addresses are stored here:
 Address: "Mr."
+
+
+
+mynumber: 1.0
