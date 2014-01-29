@@ -301,7 +301,7 @@ class Configuration(MutableMappingBase):
                 key, value = parts
             try:
                 self[key] = ast.literal_eval(value)
-            except ValueError:
+            except (ValueError, SyntaxError):
                 self[key] = value
         
     def load_resource(self, module, filename, silent=True):
