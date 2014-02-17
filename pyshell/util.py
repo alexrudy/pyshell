@@ -512,3 +512,12 @@ class TypedProperty(object):
                 raise TypeError("{}.{} requires type {}, got {}".format(type(obj), self.name, self._class, type(value)))
         setattr(obj, self._attr, value)
     
+
+def apply_monkey_patch(base, new, prefix="_original_"):
+    """Apply a monkey patch to the target, returning the old."""
+    new_name = new.__name__
+    old_name = prefix + new_name
+    setattr(base, old_name, getattr(base, new_name))
+    setattr(base, new_name, new)
+    return getattr(base, old_name)
+
