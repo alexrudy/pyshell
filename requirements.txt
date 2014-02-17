@@ -1,3 +1,4 @@
 PyYAML>=3.10
 jinja2==2.6
 six
+nose
