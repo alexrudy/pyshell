@@ -9,7 +9,7 @@
 
 __all__ = ['fix']
 
-from fix_console_scripts import monkey_patch_setuptools
+from .fix_console_scripts import monkey_patch_setuptools
 
 def fix():
     """Fix the setuptools"""
