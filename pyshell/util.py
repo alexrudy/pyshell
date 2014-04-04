@@ -521,10 +521,10 @@ def apply_monkey_patch(base, new, prefix="_original_"):
     setattr(base, new_name, new)
     return getattr(base, old_name)
 
-def apply_monkey_patch_decorator(base, decorator, new_name, prefix="_original_"):
+def apply_monkey_patch_decorator(base, decorator, old, prefix="_original_"):
     """Apply a decorator-style monkey patch to a function or class."""
+    new_name = old.__name__
     old_name = prefix + new_name
-    old = getattr(base, new_name)
     setattr(base, old_name, old)
     setattr(base, new_name, decorator(old))
     return getattr(base, old_name)

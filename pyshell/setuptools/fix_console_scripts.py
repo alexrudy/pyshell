@@ -11,8 +11,9 @@ This module fixes the broken 'develop' mode console scripts in setuptools.
 
 """
 
-from ..util import apply_monkey_patch
+from ..util import apply_monkey_patch, apply_monkey_patch_decorator
 import textwrap
+import functools
 
 
 def install_wrapper_scripts(self, dist):
@@ -28,24 +29,28 @@ def install_wrapper_scripts(self, dist):
             self.write_script(*args)
             
 
-def get_script_header(script_text, executable=None, wininst=False):
-    """Fix get_script_header to use virtualenvironments."""
-    if executable is None:
-        from setuptools.command.easy_install import sys_executable
-        executable = sys_executable
-    from setuptools.command.easy_install import _original_get_script_header
-    header = _original_get_script_header(script_text, executable, wininst)
+
+def add_script_header(f):
+    """Decorator for the script header function."""
+    @functools.wraps(f)
+    def get_script_header(script_text, executable=None, wininst=False):
+        """Fix get_script_header to use virtualenvironments."""
+        if executable is None:
+            from setuptools.command.easy_install import sys_executable
+            executable = sys_executable
+        header = f(script_text, executable, wininst)
     
-    environment_start = textwrap.dedent("""
-    # If we are in a virtual environment, let's activate it.
-    import os, os.path
-    if "VIRTUAL_ENV" in os.environ:
-        activate_this = os.path.join(os.environ["VIRTUAL_ENV"],'bin/activate_this.py')
-        execfile(activate_this, dict(__file__=activate_this))
+        environment_start = textwrap.dedent("""
+        # If we are in a virtual environment, let's activate it.
+        import os, os.path
+        if "VIRTUAL_ENV" in os.environ:
+            activate_this = os.path.join(os.environ["VIRTUAL_ENV"],'bin/activate_this.py')
+            execfile(activate_this, dict(__file__=activate_this))
+            del activate_this
     
-    """)
-    return header + environment_start
-    
+        """)
+        return header + environment_start
+    return get_script_header
 
 
 def monkey_patch_setuptools():
@@ -53,5 +58,5 @@ def monkey_patch_setuptools():
     from setuptools.command.easy_install import easy_install as easy_install_cmd
     from setuptools.command import easy_install as easy_install_mod
     apply_monkey_patch(easy_install_cmd, install_wrapper_scripts)
-    apply_monkey_patch(easy_install_mod, get_script_header)
+    apply_monkey_patch_decorator(easy_install_mod, add_script_header, easy_install_mod.get_script_header)
     
