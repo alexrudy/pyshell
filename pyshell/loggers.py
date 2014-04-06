@@ -144,6 +144,7 @@ def _getSimpleConfig():
     global _simpleConfig
     if _simpleConfig is None:
         _simpleConfig = DottedConfiguration.fromresource('pyshell','logging-stream-all.yml')
+    return _simpleConfig
 
 def getSimpleLogger(name=None,level=None):
     """Retrieves a logger with a simple logging configuration setup,
