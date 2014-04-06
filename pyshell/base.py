@@ -183,6 +183,12 @@ class CLIEngine(object):
         engine gets configured."""
         pass
         
+    def init_positional(self):
+        """This function is called to initialize positional arguments
+        for this CLI item. Positional arguments initialized here will
+        be parsed correctly."""
+        pass
+        
     def parse(self):
         """Parse the command line arguments.
         
@@ -230,6 +236,7 @@ class CLIEngine(object):
         self.before_configure()
         self.configure()
         self.after_configure()
+        self.init_positional()
         self.parse()
         try:
             self.do()
