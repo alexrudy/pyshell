@@ -67,6 +67,9 @@ class Configuration(MutableMappingBase):
     
     _dt = collections.OrderedDict
     
+    _loader = PyshellLoader
+    _dumper = PyshellDumper
+    
     @property
     def dn(self):
         """Deep nesting attribute reader""" #pylint: disable=C0103
@@ -186,14 +189,14 @@ class Configuration(MutableMappingBase):
         if hasattr(filename,'read') and hasattr(filename,'readlines'):
             filename.write("# %s: <stream>" % self.name)
             yaml.dump_all(self._save_yaml_callback() + [self.store],
-                 filename, default_flow_style=False, encoding='utf-8', Dumper=PyshellDumper)
+                 filename, default_flow_style=False, encoding='utf-8', Dumper=self._dumper)
         else:
             with open(filename, "w") as stream:
                 stream.write("# %s: %s\n" % (self.name, filename))
                 if re.search(r"(\.yaml|\.yml)$", filename):
                     yaml.dump_all(
                         self._save_yaml_callback() + [self.store], stream, 
-                        default_flow_style=False, encoding='utf-8', Dumper=PyshellDumper)
+                        default_flow_style=False, encoding='utf-8', Dumper=self._dumper)
                 elif re.search(r"\.dat$", filename):
                     for document in self._save_yaml_callback():
                         stream.write(str(document))
@@ -220,11 +223,11 @@ class Configuration(MutableMappingBase):
         isstream = False
         try:
             if hasattr(filename, 'read') and hasattr(filename, 'readlines'):
-                new = list(yaml.load_all(filename, Loader=PyshellLoader))
+                new = list(yaml.load_all(filename, Loader=self._loader))
                 isstream = True
             else:
                 with open(filename, "r") as stream:
-                    new = list(yaml.load_all(stream, Loader=PyshellLoader))
+                    new = list(yaml.load_all(stream, Loader=self._loader))
         except IOError:
             if silent:
                 warnings.warn("Could not load configuration "
