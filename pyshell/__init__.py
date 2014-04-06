@@ -21,14 +21,13 @@ version = "0.6.2"
 __all__ = []
 
 from .base import *
-from . import base
-__all__ += base.__all__
+__all__ += ['CLIEngine',
+    'PYSHELL_LOGGING','PYSHELL_LOGGING_STREAM','PYSHELL_LOGGING_STREAM_ALL']
 
-from .loggers import getLogger, getSimpleLogger, configure_logging
+from .loggers import getLogger, getSimpleLogger, configure_logging, buffer_logger
 __all__ += ['getLogger' , 'getSimpleLogger', 'configure_logging']
-
-from . import loggers
-loggers.buffer_logger()
+buffer_logger()
+del buffer_logger # Cleanup Namespace
 
 from .subcommand import SCEngine, SCController
 __all__ += ['SCEngine', 'SCController']
