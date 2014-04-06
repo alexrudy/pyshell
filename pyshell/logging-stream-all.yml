@@ -1,6 +1,6 @@
 # This file is designed for use as a logging configuration for pyshell-based scripts.
 # It can easily be used by setting the script's supercfg attribute properly:
-#  supercfg = [('pyshell','logging-stream-only.yml')]
+#  supercfg = [('pyshell','logging-stream-all.yml')]
 # or
 #  supercfg = PYSHELL_LOGGING_STREAM_ALL
 logging:
