@@ -7,6 +7,8 @@
 #  Copyright 2013 Jaberwocky. All rights reserved.
 # 
 
+from __future__ import (absolute_import, unicode_literals, division, print_function)
+
 import yaml
 import pyshell.yaml as ps_yaml
 from pkg_resources import resource_filename
