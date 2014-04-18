@@ -31,8 +31,8 @@ def astropy_quantity_yaml_factory(astropy_type, Loader=None, Dumper=None, python
         def astropy_constructor(loader, node):
             scalar_value = loader.construct_scalar(node)
             parts = scalar_value.split(" ")
-            value = " ".join(parts[:-1])
-            unit = parts[-1]
+            value = parts[0]
+            unit = " ".join(parts[1:])
             return astropy_type(python_type(value), unit=unit)
         astropy_constructor.__doc__ = "A {0} constructor interpreting the {1} tag.".format(astropy_type.__name__, tag)
         Loader.add_constructor(tag, astropy_constructor)
