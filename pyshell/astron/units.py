@@ -72,7 +72,7 @@ class UnitsProperty(object):
         super(UnitsProperty, self).__init__()
         self.name = name
         self.latex = name if latex is None else latex
-        self._unit = unit
+        self._unit = u.Unit(unit) if unit is not None else None
         self._attr = '_{}_{}'.format(self.__class__.__name__, name.replace(" ", "_"))
         self._nn = nonnegative
         self._readonly = readonly
@@ -99,7 +99,12 @@ class UnitsProperty(object):
         
     def set(self, obj, value):
         """Shortcut for the setter."""
-        quantity = u.Quantity(value, unit=self.unit(obj))
+        if isinstance(value, u.Quantity):
+            quantity = value
+        else:
+            quantity = u.Quantity(value, unit=self.unit(obj))
+        if not quantity.unit.is_equivalent(self.unit(obj)):
+            raise ValueError("{} must have units of {}".format(quantity, self.unit(obj)))
         if not np.isfinite(quantity.value).all():
             raise ValueError("{} must be finite!".format(self.name))
         if self._nn and not np.all(quantity.value >= 0.0):
@@ -265,7 +270,7 @@ class HasNonDimensonals(HasUnitsProperties):
         
 setattr(HasNonDimensonals, NON_DIMENSIONAL_FLAG, False)
         
-class HasInitialValues(HasNonDimensonals):
+class HasInitialValues(HasUnitsProperties):
     """Base class for something which has non-dimensional properties."""
     
     def _list_iv_variables(self):
