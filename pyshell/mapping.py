@@ -252,7 +252,7 @@ class MutableMappingBase(collections.MutableMapping):
     @property
     def store(self):
         """Return a copy of the internal storage object."""
-        return self._store.copy()
+        return self._store
         
     def merge(self, item):
         """Alias between merge and update in the basic case."""

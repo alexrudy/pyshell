@@ -65,7 +65,7 @@ class Configuration(MutableMappingBase):
     """Deep nesting dictionary setting. This class will be used to create 
     deep nesting structures for this dictionary.""" #pylint: disable=W0105
     
-    _dt = collections.OrderedDict
+    _dt = DeepNestDict
     
     _loader = PyshellLoader
     _dumper = PyshellDumper
@@ -83,11 +83,6 @@ class Configuration(MutableMappingBase):
                 collections.MutableMapping, new_type
             ))
         self._dn = new_type
-    
-    _dt = dict
-    """Exctraction nesting dictionary setting. This class will be used to 
-    create deep nesting structures when this object is 
-    extracted.""" #pylint: disable=W0105
     
     @property
     def dt(self):
@@ -188,14 +183,14 @@ class Configuration(MutableMappingBase):
         """
         if hasattr(filename,'read') and hasattr(filename,'readlines'):
             filename.write("# %s: <stream>" % self.name)
-            yaml.dump_all(self._save_yaml_callback() + [self.store],
+            yaml.dump_all(self._save_yaml_callback() + [self._store],
                  filename, default_flow_style=False, encoding='utf-8', Dumper=self._dumper)
         else:
             with open(filename, "w") as stream:
                 stream.write("# %s: %s\n" % (self.name, filename))
                 if re.search(r"(\.yaml|\.yml)$", filename):
                     yaml.dump_all(
-                        self._save_yaml_callback() + [self.store], stream, 
+                        self._save_yaml_callback() + [self._store], stream, 
                         default_flow_style=False, encoding='utf-8', Dumper=self._dumper)
                 elif re.search(r"\.dat$", filename):
                     for document in self._save_yaml_callback():
@@ -563,7 +558,7 @@ class DottedConfiguration(Configuration):
         except KeyError:
             raise KeyError('%s' % key)
         
-        if isinstance(rval,self.dt):
+        if rval.__class__ is self.dt:
             rval = self.dn(rval)
             rval.separator = self.separator
         return rval
