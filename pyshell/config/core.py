@@ -46,7 +46,20 @@ class ConfigurationError(Exception):
         
 class DeepNestDict(collections.OrderedDict):
     """Class for deep nesting emptiness"""
-    pass
+    
+    def _repr_pretty_(self, p, cycle):
+        """Pretty representation of this object."""
+        if cycle:
+            p.text("{...}")
+        else:
+            with p.group(2,"{","}"):
+                for i, (key, value) in enumerate(six.iteritems(self)):
+                    if i:
+                        p.breakable(", ")
+                    p.pretty(key)
+                    p.text(":")
+                    p.pretty(value)
+                p.breakable(" ")
 
 
 class Configuration(MutableMappingBase):
@@ -61,11 +74,11 @@ class Configuration(MutableMappingBase):
     _strict = False
     """Whether to use strict lookup controls.""" #pylint: disable=W0105
     
-    _dn = DeepNestDict
+    _dn = dict
     """Deep nesting dictionary setting. This class will be used to create 
     deep nesting structures for this dictionary.""" #pylint: disable=W0105
     
-    _dt = DeepNestDict
+    _dt = dict
     
     _loader = PyshellLoader
     _dumper = PyshellDumper
@@ -119,6 +132,20 @@ class Configuration(MutableMappingBase):
             return self.dn(rval)
         else:
             return rval
+    
+    def _repr_pretty_(self, p, cycle):
+        """Pretty representation of this object."""
+        if cycle:
+            p.text("{...}")
+        else:
+            with p.group(2,"{","}"):
+                for i, (key, value) in enumerate(six.iteritems(self)):
+                    if i:
+                        p.breakable(", ")
+                    p.pretty(key)
+                    p.text(":")
+                    p.pretty(value)
+                p.breakable(" ")
     
     def update(self, other, deep=True): #pylint: disable=W0221
         """Update the dictionary using :meth:`merge`.
@@ -182,7 +209,7 @@ class Configuration(MutableMappingBase):
         
         """
         if hasattr(filename,'read') and hasattr(filename,'readlines'):
-            filename.write("# %s: <stream>" % self.name)
+            filename.write("# %s: <stream>\n" % self.name)
             yaml.dump_all(self._save_yaml_callback() + [self._store],
                  filename, default_flow_style=False, encoding='utf-8', Dumper=self._dumper)
         else:

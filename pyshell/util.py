@@ -393,6 +393,8 @@ def query_select(iterable, labels=None, default=None,
         labels = iterable
     elif len(labels) != len(iterable):
         raise ValueError("Labels must be the same length as the iterable.")
+    if len(iterable) < 1:
+        raise ValueError("Must provide at least 1 choice!")
     
     def validate(answer):
         valid = is_type_factory(int)(answer)
