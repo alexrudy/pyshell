@@ -81,8 +81,8 @@ def askip(pylab=False, enter="Launch iPython?", exit="Continuing...", default="n
     :param str default: The default answer ("yes" or "no")
     :returns: A function which either does nothing, or starts an iPython shell.
     """
-    from IPython.terminal.embed import InteractiveShellEmbed
     if query_yes_no(enter,default=default):
+        from IPython.terminal.embed import InteractiveShellEmbed
         if pylab:
             import matplotlib.pyplot as plt
             plt.ion()
