@@ -217,8 +217,14 @@ class CLIEngine(object):
         errors will be caught by :meth:`kill`"""
         pass
         
+    def final(self):
+        """This method should do everything required at the end of a command,
+        after :meth:`do` has succeed
+        """
+        pass
+        
     def kill(self):
-        """This function should forcibly kill any subprocesses. It is called 
+        """This method should forcibly kill any subprocesses. It is called 
         when :meth:`do` raises a :exc:`KeyboardInterrupt` or :exc:`SystemExit`
         to ensure that any tasks can be finalized before the system exits.
         Errors raised here are not caught."""
@@ -250,6 +256,7 @@ class CLIEngine(object):
             self.kill()
             if self.debug:
                 raise
+        self.final()
         return self.exitcode
     
     @classmethod        
