@@ -64,18 +64,21 @@ class ConfigurationProperty(TypedProperty):
 
 class ConfigurationItemProperty(object):
     """A property which accessess an underlying configuration item"""
-    def __init__(self, configvalue, configattr='config', readonly=False, postget=lambda x : x, preset=lambda x : x):
+    def __init__(self, configvalue, configattr='config', readonly=False, postget=lambda x : x, preset=lambda x : x, default=None):
         super(ConfigurationItemProperty, self).__init__()
         self.configvalue = configvalue
         self.configattr = configattr
         self.readonly = readonly
         self.postget = postget
         self.preset = preset
+        self.default = default
         
     @descriptor__get__
     def __get__(self, obj, objtype):
         """Descriptor get."""
         config = getattr(obj, self.configattr)
+        if self.default is not None:
+            return self.postget(config.get(self.configvalue, self.default))
         return self.postget(config[self.configvalue])
         
     def __set__(self, obj, value):
