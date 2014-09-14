@@ -70,7 +70,7 @@ class ConfigurationItemProperty(object):
         self.configattr = configattr
         self.readonly = readonly
         self.postget = postget
-        self.preset = presets
+        self.preset = preset
         
     @descriptor__get__
     def __get__(self, obj, objtype):
