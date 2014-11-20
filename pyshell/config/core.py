@@ -66,7 +66,6 @@ class Configuration(MutableMappingBase):
     """Adds extra methods to dictionary for configuration"""
     def __init__(self, *args, **kwargs):
         super(Configuration, self).__init__(*args, **kwargs)
-        self.log = loggers.getLogger(self.__module__)
         self._filename = None
         self._strict = False
         self._dn = self.__class__
@@ -114,9 +113,9 @@ class Configuration(MutableMappingBase):
     @property
     def hash(self):
         """Return the HexDigest hash"""
-        self._hash = hashlib.md5()
-        self._hash.update(six.b(str(self)))
-        return self._hash.hexdigest()
+        _hash = hashlib.md5()
+        _hash.update(six.b(str(self)))
+        return _hash.hexdigest()
         
     @property
     def filename(self):
