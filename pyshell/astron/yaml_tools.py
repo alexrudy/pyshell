@@ -38,7 +38,7 @@ def astropy_quantity_yaml_factory(astropy_type, Loader=None, Dumper=None, python
         Loader.add_constructor(tag, astropy_constructor)
     
 def astropy_direct_yaml_factory(astropy_type, Loader=None, Dumper=None):
-    """Represent a quantity type"""
+    """Represent a quantity type. Reconstructon is handled directly."""
     
     tag = "!{}".format(astropy_type.__name__.lower())
     

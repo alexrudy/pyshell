@@ -210,7 +210,7 @@ class SCController(CLIEngine):
             # it won't get parsed again.
             self._rargs.insert(0,self.opts.mode)
             delattr(self._opts,'mode')
-        self._opts = self.parser.parse_args(self._rargs, self._opts)
+        self._opts = self.parser.parse_args(self._rargs, namespace=self._opts)
         self.configure_logging()
         self.subcommand.__parse__(self._opts)
         self.subcommand.parse()

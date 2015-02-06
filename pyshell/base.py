@@ -22,6 +22,7 @@ from __future__ import (absolute_import, unicode_literals, division,
 
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import os, os.path
+import sys
 import abc
 from warnings import warn
 from .config import StructuredConfiguration
@@ -144,6 +145,10 @@ class CLIEngine(object):
         """
         if not self._hasinit:
             self.init()
+        if len(args):
+            self._oargs = args
+        else:
+            self._oargs = sys.argv
         self._opts, self._rargs = self.parser.parse_known_args(*args)        
         self._hasargs = True
     
@@ -206,7 +211,7 @@ class CLIEngine(object):
         
         """
         self._add_help()
-        self._opts = self.parser.parse_args(self._rargs, self._opts)
+        self._opts = self.parser.parse_args(self._rargs, namespace=self._opts)
         self.configure_logging()
         
     @abc.abstractmethod
